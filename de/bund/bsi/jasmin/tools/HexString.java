@@ -1,5 +1,9 @@
 package de.bund.bsi.jasmin.tools;
 
+/**
+*
+* @author Tobias Senger (jsmex@t-senger.de)
+*/
 public class HexString {
 
 	public static String stringToHex(String s)

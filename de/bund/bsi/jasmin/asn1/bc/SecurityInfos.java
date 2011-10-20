@@ -1,8 +1,6 @@
 
 package de.bund.bsi.jasmin.asn1.bc;
 
-
-
 import java.io.IOException;
 
 import org.bouncycastle.asn1.ASN1Object;
@@ -14,7 +12,7 @@ import de.bund.bsi.jasmin.asn1.SecurityInfosInterface;
 
 /**
  *
- * @author Tobias Senger (jsmex@t-senger.de)
+ * @author Tobias Senger (tobias.senger@bsi.bund.de)
  */
 public class SecurityInfos implements SecurityInfosInterface{
     
@@ -90,7 +88,8 @@ public class SecurityInfos implements SecurityInfosInterface{
         return chipAuthenticationInfo;
     }
 
-    public PaceInfo getPACEInfo()
+    @Override
+	public PaceInfo getPACEInfo()
     {
         return new PaceInfo(paceInfo);
     }

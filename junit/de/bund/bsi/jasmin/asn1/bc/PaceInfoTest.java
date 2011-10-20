@@ -1,6 +1,7 @@
 package junit.de.bund.bsi.jasmin.asn1.bc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
@@ -8,8 +9,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.bund.bsi.jasmin.asn1.bc.PaceInfo;
-import de.bund.bsi.jasmin.tools.HexString;
 
+/**
+*
+* @author Tobias Senger (tobias.senger@bsi.bund.de)
+*/
 public class PaceInfoTest {
 	
 	PaceInfo pi1 = null;

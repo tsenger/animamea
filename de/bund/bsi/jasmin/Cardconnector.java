@@ -1,9 +1,22 @@
 package de.bund.bsi.jasmin;
 
-import javax.smartcardio.*;
+import java.security.NoSuchAlgorithmException;
+
+import javax.smartcardio.ATR;
+import javax.smartcardio.Card;
+import javax.smartcardio.CardChannel;
+import javax.smartcardio.CardException;
+import javax.smartcardio.CardTerminal;
+import javax.smartcardio.CommandAPDU;
+import javax.smartcardio.ResponseAPDU;
+import javax.smartcardio.TerminalFactory;
 
 import de.bund.bsi.jasmin.tools.HexString;
 
+/**
+*
+* @author Tobias Senger (tobias.senger@bsi.bund.de)
+*/
 public class Cardconnector {
 
     /**

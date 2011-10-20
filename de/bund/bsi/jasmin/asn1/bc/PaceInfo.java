@@ -2,13 +2,16 @@ package de.bund.bsi.jasmin.asn1.bc;
 
 import java.io.IOException;
 
-import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERInteger;
 
 import de.bund.bsi.jasmin.asn1.PaceInfoInterface;
 
+/**
+*
+* @author Tobias Senger (tobias.senger@bsi.bund.de)
+*/
 public class PaceInfo implements PaceInfoInterface{
 	
 	private DERObjectIdentifier protocol = null;
@@ -31,18 +34,22 @@ public class PaceInfo implements PaceInfoInterface{
 		this.parameterId = parameterId;
 	}
 	
+	@Override
 	public String getProtocolString() {
 		return protocol.toString();
 	}
 	
+	@Override
 	public byte[] getProtocolBytes() {
 		return protocol.getDEREncoded();
 	}
 	
+	@Override
 	public int getVersion() {
 		return version;
 	}
 	
+	@Override
 	public int getParameterId() {
 		return parameterId;
 	}
