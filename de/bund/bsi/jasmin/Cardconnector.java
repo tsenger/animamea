@@ -45,7 +45,6 @@ public class Cardconnector {
        /* Get the basic channel. This one can't be closed */
        CardChannel channel = card.getBasicChannel();
       
-       /* Try to send a command. This one won't work! */
        byte[] command = { (byte)0x00, (byte)0xB0, (byte)0x9C, 0, (byte)0x08};
       
        CommandAPDU someApdu = new CommandAPDU(command);
