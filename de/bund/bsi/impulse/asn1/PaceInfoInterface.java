@@ -1,4 +1,4 @@
-package de.bund.bsi.jasmin.asn1;
+package de.bund.bsi.impulse.asn1;
 
 /**
 *
@@ -8,7 +8,7 @@ public interface PaceInfoInterface {
 	
 	public String getProtocolString();
 	public byte[] getProtocolBytes();
-	public int getParameterId();
 	public int getVersion();
+	public int getParameterId();
 
 }

@@ -1,4 +1,4 @@
-package de.bund.bsi.jasmin.tools;
+package de.bund.bsi.impulse.tools;
 
 /**
 *

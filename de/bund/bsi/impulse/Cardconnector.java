@@ -1,4 +1,4 @@
-package de.bund.bsi.jasmin;
+package de.bund.bsi.impulse;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -11,7 +11,7 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
-import de.bund.bsi.jasmin.tools.HexString;
+import de.bund.bsi.impulse.tools.HexString;
 
 /**
 *
