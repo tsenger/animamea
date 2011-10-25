@@ -1,4 +1,4 @@
-package de.bund.bsi.impulse.asn1;
+package de.bund.bsi.animamea.asn1;
 
 /**
 *

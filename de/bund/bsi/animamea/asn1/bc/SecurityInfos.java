@@ -1,4 +1,4 @@
-package de.bund.bsi.impulse.asn1.bc;
+package de.bund.bsi.animamea.asn1.bc;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import org.bouncycastle.asn1.ASN1Set;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
-import de.bund.bsi.impulse.asn1.SecurityInfosInterface;
+import de.bund.bsi.animamea.asn1.SecurityInfosInterface;
 
 /**
  * 
@@ -95,7 +95,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see de.bund.bsi.impulse.asn1.SecurityInfosInterface#getBytes()
+	 * @see de.bund.bsi.animamea.asn1.SecurityInfosInterface#getBytes()
 	 */
 	@Override
 	public byte[] getBytes() {
@@ -105,7 +105,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see de.bund.bsi.impulse.asn1.SecurityInfosInterface#getPaceInfoList()
+	 * @see de.bund.bsi.animamea.asn1.SecurityInfosInterface#getPaceInfoList()
 	 */
 	@Override
 	public List<PaceInfo> getPaceInfoList() {
@@ -115,7 +115,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see de.bund.bsi.impulse.asn1.SecurityInfosInterface#
+	 * @see de.bund.bsi.animamea.asn1.SecurityInfosInterface#
 	 * getTerminalAuthenticationInfoList()
 	 */
 	@Override
@@ -127,7 +127,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * de.bund.bsi.impulse.asn1.SecurityInfosInterface#getChipAuthenticationInfoList
+	 * de.bund.bsi.animamea.asn1.SecurityInfosInterface#getChipAuthenticationInfoList
 	 * ()
 	 */
 	@Override
@@ -139,7 +139,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * de.bund.bsi.impulse.asn1.SecurityInfosInterface#getCardInfoLocatorList()
+	 * de.bund.bsi.animamea.asn1.SecurityInfosInterface#getCardInfoLocatorList()
 	 */
 	@Override
 	public List<CardInfoLocator> getCardInfoLocatorList() {
@@ -149,7 +149,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see de.bund.bsi.impulse.asn1.SecurityInfosInterface#
+	 * @see de.bund.bsi.animamea.asn1.SecurityInfosInterface#
 	 * getChipAuthenticationDomainParameterInfoList()
 	 */
 	@Override
@@ -161,7 +161,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * de.bund.bsi.impulse.asn1.SecurityInfosInterface#getPaceDomainParameterInfoList
+	 * de.bund.bsi.animamea.asn1.SecurityInfosInterface#getPaceDomainParameterInfoList
 	 * ()
 	 */
 	@Override

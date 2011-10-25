@@ -1,9 +1,9 @@
 /**
  * 
  */
-package de.bund.bsi.impulse.asn1;
+package de.bund.bsi.animamea.asn1;
 
-import de.bund.bsi.impulse.asn1.bc.FileID;
+import de.bund.bsi.animamea.asn1.bc.FileID;
 
 /**
  * @author Tobias Senger (tobias.senger@bsi.bund.de)

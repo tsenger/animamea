@@ -2,12 +2,12 @@
  * FileID
  */
 
-package de.bund.bsi.impulse.asn1.bc;
+package de.bund.bsi.animamea.asn1.bc;
 
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 
-import de.bund.bsi.impulse.asn1.FileIDInterface;
+import de.bund.bsi.animamea.asn1.FileIDInterface;
 
 
 /**
@@ -27,7 +27,7 @@ public class FileID implements FileIDInterface {
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.FileIDInterface#getFID()
+	 * @see de.bund.bsi.animamea.asn1.FileIDInterface#getFID()
 	 */
 	@Override
 	public byte[] getFID() {
@@ -35,7 +35,7 @@ public class FileID implements FileIDInterface {
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.FileIDInterface#getSFID()
+	 * @see de.bund.bsi.animamea.asn1.FileIDInterface#getSFID()
 	 */
 	@Override
 	public byte getSFID() {

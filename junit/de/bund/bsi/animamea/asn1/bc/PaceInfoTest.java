@@ -1,4 +1,4 @@
-package junit.de.bund.bsi.impulse.asn1.bc;
+package junit.de.bund.bsi.animamea.asn1.bc;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.bund.bsi.impulse.asn1.bc.PaceInfo;
+import de.bund.bsi.animamea.asn1.bc.PaceInfo;
 
 /**
 *

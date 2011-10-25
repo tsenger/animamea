@@ -1,13 +1,13 @@
 /**
  * 
  */
-package de.bund.bsi.impulse.asn1.bc;
+package de.bund.bsi.animamea.asn1.bc;
 
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
-import de.bund.bsi.impulse.asn1.TerminalAuthenticationInfoInterface;
+import de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface;
 
 /**
  * @author Tobias Senger (tobias.senger@bsi.bund.de)
@@ -31,7 +31,7 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.TerminalAuthenticationInfoInterface#getProtocolString()
+	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getProtocolString()
 	 */
 	@Override
 	public String getProtocolString() {
@@ -39,7 +39,7 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.TerminalAuthenticationInfoInterface#getProtocolBytes()
+	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getProtocolBytes()
 	 */
 	@Override
 	public byte[] getProtocolBytes() {
@@ -47,7 +47,7 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.TerminalAuthenticationInfoInterface#getVersion()
+	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getVersion()
 	 */
 	@Override
 	public int getVersion() {
@@ -55,7 +55,7 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.TerminalAuthenticationInfoInterface#getEFCVCA()
+	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getEFCVCA()
 	 */
 	@Override
 	public FileID getEFCVCA() {

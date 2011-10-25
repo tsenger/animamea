@@ -3,13 +3,13 @@
  * OID: 0.4.0.127.0.7.2.2.6
  */
 
-package de.bund.bsi.impulse.asn1.bc;
+package de.bund.bsi.animamea.asn1.bc;
 
 import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
-import de.bund.bsi.impulse.asn1.CardInfoLocatorInterface;
+import de.bund.bsi.animamea.asn1.CardInfoLocatorInterface;
 
 ;
 
@@ -32,7 +32,7 @@ public class CardInfoLocator implements CardInfoLocatorInterface{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.CardInfoLocatorInterface#getOID()
+	 * @see de.bund.bsi.animamea.asn1.CardInfoLocatorInterface#getOID()
 	 */
 	@Override
 	public String getOID() {
@@ -40,7 +40,7 @@ public class CardInfoLocator implements CardInfoLocatorInterface{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.CardInfoLocatorInterface#getUrl()
+	 * @see de.bund.bsi.animamea.asn1.CardInfoLocatorInterface#getUrl()
 	 */
 	@Override
 	public String getUrl() {
@@ -48,7 +48,7 @@ public class CardInfoLocator implements CardInfoLocatorInterface{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.bund.bsi.impulse.asn1.CardInfoLocatorInterface#getFileID()
+	 * @see de.bund.bsi.animamea.asn1.CardInfoLocatorInterface#getFileID()
 	 */
 	@Override
 	public FileID getFileID() {

@@ -1,13 +1,13 @@
-package de.bund.bsi.impulse.asn1;
+package de.bund.bsi.animamea.asn1;
 
 import java.util.List;
 
-import de.bund.bsi.impulse.asn1.bc.CardInfoLocator;
-import de.bund.bsi.impulse.asn1.bc.ChipAuthenticationDomainParameterInfo;
-import de.bund.bsi.impulse.asn1.bc.ChipAuthenticationInfo;
-import de.bund.bsi.impulse.asn1.bc.PaceDomainParameterInfo;
-import de.bund.bsi.impulse.asn1.bc.PaceInfo;
-import de.bund.bsi.impulse.asn1.bc.TerminalAuthenticationInfo;
+import de.bund.bsi.animamea.asn1.bc.CardInfoLocator;
+import de.bund.bsi.animamea.asn1.bc.ChipAuthenticationDomainParameterInfo;
+import de.bund.bsi.animamea.asn1.bc.ChipAuthenticationInfo;
+import de.bund.bsi.animamea.asn1.bc.PaceDomainParameterInfo;
+import de.bund.bsi.animamea.asn1.bc.PaceInfo;
+import de.bund.bsi.animamea.asn1.bc.TerminalAuthenticationInfo;
 
 /**
 *
