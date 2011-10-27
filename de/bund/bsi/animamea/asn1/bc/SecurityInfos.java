@@ -25,7 +25,8 @@ public class SecurityInfos implements SecurityInfosInterface {
 	List<PaceDomainParameterInfo> paceDomainParameterInfoList = new ArrayList<PaceDomainParameterInfo>();
 	List<ChipAuthenticationDomainParameterInfo> chipAuthenticationDomainParameterInfoList = new ArrayList<ChipAuthenticationDomainParameterInfo>();
 	List<CardInfoLocator> cardInfoLocatorList = new ArrayList<CardInfoLocator>();
-
+	List<PrivilegedTerminalInfo> privilegedTerminalInfoList = new ArrayList<PrivilegedTerminalInfo>();
+	
 	private byte[] encodedData = null;
 
 	public SecurityInfos() {
@@ -48,9 +49,9 @@ public class SecurityInfos implements SecurityInfosInterface {
 
 		for (int i = 0; i < anzahlObjekte; i++) {
 			securityInfo[i] = (DERSequence) securityInfos.getObjectAt(i);
-			DERObjectIdentifier oid = (DERObjectIdentifier) securityInfo[i]
-					.getObjectAt(0);
-			switch (oid.toString().charAt(18)) { //TODO Besser auf komplette OID prüfen
+			DERObjectIdentifier oid = (DERObjectIdentifier) securityInfo[i].getObjectAt(0);
+	
+			switch (oid.toString().charAt(18)) {
 			case '2':
 				terminalAuthenticationInfoList.add(new TerminalAuthenticationInfo(securityInfo[i]));
 				break;
@@ -68,6 +69,9 @@ public class SecurityInfos implements SecurityInfosInterface {
 				break;
 			case '6':
 				cardInfoLocatorList.add(new CardInfoLocator(securityInfo[i]));
+				break;
+			case '8':
+				privilegedTerminalInfoList.add(new PrivilegedTerminalInfo(securityInfo[i]));
 				break;
 			} // SWITCH
 
@@ -88,7 +92,31 @@ public class SecurityInfos implements SecurityInfosInterface {
 				+ paceInfoList.size() + " PaceInfo objects \n"
 				+ paceDomainParameterInfoList.size()
 				+ " PaceDomainParameterInfo objects \n"
-				+ cardInfoLocatorList.size() + " CardInfoLocator objects \n";
+				+ cardInfoLocatorList.size() + " CardInfoLocator objects \n"
+				+ privilegedTerminalInfoList.size() + " PrivilegedTerminalInfo objects \n\n------------------\n";
+		
+		for (TerminalAuthenticationInfo item: terminalAuthenticationInfoList) {
+			summary=summary+item.toString();
+		}
+		for (ChipAuthenticationInfo item: chipAuthenticationInfoList) {
+			summary=summary+item.toString();
+		}
+		for (ChipAuthenticationDomainParameterInfo item: chipAuthenticationDomainParameterInfoList) {
+			summary=summary+item.toString();
+		}
+		for (PaceInfo item: paceInfoList) {
+			summary=summary+item.toString();
+		}
+		for (PaceDomainParameterInfo item: paceDomainParameterInfoList) {
+			summary=summary+item.toString();
+		}
+		for (CardInfoLocator item: cardInfoLocatorList) {
+			summary=summary+item.toString();
+		}
+		for (PrivilegedTerminalInfo item: privilegedTerminalInfoList) {
+			summary=summary+item.toString();
+		}
+		
 		return summary;
 	}
 

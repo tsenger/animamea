@@ -3,6 +3,8 @@
  */
 package de.bund.bsi.animamea.asn1;
 
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
+
 
 
 /**
@@ -11,9 +13,8 @@ package de.bund.bsi.animamea.asn1;
  */
 public interface PaceDomainParameterInfoInterface {
 	
-	public String getProtocolString();
-	public byte[] getProtocolBytes();
-	public byte[] getDomainParameter();
+	public String getProtocolOID();
+	public AlgorithmIdentifier getDomainParameter();
 	public int getParameterId();
 
 }

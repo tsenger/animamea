@@ -55,6 +55,12 @@ public class CardInfoLocator implements CardInfoLocatorInterface{
 		if (fileID==null) return null;
 		else return new FileID(fileID);
 	}
+	
+	@Override
+	public String toString() {
+		return "CardInfoLocator \n\tOID: " + getOID() + "\n\tURL: " +getUrl() + "\n\t" + getFileID()+"\n";
+		
+	}
 
 
 }

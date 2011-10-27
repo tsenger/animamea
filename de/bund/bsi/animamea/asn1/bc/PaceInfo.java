@@ -29,16 +29,8 @@ public class PaceInfo implements PaceInfoInterface{
 	 * @see de.bund.bsi.animamea.asn1.PaceInfoInterface#getProtocolString()
 	 */
 	@Override
-	public String getProtocolString() {
+	public String getProtocolOID() {
 		return protocol.toString();
-	}
-	
-	/* (non-Javadoc)
-	 * @see de.bund.bsi.animamea.asn1.PaceInfoInterface#getProtocolBytes()
-	 */
-	@Override
-	public byte[] getProtocolBytes() {
-		return protocol.getDEREncoded();
 	}
 	
 	/* (non-Javadoc)
@@ -56,5 +48,10 @@ public class PaceInfo implements PaceInfoInterface{
 	public int getParameterId() {
 		if (parameterId==null) return 0;
 		else return parameterId.getValue().intValue();
+	}
+	
+	@Override
+	public String toString() {
+		return "PaceInfo\n\tOID: " + getProtocolOID() + "\n\tVersion: " + getVersion() + "\n\tParameterId: " + getParameterId() + "\n";
 	}
 }

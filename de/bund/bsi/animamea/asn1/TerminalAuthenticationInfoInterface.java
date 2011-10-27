@@ -11,8 +11,7 @@ import de.bund.bsi.animamea.asn1.bc.FileID;
  */
 public interface TerminalAuthenticationInfoInterface {
 
-	public String getProtocolString();
-	public byte[] getProtocolBytes();
+	public String getProtocolOID();
 	public int getVersion();
 	public FileID getEFCVCA();
 

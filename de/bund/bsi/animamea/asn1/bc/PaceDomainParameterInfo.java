@@ -22,7 +22,7 @@ public class PaceDomainParameterInfo implements PaceDomainParameterInfoInterface
 	
 	public PaceDomainParameterInfo(DERSequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		domainParameter = (AlgorithmIdentifier)seq.getObjectAt(1);
+		domainParameter = AlgorithmIdentifier.getInstance(seq.getObjectAt(1));
 		
 		if (seq.size()>2) {
 			parameterId = (DERInteger)seq.getObjectAt(2);
@@ -33,24 +33,16 @@ public class PaceDomainParameterInfo implements PaceDomainParameterInfoInterface
 	 * @see de.bund.bsi.animamea.asn1.PaceDomainParameterInfoInterface#getProtocolString()
 	 */
 	@Override
-	public String getProtocolString() {
+	public String getProtocolOID() {
 		return protocol.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see de.bund.bsi.animamea.asn1.PaceDomainParameterInfoInterface#getProtocolBytes()
-	 */
-	@Override
-	public byte[] getProtocolBytes() {
-		return protocol.getDEREncoded();
 	}
 
 	/* (non-Javadoc)
 	 * @see de.bund.bsi.animamea.asn1.PaceDomainParameterInfoInterface#getDomainParameter()
 	 */
 	@Override
-	public byte[] getDomainParameter() {
-		return domainParameter.getDEREncoded();
+	public AlgorithmIdentifier getDomainParameter() {
+		return domainParameter;
 	}
 
 	/* (non-Javadoc)
@@ -61,5 +53,9 @@ public class PaceDomainParameterInfo implements PaceDomainParameterInfoInterface
 		if (parameterId==null) return 0;
 		else return parameterId.getValue().intValue();
 	}
-
+	
+	@Override
+	public String toString() {
+		return "PaceDomainParameterInfo\n\tOID: " + getProtocolOID() + "\n\tDomainParameter: \n\t\t" + getDomainParameter().getAlgorithm() + "\n\t\t" + getDomainParameter().getParameters() + "\n\tParameterId: " + getParameterId() + "\n";
+	}
 }

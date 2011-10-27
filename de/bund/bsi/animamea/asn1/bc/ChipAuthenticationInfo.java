@@ -32,16 +32,8 @@ public class ChipAuthenticationInfo implements ChipAuthenticationInfoInterface{
 	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationInfoInterface#getProtocolString()
 	 */
 	@Override
-	public String getProtocolString() {
+	public String getProtocolOID() {
 		return protocol.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationInfoInterface#getProtocolBytes()
-	 */
-	@Override
-	public byte[] getProtocolBytes() {
-		return protocol.getDEREncoded();
 	}
 
 	/* (non-Javadoc)
@@ -56,9 +48,14 @@ public class ChipAuthenticationInfo implements ChipAuthenticationInfoInterface{
 	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationInfoInterface#keyId()
 	 */
 	@Override
-	public int keyId() {
+	public int getKeyId() {
 		if (keyId==null) return 0;
 		else return keyId.getValue().intValue();
+	}
+	
+	@Override
+	public String toString() {
+		return "ChipAuthenticationInfo \n\tOID: " + getProtocolOID() + "\n\tVersion: " + getVersion() + "\n\tKeyId: " + getKeyId() +"\n";
 	}
 
 }

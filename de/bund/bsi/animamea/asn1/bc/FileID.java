@@ -8,6 +8,7 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 
 import de.bund.bsi.animamea.asn1.FileIDInterface;
+import de.bund.bsi.animamea.tools.HexString;
 
 
 /**
@@ -22,7 +23,7 @@ public class FileID implements FileIDInterface {
 	public FileID(DERSequence seq) {
 		fid = (DEROctetString) seq.getObjectAt(0);
 		if (seq.size()>1) {
-			sfid = (DEROctetString)seq.getObjectAt(2);
+			sfid = (DEROctetString)seq.getObjectAt(1);
 		}
 	}
 
@@ -39,7 +40,13 @@ public class FileID implements FileIDInterface {
 	 */
 	@Override
 	public byte getSFID() {
-		return (sfid.getOctets()[0]);
+		if (sfid!=null) return (sfid.getOctets()[0]);
+		else return 0;
+	}
+	
+	@Override
+	public String toString() {
+		return "FileID \n\tFID: " + HexString.bufferToHex(getFID()) + "\n\tSFID: " + getSFID()+"\n";
 	}
 	
 }

@@ -34,16 +34,8 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getProtocolString()
 	 */
 	@Override
-	public String getProtocolString() {
+	public String getProtocolOID() {
 		return protocol.toString();
-	}
-
-	/* (non-Javadoc)
-	 * @see de.bund.bsi.animamea.asn1.TerminalAuthenticationInfoInterface#getProtocolBytes()
-	 */
-	@Override
-	public byte[] getProtocolBytes() {
-		return protocol.getDEREncoded();
 	}
 
 	/* (non-Javadoc)
@@ -61,6 +53,11 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	public FileID getEFCVCA() {
 		if (fileID==null) return null;
 		else return new FileID(fileID);
+	}
+	
+	@Override
+	public String toString() {
+		return "TerminalAuthenticationInfo\n\tOID: " + getProtocolOID() + "\n\tVersion: " + getVersion() + "\n\tEF.CVCA: " + getEFCVCA() + "\n";
 	}
 
 }

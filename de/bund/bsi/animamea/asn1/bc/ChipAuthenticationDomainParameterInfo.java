@@ -25,7 +25,7 @@ public class ChipAuthenticationDomainParameterInfo implements ChipAuthentication
 	 */
 	public ChipAuthenticationDomainParameterInfo(DERSequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		domainParameter = (AlgorithmIdentifier)seq.getObjectAt(1);
+		domainParameter = AlgorithmIdentifier.getInstance(seq.getObjectAt(1));
 		
 		if (seq.size()>2) {
 			keyId = (DERInteger)seq.getObjectAt(2);
@@ -36,24 +36,17 @@ public class ChipAuthenticationDomainParameterInfo implements ChipAuthentication
 	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationDomainParameterInfoInterface#getProtocolString()
 	 */
 	@Override
-	public String getProtocolString() {
+	public String getProtocolOID() {
 		return protocol.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationDomainParameterInfoInterface#getProtocolBytes()
-	 */
-	@Override
-	public byte[] getProtocolBytes() {
-		return protocol.getDEREncoded();
-	}
 
 	/* (non-Javadoc)
 	 * @see de.bund.bsi.animamea.asn1.ChipAuthenticationDomainParameterInfoInterface#getDomainParameter()
 	 */
 	@Override
-	public byte[] getDomainParameter() {
-		return domainParameter.getDEREncoded();
+	public AlgorithmIdentifier getDomainParameter() {
+		return domainParameter;
 	}
 
 	/* (non-Javadoc)
@@ -63,6 +56,11 @@ public class ChipAuthenticationDomainParameterInfo implements ChipAuthentication
 	public int getKeyId() {
 		if (keyId==null) return 0;
 		else return keyId.getValue().intValue();
+	}
+	
+	@Override
+	public String toString() {
+		return "ChipAuthenticationDomainParameterInfo \n\tOID: "+getProtocolOID()+"\n\tDomainParameter: \n\t\t" + getDomainParameter().getAlgorithm() + "\n\t\t" + getDomainParameter().getParameters() + "\n\tKeyID " + getKeyId()+"\n";
 	}
 
 }
