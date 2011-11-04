@@ -16,7 +16,6 @@ import de.bund.bsi.animamea.asn1.SecurityInfosInterface;
  * @author Tobias Senger (tobias.senger@bsi.bund.de)
  */
 
-//TODO Klasse um Prüfung aller in der TR-03110 genannten Bedingungen erweitern. (z.B. max 1 CardInfoLocator)
 public class SecurityInfos implements SecurityInfosInterface {
 
 	List<TerminalAuthenticationInfo> terminalAuthenticationInfoList = new ArrayList<TerminalAuthenticationInfo>();
