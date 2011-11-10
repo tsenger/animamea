@@ -3,8 +3,11 @@
  */
 package de.bund.bsi.animamea.asn1.bc;
 
+import java.io.IOException;
+
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERSet;
 
 import de.bund.bsi.animamea.asn1.PrivilegedTerminalInfoInterface;
 
@@ -17,9 +20,15 @@ public class PrivilegedTerminalInfo implements PrivilegedTerminalInfoInterface{
 	private DERObjectIdentifier protocol = null;
 	private SecurityInfos secinfos = null;
 
-	public PrivilegedTerminalInfo(DERSequence seq) {
+	public PrivilegedTerminalInfo(DERSequence seq) throws IOException, Exception {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		secinfos = (SecurityInfos)seq.getObjectAt(1);
+		
+		DERSet derSet = (DERSet) seq.getObjectAt(1);
+		
+		SecurityInfos si = new SecurityInfos();
+		si.decode(derSet.getEncoded());
+		
+		secinfos = (si);
 	}
 	
 	/* (non-Javadoc)

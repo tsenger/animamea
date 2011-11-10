@@ -21,13 +21,15 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	
 	/**
 	 * @param derSequence
+	 * @throws Exception Throws Exception if FileId is used with version 2
 	 */
-	public TerminalAuthenticationInfo(DERSequence seq) {
+	public TerminalAuthenticationInfo(DERSequence seq) throws Exception {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		version = (DERInteger)seq.getObjectAt(1);
 		if (seq.size()>2) {
 			fileID = (DERSequence)seq.getObjectAt(2);
 		}
+		if (version.getValue().intValue()==2&&fileID!=null) throw new Exception("FileID MUST NOT be used for version 2!");
 	}
 
 	/* (non-Javadoc)
@@ -51,7 +53,7 @@ public class TerminalAuthenticationInfo implements TerminalAuthenticationInfoInt
 	 */
 	@Override
 	public FileID getEFCVCA() {
-		if (fileID==null) return null;
+		if (fileID==null) return null; //optionales Feld FileID nicht vorhanden.
 		else return new FileID(fileID);
 	}
 	

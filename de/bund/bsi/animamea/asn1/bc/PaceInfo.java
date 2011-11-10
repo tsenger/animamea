@@ -46,7 +46,7 @@ public class PaceInfo implements PaceInfoInterface{
 	 */
 	@Override
 	public int getParameterId() {
-		if (parameterId==null) return 0;
+		if (parameterId==null) return -1;//ID nicht vorhanden
 		else return parameterId.getValue().intValue();
 	}
 	

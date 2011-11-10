@@ -32,13 +32,36 @@ public class KeyDerivationFunction {
 			8, 0, 8, 0, 0, 8, 8, 0, 0, 8, 0, 8, 8, 0, 4, 8, 8, 0, 8, 0, 0, 8,
 			8, 0, 0, 8, 0, 8, 8, 0, 8, 5, 0, 8, 0, 8, 8, 0, 0, 8, 8, 0, 8, 0,
 			6, 8 };
+	
+	/**
+	 * 
+	 * Das MRZ-Passwort besteht aus dem SHA1-Wert der Dokumentennummer +
+	 * Geburtsdatum + Gültigkeitsdatum (jeweils mit Prüfziffer)
+	 * 
+	 * @param documentNr Dokumentennummer plus Prüfziffer
+	 * @param dateOfBirth Geburtsdatum aus der MRZ plus Prüfziffer
+	 * @param dateOfExpiry Gültigkeitsdatum aus der MRZ plus Prüfziffer
+	 * @return K = SHA-1(Serial Number||Date of Birth||Date of Expiry)
+	 */
+	public static byte[] getMRZBytes(String documentNr, String dateOfBirth, String dateOfExpiry) {
+		String mrzInfo = documentNr + dateOfBirth + dateOfExpiry;
+		byte[] passwordBytes = mrzInfo.getBytes();
+		
+		byte[] K = new byte[20];
+		
+		SHA1Digest sha1 = new SHA1Digest();
+		sha1.update(passwordBytes, 0, passwordBytes.length);
+		sha1.doFinal(K, 0);
+		
+		return K;		
+	}
 
 	
 	/**
 	 * Constructor for Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel A.2.3
 	 *  
 	 * @param K
-	 *            The shared secret Value (z.B. PIN, CAN, PUK oder abgeleitete
+	 *            The shared secret Value (z.B. PIN, CAN, PUK als Byte Array oder abgeleitete
 	 *            MRZ siehe BSI TR-03110 Tabelle A.4)
 	 * @param c
 	 *            A 32-bit, big-endian integer counter. 1 for

@@ -5,11 +5,13 @@ package de.bund.bsi.animamea.pace;
 
 import java.math.BigInteger;
 
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.DHParameters;
 
+import de.bund.bsi.animamea.asn1.bc.BSIObjectIdentifiers;
 import de.bund.bsi.animamea.asn1.bc.CertificateHolderAuthorizationTemplate;
 import de.bund.bsi.animamea.asn1.bc.PaceDomainParameterInfo;
 import de.bund.bsi.animamea.asn1.bc.PaceInfo;
@@ -25,8 +27,8 @@ public class PaceParameter {
 	private final byte[] nonce_z = null;
 	private final byte[] nonce_s = null;
 	
-	private final byte[] passwordBytes = null;
-	private final byte passwordType = 0;
+	private byte[] passwordBytes = null;
+	private int passwordType = 0;
 	private String protocol = null;
 	private X9ECParameters cp = null;
 	private DHParameters dhp = null;
@@ -39,19 +41,35 @@ public class PaceParameter {
 	
 	private byte parameterType = 0; // 1 für GFP; 2 für ECP 
 	
-	public PaceParameter(PaceInfo pi, String pwString) {
+	public PaceParameter(PaceInfo pi, byte[] pwBytes, int pwRef) {
 		protocol = pi.getProtocolOID();
-		extractDomainParameter(pi);
+		passwordBytes = pwBytes.clone();
+		passwordType = pwRef;
+		getStandardizedDomainParameters(pi.getParameterId());
 	}
 	
-	public PaceParameter(PaceInfo pi, PaceDomainParameterInfo pdpi) {
+	public PaceParameter(PaceInfo pi, PaceDomainParameterInfo pdpi, byte[] pwBytes, int pwRef) throws Exception {
 		protocol = pi.getProtocolOID();
-		extractDomainParameter(pi);
+		passwordBytes = pwBytes.clone();
+		passwordType = pwRef;
+		if (pi.getParameterId()<=31) throw new Exception ("ParameterID number 0 to 31 is used for standardized domain paramters!");
+		if (pi.getParameterId()!=pdpi.getParameterId()) throw new Exception ("PaceInfo doesn't match the PaceDomainParameterInfo");
+		getProprietaryDomainParameters(pdpi);
 	}
 	
-	private void extractDomainParameter(PaceInfo pi) {
+	private void getProprietaryDomainParameters(PaceDomainParameterInfo pdpi) throws Exception {
 		
-		switch (pi.getParameterId()) {
+		if (pdpi.getDomainParameter().getAlgorithm().toString().contains(BSIObjectIdentifiers.id_ecc.toString())) {
+			ASN1Sequence seq = (ASN1Sequence)pdpi.getDomainParameter().getParameters().getDERObject().toASN1Object();
+			cp = new X9ECParameters(seq);
+		}
+		else throw new Exception("Can't decode properietary domain parameters in PaceDomainParameterInfo!");		
+	}
+	
+	
+	private void getStandardizedDomainParameters(int parameterId) {
+		
+		switch (parameterId) {
 		case 0:
 			dhp = modp1024_160();
 			break;
@@ -93,7 +111,7 @@ public class PaceParameter {
 			break;
 		case 18: 
 			cp = SECNamedCurves.getByName ("secp521r1");
-			break;
+			break;			
 		}
 		
 		if (cp!=null) parameterType = 2;
@@ -179,5 +197,6 @@ public class PaceParameter {
 				"A308B0FE64F5FBD3",16);
 		return new DHParameters(p,g,q);
 	}
+	
 
 }

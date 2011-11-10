@@ -14,6 +14,9 @@ public interface ChipAuthenticationDomainParameterInfoInterface {
 	
 	public String getProtocolOID();
 	public AlgorithmIdentifier getDomainParameter();
+	/**
+	 * @return Returns -1 if the optional field keyId is not used.
+	 */
 	public int getKeyId();
 
 }

@@ -41,7 +41,7 @@ public class FileID implements FileIDInterface {
 	@Override
 	public byte getSFID() {
 		if (sfid!=null) return (sfid.getOctets()[0]);
-		else return 0;
+		else return -1; // optionales Feld sfid ist nicht vorhanden
 	}
 	
 	@Override

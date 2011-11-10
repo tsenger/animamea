@@ -1,6 +1,5 @@
 package de.bund.bsi.animamea.asn1.bc;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +39,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	 *  
 	 * @ throws IOException DOCUMENT ME!
 	 */
-	public void decode(byte[] encodedData) throws IOException {
+	public void decode(byte[] encodedData) throws Exception {
 		this.encodedData = encodedData;
 		ASN1Set securityInfos = (ASN1Set) ASN1Object.fromByteArray(encodedData);
 		int anzahlObjekte = securityInfos.size();
@@ -81,7 +80,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 	@Override
 	public String toString() {
 		String summary = null;
-		summary = "SecurityInfos object contains\n"
+		summary = "------------------\nSecurityInfos object contains\n"
 				+ terminalAuthenticationInfoList.size()
 				+ " TerminalAuthenticationInfo objects \n"
 				+ chipAuthenticationInfoList.size()
@@ -92,7 +91,7 @@ public class SecurityInfos implements SecurityInfosInterface {
 				+ paceDomainParameterInfoList.size()
 				+ " PaceDomainParameterInfo objects \n"
 				+ cardInfoLocatorList.size() + " CardInfoLocator objects \n"
-				+ privilegedTerminalInfoList.size() + " PrivilegedTerminalInfo objects \n\n------------------\n";
+				+ privilegedTerminalInfoList.size() + " PrivilegedTerminalInfo objects\n------------------\n";
 		
 		for (TerminalAuthenticationInfo item: terminalAuthenticationInfoList) {
 			summary=summary+item.toString();

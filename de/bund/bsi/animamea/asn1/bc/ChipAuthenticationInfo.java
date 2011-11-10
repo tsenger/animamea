@@ -49,7 +49,7 @@ public class ChipAuthenticationInfo implements ChipAuthenticationInfoInterface{
 	 */
 	@Override
 	public int getKeyId() {
-		if (keyId==null) return 0;
+		if (keyId==null) return -1; //optionales Feld keyId nicht vorhanden
 		else return keyId.getValue().intValue();
 	}
 	

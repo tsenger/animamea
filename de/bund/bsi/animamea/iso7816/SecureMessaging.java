@@ -13,7 +13,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
-import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
+import de.bund.bsi.animamea.pace.Crypto;
 
 
 public class SecureMessaging{
@@ -45,7 +45,7 @@ public class SecureMessaging{
 	 * @throws InvalidAlgorithmParameterException 
 	 * @throws IOException 
 	 */
-	public CommandAPDU encode(CommandAPDU capdu) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, IOException {
+	public CommandAPDU wrap(CommandAPDU capdu) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, IOException {
         
 		byte[] header = null;
 		byte lc = 0;
@@ -59,9 +59,9 @@ public class SecureMessaging{
 		header = new byte[4];
 		System.arraycopy(capdu, 0, header, 0, 4); //Die ersten 4 Bytes der CAPDU sind der Header
 		header[0] = (byte)(header[0]|(byte)0x0C);
-		ISO7816d4Padding padder = new ISO7816d4Padding();
-		padder.addPadding(header, 4);
-        paddedheader = header.clone();        
+        paddedheader = addPadding(header); 
+		
+		  
         
         // build DO87
         if (getAPDUStructure(capdu)==3||getAPDUStructure(capdu)==4) {
@@ -110,7 +110,7 @@ public class SecureMessaging{
         return new CommandAPDU(bOut.toByteArray());
     }
 	
-	public ResponseAPDU decode(ResponseAPDU rapdu) throws Exception {
+	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws Exception {
 	       
         byte[] responseData = null;
         byte[] decryptedData = null;
@@ -266,7 +266,7 @@ public class SecureMessaging{
 	//Pad data, encrypt data with KS.ENC and build DO87
     private byte[] buildDO87(byte[] data) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
         //b
-        data = Crypto.padByteArray(data);
+        data = addPadding(data);
         
         //c
         byte[] encrypted_data = Crypto.tripleDES(true, ks_enc, data);
@@ -332,6 +332,60 @@ public class SecureMessaging{
 		if (cardcmd.length==(7+cardcmd[5]*256+cardcmd[6]) && cardcmd[4]==0 && (cardcmd[5]!=0 || cardcmd[6]!=0))	return 6;
 		if (cardcmd.length==(9+cardcmd[5]*256+cardcmd[6]) && cardcmd[4]==0 && (cardcmd[5]!=0 || cardcmd[6]!=0))	return 7;
 		return 0;
+	}
+	
+	/**
+	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00
+	 * bis die Länge des übergebenen Byte-Array ein Vielfaches von 8 ist. Dies
+	 * ist die ISO9797-1 Padding-Methode 2.
+	 * 
+	 * @param data
+	 *            Das Byte-Array welches aufgefüllt werden soll.
+	 * @return Das gefüllte Byte-Array.
+	 */
+	private byte[] addPadding(byte[] data) {
+
+		int i = 0;
+		byte[] tempdata = new byte[data.length + 8];
+
+		for (i = 0; i < data.length; i++) {
+			tempdata[i] = data[i];
+		}
+
+		tempdata[i] = (byte) 0x80;
+
+		for (i = i + 1; ((i) % 8) != 0; i++) {
+			tempdata[i] = (byte) 0;
+		}
+
+		byte[] filledArray = new byte[i];
+		System.arraycopy(tempdata, 0, filledArray, 0, i);
+		return filledArray;
+	}
+
+	/**
+	 * Entfernt aus dem übergebenen Byte-Array das Padding nach ISO9797-1
+	 * Padding-Methode 2. Dazu werden aus dem übergebenen Byte-Array von hinten
+	 * beginnend Bytes mit dem Wert 0x00 gelöscht, sowie die der Wert 0x80 der
+	 * das Padding markiert.
+	 * 
+	 * @param Byte
+	 *            -Array aus dem das Padding entfernt werden soll
+	 * @return bereinigtes Byte-Array
+	 */
+	private byte[] removePadding(byte[] b) {
+		byte[] rd = null;
+		int i = b.length - 1;
+		do {
+			i--;
+		} while (b[i] == (byte) 0x00);
+
+		if (b[i] == (byte) 0x80) {
+			rd = new byte[i];
+			System.arraycopy(b, 0, rd, 0, rd.length);
+			return rd;
+		}
+		return b;
 	}
 
 }

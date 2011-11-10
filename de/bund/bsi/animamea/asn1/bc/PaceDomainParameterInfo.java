@@ -50,7 +50,7 @@ public class PaceDomainParameterInfo implements PaceDomainParameterInfoInterface
 	 */
 	@Override
 	public int getParameterId() {
-		if (parameterId==null) return 0;
+		if (parameterId==null) return -1; // optionales Feld parameterId nicht vorhanden
 		else return parameterId.getValue().intValue();
 	}
 	
