@@ -31,7 +31,7 @@ public abstract class AmCryptoProvider {
 	}
 	
 	public abstract void decrypt(InputStream in, OutputStream out) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
-	public abstract void encrypt(InputStream in, OutputStream out) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
+	public abstract byte[] encrypt(byte[] in) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
 
 	/**
 	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00

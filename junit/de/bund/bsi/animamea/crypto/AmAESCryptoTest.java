@@ -50,11 +50,10 @@ public class AmAESCryptoTest {
 	@Test
 	public void testEncrypt() {
 		
-		ByteArrayInputStream bis = new ByteArrayInputStream(plainBytes);
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		
+		byte[] enc = null;
 		try {
-			aes.encrypt(bis, bos);
+			enc = aes.encrypt(plainBytes);
 		} catch (DataLengthException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,7 +77,7 @@ public class AmAESCryptoTest {
 			e.printStackTrace();
 		}
 		
-		System.out.println("Encrypted:\n"+HexString.bufferToHex(bos.toByteArray()));
+		System.out.println("Encrypted:\n"+HexString.bufferToHex(enc));
 	}
 	
 	/**

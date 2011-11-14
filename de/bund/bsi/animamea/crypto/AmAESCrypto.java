@@ -3,31 +3,43 @@
  */
 package de.bund.bsi.animamea.crypto;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
+import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.crypto.engines.AESFastEngine;
-import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
-import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.crypto.params.ParametersWithIV;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * @author Tobias Senger (tobias.senger@bsi.bund.de)
  * 
  */
 public class AmAESCrypto extends AmCryptoProvider {
+	
+	public AmAESCrypto() {
+		Security.addProvider(new BouncyCastleProvider());
+	}
 
-	PaddedBufferedBlockCipher encryptCipher = null;
-	PaddedBufferedBlockCipher decryptCipher = null;
+	Cipher encryptCipher = null;
+	Cipher decryptCipher = null;
 
 	// Buffer used to transport the bytes from one stream to another
 	byte[] buf = new byte[16]; // input buffer
@@ -41,34 +53,29 @@ public class AmAESCrypto extends AmCryptoProvider {
 	public static int blockSize = 16;
 
 
-	public void initCiphers(byte[] keyBytes, byte[] iv) {
+	public void initCiphers(byte[] keyBytes, byte[] iv) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
 
-		// get the key
-		key = new byte[keyBytes.length];
-		System.arraycopy(keyBytes, 0, key, 0, keyBytes.length);
+		 //1. create the cipher using Bouncy Castle Provider
+	       encryptCipher =
+	               Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
+	       //2. create the key
+	       SecretKey keyValue = new SecretKeySpec(keyBytes,"AES");
+	       //3. create the IV
+	       AlgorithmParameterSpec IVspec = new IvParameterSpec(iv);
+	       //4. init the cipher
+	       encryptCipher.init(Cipher.ENCRYPT_MODE, keyValue, IVspec);
 
-		// get the IV
-		IV = new byte[blockSize];
-		System.arraycopy(iv, 0, IV, 0, iv.length);
-		
-		// create the ciphers
-		// AES block cipher in CBC mode with ISO7816d4 padding
-		encryptCipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(
-				new AESFastEngine()), new ISO7816d4Padding() );
-
-		decryptCipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(
-				new AESFastEngine()), new ISO7816d4Padding() );
-
-		// create the IV parameter
-		ParametersWithIV parameterIV = new ParametersWithIV(new KeyParameter(
-				key), IV);
-
-		encryptCipher.init(true, parameterIV);
-		decryptCipher.init(false, parameterIV);
+	       //1 create the cipher
+	       decryptCipher =
+	               Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
+	       //2. the key is already created
+	       //3. the IV is already created
+	       //4. init the cipher
+	       decryptCipher.init(Cipher.DECRYPT_MODE, keyValue, IVspec);
 	}
 
 	@Override
-	public void encrypt(InputStream in, OutputStream out)
+	public byte[] encrypt(byte[] in)
 			throws ShortBufferException, IllegalBlockSizeException,
 			BadPaddingException, DataLengthException, IllegalStateException,
 			InvalidCipherTextException, IOException {
@@ -78,28 +85,17 @@ public class AmAESCrypto extends AmCryptoProvider {
 		// optionaly put the IV at the beginning of the cipher file
 		// out.write(IV, 0, IV.length);
 
-		int noBytesRead = 0; // number of bytes read from input
-		int noBytesProcessed = 0; // number of bytes processed
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        CipherOutputStream cOut = new CipherOutputStream(bOut, encryptCipher);
 
-		while ((noBytesRead = in.read(buf)) >= 0) {
-			// System.out.println(noBytesRead +" bytes read");
+       
+                cOut.write(in);
+            
+            cOut.close();
+     
 
-			noBytesProcessed = encryptCipher.processBytes(buf, 0, noBytesRead,
-					obuf, 0);
-			// System.out.println(noBytesProcessed +" bytes processed");
-			out.write(obuf, 0, noBytesProcessed);
-		}
+        return bOut.toByteArray();
 
-		// System.out.println(noBytesRead +" bytes read");
-		noBytesProcessed = encryptCipher.doFinal(obuf, 0);
-
-		// System.out.println(noBytesProcessed +" bytes processed");
-		out.write(obuf, 0, noBytesProcessed);
-
-		out.flush();
-
-		in.close();
-		out.close();
 	}
 
 	@Override
@@ -121,8 +117,8 @@ public class AmAESCrypto extends AmCryptoProvider {
 
 		while ((noBytesRead = in.read(buf)) >= 0) {
 			// System.out.println(noBytesRead +" bytes read");
-			noBytesProcessed = decryptCipher.processBytes(buf, 0, noBytesRead,
-					obuf, 0);
+//			noBytesProcessed = decryptCipher.processBytes(buf, 0, noBytesRead,
+//					obuf, 0);
 			// System.out.println(noBytesProcessed +" bytes processed");
 			out.write(obuf, 0, noBytesProcessed);
 		}
