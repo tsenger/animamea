@@ -1,29 +1,22 @@
-package de.bund.bsi.animamea.crypto;
+package de.bund.bsi.animamea.pace;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+<<<<<<< HEAD:de/bund/bsi/animamea/crypto/AmCryptoProvider.java
 public abstract class AmCryptoProvider {
 	
 	public AmCryptoProvider() {
@@ -32,6 +25,9 @@ public abstract class AmCryptoProvider {
 	
 	public abstract void decrypt(InputStream in, OutputStream out) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
 	public abstract byte[] encrypt(byte[] in) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
+=======
+public class Crypto {
+>>>>>>> 416cc8a... AmAESCrypto-Test:de/bund/bsi/animamea/pace/Crypto.java
 
 	/**
 	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00
@@ -42,7 +38,7 @@ public abstract class AmCryptoProvider {
 	 *            Das Byte-Array welches aufgefüllt werden soll.
 	 * @return Das gefüllte Byte-Array.
 	 */
-	public byte[] addPadding(byte[] data) {
+	public static byte[] padByteArray(byte[] data) {
 
 		int i = 0;
 		byte[] tempdata = new byte[data.length + 8];
@@ -72,7 +68,7 @@ public abstract class AmCryptoProvider {
 	 *            -Array aus dem das Padding entfernt werden soll
 	 * @return bereinigtes Byte-Array
 	 */
-	public byte[] removePadding(byte[] b) {
+	public static byte[] removePadding(byte[] b) {
 		byte[] rd = null;
 		int i = b.length - 1;
 		do {
@@ -201,6 +197,67 @@ public abstract class AmCryptoProvider {
 		des.init(Cipher.ENCRYPT_MODE, skeya);
 		mac = des.doFinal(mac);
 		return mac;
+	}
+
+	/**
+	 * Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel A.2.3 Erzeugt
+	 * AES-128 SchlÃŒssel aus einem Shared Secret
+	 * 
+	 * @param K
+	 *            The shared secret Value (z.B. PIN, CAN, PUK oder abgeleitete
+	 *            MRZ siehe BSI TR-03110 Tabelle A.4)
+	 * @param c
+	 *            A 32-bit, big-endian integer counter. (byte)0x00000001 for
+	 *            en-/decoding (byte)0x00000002 for MAC (checksum)
+	 *            (byte)0x00000003 for deriving encryption keys from a password
+	 * @return Abgeleiteter SchlÃŒssel als Byte-Array
+	 */
+	public static byte[] derivateAES128Key(byte[] K, byte[] c) {
+
+		byte[] mergedData = new byte[K.length + c.length];
+		System.arraycopy(K, 0, mergedData, 0, K.length);
+		System.arraycopy(c, 0, mergedData, K.length, c.length);
+
+		byte[] checksum = calculateSHA1(mergedData);
+
+		// keydata = H(K||c)
+		// keydata sind die ersten 16 Byte der Hashfunktion ÃŒber "mergedData"
+		byte[] keydata = new byte[16];
+		System.arraycopy(checksum, 0, keydata, 0, 16);
+		return keydata;
+	}
+
+	/**
+	 * Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel A.2.3 Erzeugt
+	 * AES-128 SchlÃŒssel aus einem Shared Secret
+	 * 
+	 * @param K
+	 *            The shared secret Value (z.B. PIN, CAN, PUK oder abgeleitete
+	 *            MRZ siehe BSI TR-03110 Tabelle A.4)
+	 * @param r
+	 *            A nonce. (Zufallszahl)
+	 * @param c
+	 *            A 32-bit, big-endian integer counter. (byte)0x00000001 for
+	 *            en-/decoding (byte)0x00000002 for MAC (checksum)
+	 *            (byte)0x00000003 for deriving encryption keys from a password
+	 * @return Abgeleiteter SchlÃŒssel als Byte-Array
+	 */
+	public static byte[] derivateAES128Key(byte[] K, byte[] c, byte[] r) {
+
+		byte[] mergedData = new byte[K.length + r.length + c.length];
+
+		System.arraycopy(K, 0, mergedData, 0, K.length);
+		System.arraycopy(r, 0, mergedData, K.length, r.length);
+		System.arraycopy(c, 0, mergedData, K.length + r.length, c.length);
+
+		byte[] checksum = calculateSHA1(mergedData);
+
+		// keydata = H(K||r||c)
+		// keydata sind die ersten 16 Byte der Hashfunktion über "mergedData"
+		byte[] keydata = new byte[16];
+		System.arraycopy(checksum, 0, keydata, 0, 16);
+
+		return keydata;
 	}
 
 	/**
