@@ -5,387 +5,267 @@ import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
-import de.bund.bsi.animamea.pace.Crypto;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 
+import de.bund.bsi.animamea.crypto.AmAESCrypto;
+import de.bund.bsi.animamea.crypto.AmCryptoProvider;
+import de.bund.bsi.animamea.crypto.AmDESCrypto;
+import de.bund.bsi.animamea.tools.HexString;
 
-public class SecureMessaging{
-	
+public class SecureMessaging {
+
 	private byte[] ks_enc = null;
 	private byte[] ks_mac = null;
-	private byte[] ssc = null;
-	
-	/** Konstruktor 
-	 * @param ksenc Session Key für Verschlüsselung (K_enc)
-	 * @param ksmac Session Key für Prüfsummenberechnung (K_mac)
-	 * @param initssc Initialer Wert des Send Sequence Counters
+	private long ssc = 0;
+	private AmCryptoProvider crypto_enc = null;
+	private AmCryptoProvider crypto_mac = null;
+
+	/**
+	 * Konstruktor
+	 * 
+	 * @param ksenc
+	 *            Session Key für Verschlüsselung (K_enc)
+	 * @param ksmac
+	 *            Session Key für Prüfsummenberechnung (K_mac)
+	 * @param initssc
+	 *            Initialer Wert des Send Sequence Counters
+	 * @throws Exception
 	 */
-	public SecureMessaging(byte[] ksenc, byte[] ksmac, byte[] initssc) {
+	public SecureMessaging(String algorithm, byte[] ksenc, byte[] ksmac, long initialSSC)
+			throws Exception {
+		
+		if (algorithm.equals("AES")) {
+			crypto_enc = new AmAESCrypto();
+			crypto_mac = new AmAESCrypto();
+		} else if (algorithm.equals("DES")) {
+			crypto_enc = new AmDESCrypto();
+			crypto_mac = new AmDESCrypto();
+		} else
+			throw new Exception("Not supported Algorithm");
+		
 		ks_enc = ksenc.clone();
 		ks_mac = ksmac.clone();
-		ssc = initssc.clone();
-	}
 		
-	/**Erzeugt aus einer Command-APDU ohne Secure Messaging eine Command-APDU mit Secure Messaging.
+		ssc = initialSSC;
+
+	}
+
+
+	/**
+	 * Erzeugt aus einer Command-APDU ohne Secure Messaging eine Command-APDU
+	 * mit Secure Messaging.
 	 * 
-	 * @param capdu Ungeschützte Command-APDU
+	 * @param capdu
+	 *            Ungeschützte Command-APDU
 	 * @return CommandAPDU mit SM
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidKeyException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws IOException 
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws IOException
+	 * @throws InvalidCipherTextException
+	 * @throws IllegalStateException
+	 * @throws ShortBufferException
+	 * @throws DataLengthException
 	 */
-	public CommandAPDU wrap(CommandAPDU capdu) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, IOException {
-        
+	public CommandAPDU wrap(CommandAPDU capdu) throws InvalidKeyException,
+			NoSuchAlgorithmException, NoSuchPaddingException,
+			IllegalBlockSizeException, BadPaddingException,
+			InvalidAlgorithmParameterException, IOException,
+			DataLengthException, ShortBufferException, IllegalStateException,
+			InvalidCipherTextException {
+
 		byte[] header = null;
 		byte lc = 0;
 		byte[] paddedheader = null;
-		byte[] do97 = null;
-		byte[] do87 = null;
-		byte[] do8E = null;
-		byte[] m = null;
-		
-        // Mask class byte and pad command header
+		DERTaggedObject do97 = null;
+		DERTaggedObject do87 = null;
+		DERTaggedObject do8E = null;
+
+		ssc++;
+
+		// Mask class byte and pad command header
 		header = new byte[4];
-		System.arraycopy(capdu, 0, header, 0, 4); //Die ersten 4 Bytes der CAPDU sind der Header
-		header[0] = (byte)(header[0]|(byte)0x0C);
-        paddedheader = addPadding(header); 
-		
-		  
-        
-        // build DO87
-        if (getAPDUStructure(capdu)==3||getAPDUStructure(capdu)==4) {
-        	do87 = buildDO87(capdu.getData().clone());
-        	lc+=do87.length;
-        }
-        
-        // build DO97
-        if (getAPDUStructure(capdu)==2||getAPDUStructure(capdu)==4) {
-        	do97 = buildDO97(capdu.getNe());
-        	lc+=do97.length;
-        }
-                
-        // M wird zur Berechnung des DO8E benötigt.
-        if (do97==null&&do87==null) {
-        	m = new byte[paddedheader.length];
-        	System.arraycopy(paddedheader, 0, m, 0, paddedheader.length);
-        } else if (do97!=null&&do87==null) {
-        	m=new byte[paddedheader.length+do97.length];
-        	System.arraycopy(paddedheader, 0, m, 0, paddedheader.length);
-        	System.arraycopy(do97, 0, m, paddedheader.length, do97.length);
-        } else if (do97==null&&do87!=null) {
-        	m=new byte[paddedheader.length+do87.length];
-        	System.arraycopy(paddedheader, 0, m, 0, paddedheader.length);
-        	System.arraycopy(do87, 0, m, paddedheader.length, do87.length);
-        } else if (do97!=null&&do87!=null) {
-        	m=new byte[paddedheader.length+do87.length+do97.length];
-        	System.arraycopy(paddedheader, 0, m, 0, paddedheader.length);
-        	System.arraycopy(do87, 0, m, paddedheader.length, do87.length);
-        	System.arraycopy(do97, 0, m, paddedheader.length+do87.length, do87.length);
-        }
-                
-        // build DO8E
-        do8E = buildDO8E(m);
-        lc+=do8E.length;
-        
-        // construct and return protected APDU
-        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        bOut.write(header);
-        bOut.write(lc);
-        if (do87!=null) bOut.write(do87);
-        if (do97!=null) bOut.write(do97);
-        bOut.write(do8E);
-        bOut.write(0);
-        
-        return new CommandAPDU(bOut.toByteArray());
-    }
-	
+		System.arraycopy(capdu.getBytes(), 0, header, 0, 4); // Die ersten 4 Bytes der
+													// CAPDU sind der Header
+		header[0] = (byte) (header[0] | (byte) 0x0C);
+		paddedheader = crypto_enc.addPadding(header);
+
+		// build DO87
+		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4) {
+			do87 = buildDO87(capdu.getData().clone());
+			lc += do87.getEncoded().length;
+		}
+
+		// build DO97
+		if (getAPDUStructure(capdu) == 2 || getAPDUStructure(capdu) == 4) {
+			do97 = buildDO97(capdu.getNe());
+			lc += do97.getEncoded().length;
+		}
+
+		// build DO8E
+		do8E = buildDO8E(paddedheader, do87, do97);
+		lc += do8E.getEncoded().length;
+
+		// construct and return protected APDU
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+		bOut.write(header);
+		bOut.write(lc);
+		if (do87 != null)
+			bOut.write(do87.getEncoded());
+		if (do97 != null)
+			bOut.write(do97.getEncoded());
+		bOut.write(do8E.getEncoded());
+		bOut.write(0);
+
+		return new CommandAPDU(bOut.toByteArray());
+	}
+
 	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws Exception {
-	       
-        byte[] responseData = null;
-        byte[] decryptedData = null;
-        int  pointer = 0;
-        
-        // Check checksums of response
-        if (verifyRAPDU(rapdu.getData())) {
-            
-            // extract the DO87
-            byte[] do87 = extractDO((byte)0x87, rapdu.getData(), pointer);
-            if (do87!=null) {
-                byte[] encryptedData = extractDOdata(do87);
-                decryptedData = Crypto.tripleDES(false, ks_enc,encryptedData);
-                decryptedData = Crypto.removePadding(decryptedData);
-                pointer = pointer+do87.length;
-            }
-            
-            // extract the DO99
-            byte[] do99 = extractDO((byte)0x99, rapdu.getData(), pointer);
-            byte[] sw = extractDOdata(do99);
-            
-            // if there was no data, only return the SW
-            if (do87!=null) {
-            	responseData = mergeByteArray(decryptedData, sw);
-            }
-            else responseData = sw.clone();
-            
-        }
-        else {
-            throw new Exception("Checksum incorrect!");
-        }
-        return new ResponseAPDU(responseData);
-    }
+
+		DERTaggedObject do87 = null;
+		DERTaggedObject do99 = null;
+		DERTaggedObject do8E = null;
+		
+		ssc++; 
+
+		int pointer = 0;
+		byte[] rapduBytes = rapdu.getData();
+		byte[] subArray = new byte[rapduBytes.length];
+
+		while (pointer < rapduBytes.length) {
+			System.arraycopy(rapduBytes, pointer, subArray, 0,
+					rapduBytes.length - pointer);
+			ASN1InputStream asn1sp = new ASN1InputStream(subArray);
+			byte[] encodedBytes = asn1sp.readObject().getEncoded();
+			
+			ASN1InputStream asn1in = new ASN1InputStream(encodedBytes);
+			
+			switch (encodedBytes[0]) {
+			case (byte) 0x87:
+				do87 = (DERTaggedObject)asn1in.readObject();
+				break;
+			case (byte) 0x99:
+				do99 = (DERTaggedObject)asn1in.readObject();
+				break;
+			case (byte) 0x8E:
+				do8E = (DERTaggedObject)asn1in.readObject();
+			}
+
+			pointer += encodedBytes.length;
+		}
+		
+		if (do99==null) throw new Exception("Secure Messaging error"); //DO99 is mandatory and only absent if SM error occurs
+		
+		//Construct K (SSC||DO87||DO99)
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		if(do87!=null) bout.write(do87.getEncoded());
+		bout.write(do99.getEncoded());
+		
+		crypto_mac.init(ks_mac, ssc);
+		byte[] cc = crypto_mac.getMAC(bout.toByteArray());
+		
+		byte[] do8eData = ((DEROctetString)do8E.getObject()).getOctets();
+		
+		if (!java.util.Arrays.equals(cc, do8eData)) throw new Exception("Checksum is incorrect!\nCC: "+HexString.bufferToHex(cc)+"\nDO8E: "+HexString.bufferToHex(do8eData));
+		
+		//Decrypt DO87
+		crypto_enc.init(ks_enc, ssc);
+		byte[] value = ((DEROctetString)do87.getObject()).getOctets();
+		byte[] do87Data = new byte[value.length-1];
+		System.arraycopy(value, 1, do87Data, 0, do87Data.length);
+		byte[] data = crypto_enc.decrypt(do87Data);
+		
+		//Build unwrapped RAPDU
+		byte[] unwrappedAPDUBytes = new byte[data.length+2];
+		System.arraycopy(data, 0, unwrappedAPDUBytes, 0, data.length);
+		byte[] do99Data = ((DEROctetString)do99.getObject()).getOctets();
+		System.arraycopy(do99Data, 0, unwrappedAPDUBytes, data.length, do99Data.length);
+		
+		return new ResponseAPDU(unwrappedAPDUBytes);
+	}
+
+	// Pad data, encrypt data with KS.ENC and build DO87
+	private DERTaggedObject buildDO87(byte[] data) throws DataLengthException,
+			ShortBufferException, IllegalBlockSizeException,
+			BadPaddingException, IllegalStateException,
+			InvalidCipherTextException, IOException {
+
+		crypto_enc.init(ks_enc, ssc);
+		byte[] enc_data = crypto_enc.encrypt(data);
+
+		return new DERTaggedObject(false, 7, new DEROctetString(addOne(enc_data)));
+
+	}
 	
-	/** Merge two byte array to a new big one.
-    *
-    * @param a1 Source array 1
-    * @param a2 Source array 2
-    * @return New byte array which contains data from the two source arrays.
-    */
-   private byte[] mergeByteArray(byte[] a1, byte[] a2) {
-       byte[] newArray = new byte[ a1.length + a2.length ];
-       System.arraycopy( a1, 0, newArray, 0, a1.length );
-       System.arraycopy( a2, 0, newArray, a1.length, a2.length );
-       return newArray;
-   }
+	private byte[] addOne(byte[] data) {
+		byte[] ret = new byte[data.length+1];
+		System.arraycopy(data, 0, ret, 1, data.length);
+		ret[0] = 1;
+		return ret;
+	}
+
+	private DERTaggedObject buildDO8E(byte[] paddedHeader, DERTaggedObject do87, DERTaggedObject do97)
+			throws IOException, DataLengthException, ShortBufferException,
+			IllegalBlockSizeException, BadPaddingException,
+			IllegalStateException, InvalidCipherTextException {
+		
+		ByteArrayOutputStream m = new ByteArrayOutputStream();
+		
+		m.write(paddedHeader);
+		if (do87 != null)
+			m.write(do87.getEncoded());
+		if (do97 != null)
+			m.write(do97.getEncoded());
+		
+		crypto_mac.init(ks_mac, ssc);
+		return new DERTaggedObject(false, 0x0E, new DEROctetString(crypto_mac.getMAC(m.toByteArray())));
+	}
+
+	private DERTaggedObject buildDO97(int le) {
+		return new DERTaggedObject(false, 0x17, new DERInteger(le));
+	}
 
 	/**
-     * Checks the checksum of the given Response APDU
-     * @param rapdu The RepsonseAPDU
-     * @return Returns true if checksum is correct, otherwise this method returns a false
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidKeyException 
-     */
-    private boolean verifyRAPDU(byte[] rapdu) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-        int pointer = 0;        
-        
-        // extract the DO87
-        byte[] do87 = extractDO((byte)0x87, rapdu, pointer);        
-        
-        if (do87!=null) pointer = pointer+do87.length; 
-                
-        // extract the DO99
-        byte[] do99 = extractDO((byte)0x99, rapdu, pointer);
-        
-        if (do87!=null) pointer = pointer+do99.length; 
-        
-        // extract the DO8E
-        byte[] do8E = extractDO((byte)0x8E, rapdu, pointer);
-        
-        ssc = incByteArray(ssc);
-        
-        byte[] k = null; 
-        
-        if (do87!=null) {
-            k = mergeByteArray(ssc, do87);
-            k = mergeByteArray(k, do99);
-        }
-        else k = mergeByteArray(ssc, do99);        
-                
-        //compute MAC with KSMAC
-        byte[] cc2 = Crypto.computeMAC(ks_mac, k);
-        
-        //compare cc' with data of DO8E of RAPDU
-        if (Arrays.equals(cc2,extractDOdata(do8E))) return true;
-        else return false;
-    }
-    
-    private byte[] extractDOdata(byte[] dataObject) {
-        byte[] data = null;
-        if (dataObject[0]==(byte)0x87) {
-            
-            int len = asn1DataLength(dataObject,0);
-                      
-            int startIndex = 0;
-            if (toUnsignedInt(dataObject[1]) <= 0x7F) startIndex=3;
-            else if (toUnsignedInt(dataObject[1]) == 0x81) startIndex=4;
-            else if (toUnsignedInt(dataObject[1]) == 0x82) startIndex=5;
-            data = new byte[len-1];
-            System.arraycopy(dataObject,startIndex,data,0,data.length);
-        }
-        else {
-            data = new byte[toUnsignedInt(dataObject[1])];
-            System.arraycopy(dataObject,2,data,0,data.length);
-        }
-        return data;
-    }
-    
-    private int asn1DataLength(byte[] asn1Data, int startByte) {
-        if (toUnsignedInt(asn1Data[(startByte+1)]) <= 0x7f) 
-            return toUnsignedInt(asn1Data[(startByte+1)]);
-        
-        if (toUnsignedInt(asn1Data[(startByte+1)]) == 0x81) 
-            return toUnsignedInt(asn1Data[(startByte+2)]);
-        
-        if (toUnsignedInt(asn1Data[(startByte+1)]) == 0x82) 
-            return (toUnsignedInt(asn1Data[(startByte+2)])*256+toUnsignedInt(asn1Data[(startByte+3)]));
-        
-	return 0;
-    }
-    
-    /**Converts a byte into a unsigned integer value.
-    *
-    * @param value
-    * @return
-    */
-   private int toUnsignedInt(byte value) {
-       return (value & 0x7F) + (value < 0 ? 128 : 0);
-   }
-    
-    private byte[] extractDO(byte doID, byte[] rapdu, int startByte) {
-        for (int i = startByte;i<rapdu.length;i++) {
-            if (rapdu[i]==doID) {
-                int len = asn1DataLength(rapdu.clone(), i);
-                
-                int addlen = 2;
-                if (rapdu[i+1] == (byte)0x81) addlen = 3;
-                else if (rapdu[i+1] == (byte)0x82) addlen = 4;
-                
-                byte[] dataObject = new byte[(len+addlen)];
-                
-                System.arraycopy(rapdu,i,dataObject,0,dataObject.length);
-                
-                return dataObject;
-            }
-        }
-        return null;
-    }
-	
-	//Pad data, encrypt data with KS.ENC and build DO87
-    private byte[] buildDO87(byte[] data) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
-        //b
-        data = addPadding(data);
-        
-        //c
-        byte[] encrypted_data = Crypto.tripleDES(true, ks_enc, data);
-        
-        //d
-        byte[] do87 = new byte[encrypted_data.length+3];
-        byte[] header = new byte[]{(byte)0x87, (byte)(encrypted_data.length+1), (byte)0x01};
-        System.arraycopy(header,0,do87,0,header.length);
-        System.arraycopy(encrypted_data,0,do87,3,encrypted_data.length);
-        return do87;
-    }
-	
-	private byte[] buildDO8E(byte[] m) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-		byte[] cc = buildCC(m);        
-        byte[] do8E = new byte[cc.length+2];
-        byte[] header = new byte[]{(byte)0x8E, (byte)(cc.length)};
-        System.arraycopy(header,0,do8E,0,header.length);
-        System.arraycopy(cc,0,do8E,2,cc.length);
-        return do8E;
-    }
-	
-	private byte[] buildDO97(int le) {
-        return new byte[]{(byte)0x97, (byte)0x01, (byte)le};
-    }
-	
-    // Build MAC of data
-    private byte[] buildCC(byte[] m) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException {
-                
-        ssc = incByteArray(ssc);
-        byte[] n = new byte[ssc.length+m.length];
-        System.arraycopy(ssc,0,n,0,ssc.length);
-        System.arraycopy(m,0,n,ssc.length,m.length);
-        byte[] cc = Crypto.computeMAC(ks_mac, n);
-        return cc;
-    }
-    
-    private byte[] incByteArray(byte[] array) {
-        for (int i=array.length-1;i>=1;i--) {
-            if (array[i] == (byte)0xFF) {
-                array[i] = (byte)0x00;
-            }
-            else {
-                byte a = array[i];
-                a++;
-                array[i] = a; 
-                return array;
-            }
-        }
-        return array;
-    }
-    
-    /** Bestimmt welchem Case die CAPDU enstpricht. (Siehe ISO/IEC 7816-3 Kapitel 12.1)
+	 * Bestimmt welchem Case die CAPDU enstpricht. (Siehe ISO/IEC 7816-3 Kapitel
+	 * 12.1)
+	 * 
 	 * @return Strukurtype (1 = CASE1, ...)
 	 */
 	private byte getAPDUStructure(CommandAPDU capdu) {
 		byte[] cardcmd = capdu.getBytes();
-				
-		if (cardcmd.length==4) return 1;
-		if (cardcmd.length==5) return 2;
-		if (cardcmd.length==(5+cardcmd[4]) && cardcmd[4]!=0) return 3;
-		if (cardcmd.length==(6+cardcmd[4]) && cardcmd[4]!=0) return 4;
-		if (cardcmd.length==7 && cardcmd[4]==0)	return 5;
-		if (cardcmd.length==(7+cardcmd[5]*256+cardcmd[6]) && cardcmd[4]==0 && (cardcmd[5]!=0 || cardcmd[6]!=0))	return 6;
-		if (cardcmd.length==(9+cardcmd[5]*256+cardcmd[6]) && cardcmd[4]==0 && (cardcmd[5]!=0 || cardcmd[6]!=0))	return 7;
+
+		if (cardcmd.length == 4)
+			return 1;
+		if (cardcmd.length == 5)
+			return 2;
+		if (cardcmd.length == (5 + cardcmd[4]) && cardcmd[4] != 0)
+			return 3;
+		if (cardcmd.length == (6 + cardcmd[4]) && cardcmd[4] != 0)
+			return 4;
+		if (cardcmd.length == 7 && cardcmd[4] == 0)
+			return 5;
+		if (cardcmd.length == (7 + cardcmd[5] * 256 + cardcmd[6])
+				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
+			return 6;
+		if (cardcmd.length == (9 + cardcmd[5] * 256 + cardcmd[6])
+				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
+			return 7;
 		return 0;
 	}
-	
-	/**
-	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00
-	 * bis die Länge des übergebenen Byte-Array ein Vielfaches von 8 ist. Dies
-	 * ist die ISO9797-1 Padding-Methode 2.
-	 * 
-	 * @param data
-	 *            Das Byte-Array welches aufgefüllt werden soll.
-	 * @return Das gefüllte Byte-Array.
-	 */
-	private byte[] addPadding(byte[] data) {
-
-		int i = 0;
-		byte[] tempdata = new byte[data.length + 8];
-
-		for (i = 0; i < data.length; i++) {
-			tempdata[i] = data[i];
-		}
-
-		tempdata[i] = (byte) 0x80;
-
-		for (i = i + 1; ((i) % 8) != 0; i++) {
-			tempdata[i] = (byte) 0;
-		}
-
-		byte[] filledArray = new byte[i];
-		System.arraycopy(tempdata, 0, filledArray, 0, i);
-		return filledArray;
-	}
-
-	/**
-	 * Entfernt aus dem übergebenen Byte-Array das Padding nach ISO9797-1
-	 * Padding-Methode 2. Dazu werden aus dem übergebenen Byte-Array von hinten
-	 * beginnend Bytes mit dem Wert 0x00 gelöscht, sowie die der Wert 0x80 der
-	 * das Padding markiert.
-	 * 
-	 * @param Byte
-	 *            -Array aus dem das Padding entfernt werden soll
-	 * @return bereinigtes Byte-Array
-	 */
-	private byte[] removePadding(byte[] b) {
-		byte[] rd = null;
-		int i = b.length - 1;
-		do {
-			i--;
-		} while (b[i] == (byte) 0x00);
-
-		if (b[i] == (byte) 0x80) {
-			rd = new byte[i];
-			System.arraycopy(b, 0, rd, 0, rd.length);
-			return rd;
-		}
-		return b;
-	}
-
 }

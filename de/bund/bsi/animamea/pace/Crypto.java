@@ -24,10 +24,14 @@ public abstract class AmCryptoProvider {
 	}
 	
 	public abstract void decrypt(InputStream in, OutputStream out) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
+<<<<<<< HEAD:de/bund/bsi/animamea/pace/Crypto.java
 	public abstract byte[] encrypt(byte[] in) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
 =======
 public class Crypto {
 >>>>>>> 416cc8a... AmAESCrypto-Test:de/bund/bsi/animamea/pace/Crypto.java
+=======
+	public abstract void encrypt(InputStream in, OutputStream out) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException, DataLengthException, IllegalStateException, InvalidCipherTextException, IOException;
+>>>>>>> 7a40587... AmAESCrypto-Test2:de/bund/bsi/animamea/crypto/AmCryptoProvider.java
 
 	/**
 	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00

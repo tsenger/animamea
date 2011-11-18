@@ -3,134 +3,137 @@
  */
 package de.bund.bsi.animamea.crypto;
 
-import java.io.ByteArrayOutputStream;
+import static de.bund.bsi.animamea.tools.Converter.longToByteArray;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Security;
-import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.ShortBufferException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.crypto.Mac;
+import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.macs.CMac;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
+
+import de.bund.bsi.animamea.tools.Converter;
 
 /**
  * @author Tobias Senger (tobias.senger@bsi.bund.de)
  * 
  */
 public class AmAESCrypto extends AmCryptoProvider {
+
+	private byte[] keyBytes = null;
+	private KeyParameter keyP = null;
+	private byte[] IV = null;
+	private byte[] sscBytes = null;
 	
-	public AmAESCrypto() {
-		Security.addProvider(new BouncyCastleProvider());
-	}
-
-	Cipher encryptCipher = null;
-	Cipher decryptCipher = null;
-
-	// Buffer used to transport the bytes from one stream to another
-	byte[] buf = new byte[16]; // input buffer
-	byte[] obuf = new byte[512]; // output buffer
-	// The key
-	byte[] key = null;
-	// The initialization vector needed by the CBC mode
-	byte[] IV = null;
-
-	// The default block size
 	public static int blockSize = 16;
 
+	
+	private void initCiphers(byte[] key, byte[] iv) {
 
-	public void initCiphers(byte[] keyBytes, byte[] iv) throws NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+		// get the keyBytes
+		keyBytes = new byte[key.length];
+		System.arraycopy(key, 0, keyBytes, 0, key.length);
+		
+		keyP = new KeyParameter(keyBytes);
 
-		 //1. create the cipher using Bouncy Castle Provider
-	       encryptCipher =
-	               Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
-	       //2. create the key
-	       SecretKey keyValue = new SecretKeySpec(keyBytes,"AES");
-	       //3. create the IV
-	       AlgorithmParameterSpec IVspec = new IvParameterSpec(iv);
-	       //4. init the cipher
-	       encryptCipher.init(Cipher.ENCRYPT_MODE, keyValue, IVspec);
+		// get the IV
+		IV = new byte[blockSize];
+		System.arraycopy(iv, 0, IV, 0, iv.length);
+		
+		// create the ciphers
+		// AES block cipher in CBC mode with ISO7816d4 padding
+		encryptCipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+				new AESFastEngine()), new ISO7816d4Padding() );
 
-	       //1 create the cipher
-	       decryptCipher =
-	               Cipher.getInstance("AES/CBC/PKCS5Padding", "BC");
-	       //2. the key is already created
-	       //3. the IV is already created
-	       //4. init the cipher
-	       decryptCipher.init(Cipher.DECRYPT_MODE, keyValue, IVspec);
+		decryptCipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(
+				new AESFastEngine()), new ISO7816d4Padding() );
+
+		// create the IV parameter
+		ParametersWithIV parameterIV = new ParametersWithIV(keyP, IV);
+
+		encryptCipher.init(true, parameterIV);
+		decryptCipher.init(false, parameterIV);
 	}
-
+	
+	/**
+	 * Initialisiert die Crypto-Engine mit dem angegebenen Schlüssel und einem
+	 * aus dem Send Sequence Counter (SSC) berechneten Initialisierungsvektor
+	 * (IV).
+	 * 
+	 * @param keyBytes
+	 *            Schlüssel
+	 * @param ssc
+	 *            Send Sequence Counter
+	 */
 	@Override
-	public byte[] encrypt(byte[] in)
-			throws ShortBufferException, IllegalBlockSizeException,
-			BadPaddingException, DataLengthException, IllegalStateException,
-			InvalidCipherTextException, IOException {
-		// Bytes written to out will be encrypted
-		// Read in the cleartext bytes from in InputStream and
-		// write them encrypted to out OutputStream
-		// optionaly put the IV at the beginning of the cipher file
-		// out.write(IV, 0, IV.length);
-
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-        CipherOutputStream cOut = new CipherOutputStream(bOut, encryptCipher);
-
-       
-                cOut.write(in);
-            
-            cOut.close();
-     
-
-        return bOut.toByteArray();
-
-	}
-
-	@Override
-	public void decrypt(InputStream in, OutputStream out)
-			throws ShortBufferException, IllegalBlockSizeException,
-			BadPaddingException, DataLengthException, IllegalStateException,
-			InvalidCipherTextException, IOException {
-		// Bytes read from in will be decrypted
-		// Read in the decrypted bytes from in InputStream and and
-		// write them in cleartext to out OutputStream
-
-		// get the IV from the file
-		// DO NOT FORGET TO reinit the cipher with the IV
-		// in.read(IV,0,IV.length);
-		// this.InitCiphers();
-
-		int noBytesRead = 0; // number of bytes read from input
-		int noBytesProcessed = 0; // number of bytes processed
-
-		while ((noBytesRead = in.read(buf)) >= 0) {
-			// System.out.println(noBytesRead +" bytes read");
-//			noBytesProcessed = decryptCipher.processBytes(buf, 0, noBytesRead,
-//					obuf, 0);
-			// System.out.println(noBytesProcessed +" bytes processed");
-			out.write(obuf, 0, noBytesProcessed);
+	public void init(byte[] keyBytes, long ssc) {
+		
+		sscBytes = Converter.longToByteArray(ssc);
+		
+		initCiphers(keyBytes, new byte[blockSize]);
+		byte[] iv = null;
+		try {
+			iv = encrypt(longToByteArray(ssc));
+		} catch (DataLengthException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ShortBufferException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidCipherTextException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		// System.out.println(noBytesRead +" bytes read");
-		noBytesProcessed = decryptCipher.doFinal(obuf, 0);
-		// System.out.println(noBytesProcessed +" bytes processed");
-		out.write(obuf, 0, noBytesProcessed);
+		initCiphers(keyBytes, iv);
+	}
+	
 
-		out.flush();
+	/* (non-Javadoc)
+	 * @see de.bund.bsi.animamea.crypto.AmCryptoProvider#getMAC(byte[])
+	 */
+	@Override
+	public byte[] getMAC(byte[] data) {
+		
+		byte[] n = new byte[8+data.length];
+		System.arraycopy(sscBytes, 0, n, 0, 8);
+		System.arraycopy(data, 0, n, 8, data.length);
+		
+		BlockCipher cipher = new AESFastEngine();
+        Mac mac = new CMac(cipher, 64); //TODO Padding der Daten 
+        
+        ParametersWithIV parameterIV = new ParametersWithIV(keyP, IV);
+        mac.init(parameterIV);
+        
+        mac.update(n, 0, n.length);
 
-		in.close();
-		out.close();
+        byte[] out = new byte[8];
+
+        mac.doFinal(out, 0);
+        
+		return out;
 	}
 
 }
