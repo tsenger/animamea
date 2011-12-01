@@ -105,8 +105,6 @@ public class PaceECDH extends Pace{
 
 
 
-
-
 	/**
 	 * Erzeugt aus dem Public Key 1 der Karte (PICC_PK_Y1) und dem Secret Key
 	 * PCD_SK_x1 das erste Shared Secret P

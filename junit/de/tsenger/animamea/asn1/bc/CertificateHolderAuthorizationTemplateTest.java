@@ -3,7 +3,7 @@
  */
 package junit.de.tsenger.animamea.asn1.bc;
 
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_AT;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_AT;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -11,8 +11,8 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.asn1.bc.CertificateHolderAuthorizationTemplate;
-import de.tsenger.animamea.asn1.bc.DiscretionaryData;
+import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
+import de.tsenger.animamea.asn1.DiscretionaryData;
 import de.tsenger.animamea.tools.HexString;
 
 /**

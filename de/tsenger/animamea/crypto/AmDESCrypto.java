@@ -106,4 +106,24 @@ public class AmDESCrypto extends AmCryptoProvider {
 		return s;
 	}
 
+
+	/* (non-Javadoc)
+	 * @see de.tsenger.animamea.crypto.AmCryptoProvider#getMAC(byte[], byte[])
+	 */
+	@Override
+	public byte[] getMAC(byte[] key, byte[] data) {
+		BlockCipher cipher = new DESEngine();
+        Mac mac = new ISO9797Alg3Mac(cipher, 64, new ISO7816d4Padding());
+        
+     	KeyParameter keyP = new KeyParameter(key);
+        mac.init(keyP);        
+        mac.update(data, 0, data.length);
+
+        byte[] out = new byte[8];
+
+        mac.doFinal(out, 0);
+        
+		return out;
+	}
+
 }

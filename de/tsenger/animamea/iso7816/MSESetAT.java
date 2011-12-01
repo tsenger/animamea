@@ -11,9 +11,9 @@ import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-import de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers;
-import de.tsenger.animamea.asn1.bc.CertificateHolderAuthorizationTemplate;
-import de.tsenger.animamea.asn1.bc.DiscretionaryData;
+import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
+import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
+import de.tsenger.animamea.asn1.DiscretionaryData;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -143,7 +143,7 @@ public class MSESetAT {
 		bos.write((byte) lc);
 		bos.write(do80CMR,0,do80CMR.length);
 		bos.write(do83KeyReference,0,do83KeyReference.length);
-		bos.write(do84PrivateKeyReference,0,do84PrivateKeyReference.length);
+		if (do84PrivateKeyReference!=null) bos.write(do84PrivateKeyReference,0,do84PrivateKeyReference.length);
 		bos.write(do7F4C_CHAT,0,do7F4C_CHAT.length);
 		return bos.toByteArray();
 	}

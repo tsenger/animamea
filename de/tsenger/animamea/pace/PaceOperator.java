@@ -3,30 +3,34 @@
  */
 package de.tsenger.animamea.pace;
 
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_GM_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_256;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_IM_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_256;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_GM_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_256;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_IM_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_256;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_GM;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_GM_3DES_CBC_CBC;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_128;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_192;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_GM_AES_CBC_CMAC_256;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_3DES_CBC_CBC;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_128;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_192;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_256;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_3DES_CBC_CBC;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_128;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_192;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_256;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_3DES_CBC_CBC;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_128;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_192;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_256;
 import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp1024_160;
 import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_224;
 import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_256;
 
+import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
@@ -35,13 +39,16 @@ import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.KeyDerivationFunction;
-import de.tsenger.animamea.asn1.bc.BSIObjectIdentifiers;
-import de.tsenger.animamea.asn1.bc.PaceDomainParameterInfo;
-import de.tsenger.animamea.asn1.bc.PaceInfo;
+import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
+import de.tsenger.animamea.asn1.DynamicAuthenticationData;
+import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
+import de.tsenger.animamea.asn1.PaceInfo;
+import de.tsenger.animamea.asn1.PublicKey;
 import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
@@ -71,14 +78,13 @@ public class PaceOperator {
 		protocolOIDString = pi.getProtocolOID();		
 		passwordRef = pwRef;
 		
-		byte[] passwordBytes = null; 
 		if (passwordRef==1) passwordBytes = calcSHA1(password.getBytes());
 		else passwordBytes = password.getBytes();
 				
 		getStandardizedDomainParameters(pi.getParameterId());
 		
-		if (protocolOIDString.startsWith("id_PACE_DH")) pace = new PaceDH(dhParameters);
-		else if (protocolOIDString.startsWith("id_PACE_ECDH")) pace = new PaceECDH(ecdhParameters);
+		if (protocolOIDString.startsWith(id_PACE_DH_GM.toString())||protocolOIDString.startsWith(id_PACE_DH_IM.toString())) pace = new PaceDH(dhParameters);
+		else if (protocolOIDString.startsWith(id_PACE_ECDH_GM.toString())||protocolOIDString.startsWith(id_PACE_ECDH_IM.toString())) pace = new PaceECDH(ecdhParameters);
 		
 		getCryptoInformation(pi);
 	}
@@ -89,7 +95,7 @@ public class PaceOperator {
 		protocolOIDString = pi.getProtocolOID();
 		passwordRef = pwRef;
 				
-		if (pi.getParameterId() <= 31)
+		if (pi.getParameterId()>=0 && pi.getParameterId()<= 31)
 			throw new Exception("ParameterID number 0 to 31 is used for standardized domain parameters!");
 		if (pi.getParameterId() != pdpi.getParameterId())
 			throw new Exception("PaceInfo doesn't match the PaceDomainParameterInfo");
@@ -99,35 +105,130 @@ public class PaceOperator {
 		
 		getProprietaryDomainParameters(pdpi);
 		
-		if (protocolOIDString.startsWith("id_PACE_DH")) pace = new PaceDH(dhParameters);
-		else if (protocolOIDString.startsWith("id_PACE_ECDH")) pace = new PaceECDH(ecdhParameters);
+		if (protocolOIDString.startsWith(id_PACE_DH_GM.toString())||protocolOIDString.startsWith(id_PACE_DH_IM.toString())) pace = new PaceDH(dhParameters);
+		else if (protocolOIDString.startsWith(id_PACE_ECDH_GM.toString())||protocolOIDString.startsWith(id_PACE_ECDH_IM.toString())) pace = new PaceECDH(ecdhParameters);
 		
 		getCryptoInformation(pi);
 	}
 	
 	
-	public SecureMessaging performPace(AmCardHandler ch) throws CardException {
+	public SecureMessaging performPace(AmCardHandler ch) throws Exception {
 		cardHandler = ch;
+		
+		
 		//send MSE:SetAT
 		ResponseAPDU rapdu = ch.transceive(new CommandAPDU(getMSESetAT(2)));
+		//TODO in eigene Methode auslagern und Fehlermeldung von MSE:SetAT abfangen
 		
-		//send first GA and get 
-		byte[] nonce_z = null; //TODO Von der Karte abfragen.
-		byte[] nonce_s = decryptNonce(passwordBytes, nonce_z);
+		//send first GA and get nonce
+		byte[] nonce_z = getNonce().getEncryptedNonce80();
+		byte[] nonce_s = decryptNonce(nonce_z);
 		byte[] X1 = pace.getX1(nonce_s);
+		
 		// X1 zur Karte schicken und Y1 empfangen
-		byte[] Y1 = null; //TODO von der Karte abfragen
+		byte[] Y1 = mapNonce(X1).getMappingData82(); 
+		
 		byte[] X2 = pace.getX2(Y1);
 		// X2 zur Karte schicken und Y2 empfangen.
-		byte[] Y2 = null; //TODO von der KArte abfragen.
+		byte[] Y2 = performKeyAgreement(X2).getEphemeralPK84();
+
 		byte[] S = pace.getSharedSecret_K(Y2);
-		// Authentication Token T_PCD berechnen und zur Karte schicken
-		// Wenn Karte keinen Fehler liefert wurde PACE erfolgreich durchgeführt
 		byte[] kenc = getKenc(S);
 		byte[] kmac  = getKmac(S);
+		
+		// Authentication Token T_PCD berechnen 
+		PublicKey pkpcd = new PublicKey(protocolOIDString, Y2);	
+		byte[] tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
+		
+		// Authentication Token zur Karte schicken
+		byte[] tpicc = performMutualAuthentication(tpcd).getAuthToken86();
+		
+		// Authentication Token T_PICC berechnen 
+		PublicKey pkpicc = new PublicKey(protocolOIDString, X2);
+		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());
+		
+		//Prüfe ob tpicc = t'picc=MAC(kmac,X2)
+		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new Exception("Authentication Tokens are different");
+		
+		
+		
 		return null;
 	}
 	
+	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws Exception {
+		
+		DynamicAuthenticationData dad85 = new DynamicAuthenticationData();
+		dad85.setAuthenticationToken85(authToken);
+		byte[] dadBytes = dad85.getDEREncoded();
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		bos.write(Hex.decode("00860000"));
+		bos.write(dadBytes.length);
+		bos.write(dadBytes);
+		bos.write(0);
+		
+		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
+		ResponseAPDU resp = cardHandler.transceive(capdu);
+		if (resp.getData()==null) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
+		
+		DynamicAuthenticationData dad = new DynamicAuthenticationData();
+		dad.decode(resp.getData());
+		return dad;
+	}
+	
+	
+	/**
+	 * @return
+	 * @throws Exception 
+	 */
+	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws Exception {
+		
+		DynamicAuthenticationData dad83 = new DynamicAuthenticationData();
+		dad83.setEphemeralPK83(ephemeralPK);
+		byte[] dadBytes = dad83.getDEREncoded();
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		bos.write(Hex.decode("10860000"));
+		bos.write(dadBytes.length);
+		bos.write(dadBytes);
+		bos.write(0);
+		
+		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
+		ResponseAPDU resp = cardHandler.transceive(capdu);
+		if (resp.getData()==null) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
+		
+		DynamicAuthenticationData dad = new DynamicAuthenticationData();
+		dad.decode(resp.getData());
+		return dad;
+	}
+
+
+	/**
+	 * @return
+	 * @throws Exception 
+	 */
+	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws Exception {
+				
+		DynamicAuthenticationData dad81 = new DynamicAuthenticationData();
+		dad81.setMappingData81(mappingData);
+		byte[] dadBytes = dad81.getDEREncoded();
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		bos.write(Hex.decode("10860000"));
+		bos.write(dadBytes.length);
+		bos.write(dadBytes);
+		bos.write(0);
+		
+		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
+		ResponseAPDU resp = cardHandler.transceive(capdu);
+		if (resp.getData()==null) throw new Exception("Map nonce returns: "+HexString.bufferToHex(resp.getBytes()));
+		
+		DynamicAuthenticationData dad = new DynamicAuthenticationData();
+		dad.decode(resp.getData());
+		return dad;
+	}
+
+
 	private byte[] getMSESetAT(int terminalType) {
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_PACE);
@@ -142,20 +243,26 @@ public class PaceOperator {
 		return mse.getBytes();
 	}
 	
-	private byte[] getNonce() throws Exception {
+	/**
+	 * Send a plain General Authentication Command to get a encrypted nonce from the card.
+	 * @return
+	 * @throws Exception
+	 */
+	private DynamicAuthenticationData getNonce() throws Exception {
 		CommandAPDU capdu = new CommandAPDU(Hex.decode("10860000027C0000"));
-		ResponseAPDU resp = card.sendCommandAPDU(capdu);
-		if (resp.data()==null) throw new Exception("Get nonce returns: "+HexString.bufferToHex(resp.getBytes()));
+		ResponseAPDU resp = cardHandler.transceive(capdu);
+		if (resp.getData()==null) throw new Exception("Get nonce returns: "+HexString.bufferToHex(resp.getBytes()));
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.data());
-		return dad.getEncryptedNonce80();
+		dad.decode(resp.getData());
+		return dad;
 	}
 	
-	private byte[] decryptNonce(byte[] pwBytes, byte[] z) {
+	//TODO change to private
+	public byte[] decryptNonce(byte[] z) {
 	
 		byte[] derivatedPassword = null;
 		try {
-			derivatedPassword = getKey(keyLength, pwBytes, 3);
+			derivatedPassword = getKey(keyLength, passwordBytes, 3);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -163,8 +270,8 @@ public class PaceOperator {
 		return crypto.decryptBlock(derivatedPassword, z);
 	}
 	
-	
-	private byte[] getKenc(byte[] sharedSecret_S){
+	//TODO change to private
+	public byte[] getKenc(byte[] sharedSecret_S){
 		try {
 			return getKey(keyLength, sharedSecret_S, 1);
 		} catch (Exception e) {
@@ -174,7 +281,8 @@ public class PaceOperator {
 		return null;
 	}
 	
-	private byte[] getKmac(byte[] sharedSecret_S){
+	//TODO change to private
+	public byte[] getKmac(byte[] sharedSecret_S){
 		try {
 			return getKey(keyLength, sharedSecret_S, 2);
 		} catch (Exception e) {
@@ -290,28 +398,28 @@ public class PaceOperator {
 	 */
 	private void getCryptoInformation(PaceInfo pi) {
 		String protocolOIDString = pi.getProtocolOID();
-		if (protocolOIDString.equals(id_PACE_DH_GM_3DES_CBC_CBC)
-				|| protocolOIDString.equals(id_PACE_DH_IM_3DES_CBC_CBC)
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_3DES_CBC_CBC)
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_3DES_CBC_CBC)) {
+		if (protocolOIDString.equals(id_PACE_DH_GM_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_3DES_CBC_CBC.toString())) {
 			keyLength = 112;
 			crypto = new AmDESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_128)
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_128)
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_128)
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128)) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128.toString())) {
 			keyLength = 128;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_192)
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_192)
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_192)
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192)) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192.toString())) {
 			keyLength = 192;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_256)
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_256)
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_256)
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256)) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256.toString())) {
 			keyLength = 256;
 			crypto = new AmAESCrypto();
 		}

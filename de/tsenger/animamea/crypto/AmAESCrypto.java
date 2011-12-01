@@ -29,6 +29,10 @@ import de.tsenger.animamea.tools.Converter;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
+/**
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class AmAESCrypto extends AmCryptoProvider {
 
 	private byte[] keyBytes = null;
@@ -128,6 +132,26 @@ public class AmAESCrypto extends AmCryptoProvider {
         mac.doFinal(out, 0);
         
 		return out;
+	}
+	
+	/* (non-Javadoc)
+	 * @see de.tsenger.animamea.crypto.AmCryptoProvider#getMAC(byte[], byte[])
+	 */
+	@Override
+	public byte[] getMAC(byte[] key, byte[] data) {
+		BlockCipher cipher = new AESFastEngine();
+        Mac mac = new CMac(cipher, 64); //TODO Padding der Daten 
+        
+        KeyParameter keyP = new KeyParameter(key);
+        mac.init(keyP);
+        
+        mac.update(data, 0, data.length);
+
+        byte[] out = new byte[8];
+
+        mac.doFinal(out, 0);
+        
+        return out;
 	}
 	
 	/**

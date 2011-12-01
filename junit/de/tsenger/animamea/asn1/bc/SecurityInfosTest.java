@@ -12,7 +12,7 @@ import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.asn1.bc.SecurityInfos;
+import de.tsenger.animamea.asn1.SecurityInfos;
 
 /**
 *

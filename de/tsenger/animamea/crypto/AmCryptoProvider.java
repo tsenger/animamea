@@ -43,6 +43,15 @@ public abstract class AmCryptoProvider {
 	public abstract void init(byte[] keyBytes, long ssc);
 	
 	public abstract byte[] decryptBlock(byte[] key, byte[] z);
+	
+	/**
+	 * Berechnet den Mac der übergebenen Daten ohne vorherige Initialisierung (@see #init(byte[], long). 
+	 * Es wird daher kein SSC benötigt.
+	 * @param key Schlüssel
+	 * @param data Die Daten über die der MAC gebildet werden soll.
+	 * @return MAC
+	 */
+	public abstract byte[] getMAC(byte[] key, byte[] data);
 
 	/** 
 	 * Berechnet den Message Authentication Code (MAC) aus dem übergebenen ByteArray.

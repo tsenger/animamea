@@ -74,7 +74,7 @@ public class Converter {
 	 * muss den Wert 0x04 enthalten (uncompressed point).
 	 * 
 	 * @param value
-	 *            Byte Array der Form {0x04, x-Bytes[], y-Bytes[]}
+	 *            Byte Array der Form {0x04 || x-Bytes[] || y-Bytes[]}
 	 * @param curve
 	 *            Die Kurve auf der der Punkt liegen soll.
 	 * @return Point generiert aus den Input-Daten

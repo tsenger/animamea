@@ -11,6 +11,8 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
+import de.tsenger.animamea.tools.HexString;
+
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  *
@@ -21,7 +23,10 @@ public class AmCardHandler {
 	private CardChannel channel = null;
 	
 	public ResponseAPDU transceive(CommandAPDU capdu) throws CardException {
-		return channel.transmit(capdu);
+		System.out.println("<"+HexString.bufferToHex(capdu.getBytes()));
+		ResponseAPDU resp = channel.transmit(capdu);
+		System.out.println(">"+HexString.bufferToHex(resp.getBytes())+"\n");
+		return resp;
 	}
 	
 	/** Establish connection to terminal and card on terminal.

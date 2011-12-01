@@ -7,10 +7,11 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
+import org.bouncycastle.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.asn1.bc.DiscretionaryData;
+import de.tsenger.animamea.asn1.DiscretionaryData;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -32,14 +33,14 @@ public class DiscretionaryDataTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.asn1.bc.DiscretionaryData#getEncoded()}.
+	 * Test method for {@link de.tsenger.animamea.asn1.DiscretionaryData#getEncoded()}.
 	 * @throws IOException 
 	 */
 	@Test
 	public void testGetEncoded() throws IOException {
 		System.out.println(HexString.bufferToHex(dd.getEncoded()));
 		
-		assertTrue(dd.getEncoded().equals(HexString.hexToBuffer("53050000000110")));
+		assertTrue(Arrays.areEqual(dd.getEncoded(), HexString.hexToBuffer("53050000000110")));
 	}
 
 }
