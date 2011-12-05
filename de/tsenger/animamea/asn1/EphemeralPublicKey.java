@@ -13,7 +13,7 @@ import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-public class PublicKey {
+public class EphemeralPublicKey {
 
 	
     private DERObjectIdentifier oid06 = null;
@@ -21,17 +21,15 @@ public class PublicKey {
     private DERTaggedObject Y86 = null;
  
     private DERApplicationSpecific publicKey = null;
-    
-
-    //TODO Konstruktor für PublicKey erweitern siehe D.3 in BSI TR-03110
-    
+       
     /** 
-     * Konstruktor für PublicKey für PACE und ChipAuthentication Version 2
+     * Konstruktor für EphemeralPublicKey für PACE und ChipAuthentication -> TR-03110 V2.05 Kapitel D.3.4
      * @param oidString Algorithm Identifier beeinhaltet die OID des verwendeten Algorithmus
      * @param publicPoint Domain Parameter des verwendeten PACE-Protokolls 
+     * (für DH: Public value (y) Tag 0x84, für ECDH: Public point (Y) Tag 0x86)
      * @throws Exception 
      */
-    public PublicKey(String oidString, byte[] publicKeyData) throws Exception {
+    public EphemeralPublicKey(String oidString, byte[] publicKeyData) throws Exception {
     	
     	oid06 = new DERObjectIdentifier(oidString);
     	

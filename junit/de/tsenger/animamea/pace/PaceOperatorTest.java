@@ -15,7 +15,7 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.asn1.PublicKey;
+import de.tsenger.animamea.asn1.EphemeralPublicKey;
 import de.tsenger.animamea.asn1.SecurityInfos;
 import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.pace.PaceOperator;
@@ -45,7 +45,8 @@ public class PaceOperatorTest {
 //		si.decode(readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/EF.CardAccess/2011-07-13_X00301950_EF.CardAccess.bin"));
 //		si.decode(readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/EF.CardAccess/EF_CardAccess_001.bin"));
 		si.decode(readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/EF.CardAccess/EF_CardAccess_echt_npa.bin"));
-		pop1 = new PaceOperator(si.getPaceInfoList().get(0), "123456", 3);
+		pop1 = new PaceOperator(null);
+		pop1.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 0);
 	}
 
 	/**
@@ -76,7 +77,7 @@ public class PaceOperatorTest {
 	
 	@Test	
 	public void testAuthToken() throws Exception {
-		PublicKey pkpicc = new PublicKey(si.getPaceInfoList().get(0).getProtocolOID(), X2);	
+		EphemeralPublicKey pkpicc = new EphemeralPublicKey(si.getPaceInfoList().get(0).getProtocolOID(), X2);	
 		AmAESCrypto crypto = new AmAESCrypto();
 		
 		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());

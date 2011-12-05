@@ -46,9 +46,9 @@ import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.KeyDerivationFunction;
 import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
 import de.tsenger.animamea.asn1.DynamicAuthenticationData;
+import de.tsenger.animamea.asn1.EphemeralPublicKey;
 import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
 import de.tsenger.animamea.asn1.PaceInfo;
-import de.tsenger.animamea.asn1.PublicKey;
 import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
@@ -71,12 +71,18 @@ public class PaceOperator {
 	private byte[] passwordBytes = null;
 	private String protocolOIDString = null;
 	private int keyLength = 0;
+	private int terminalType = 0;
+	
+	public PaceOperator (AmCardHandler ch) {
+		cardHandler = ch;
+	}
 	
 	
-	public PaceOperator(PaceInfo pi, String password, int pwRef) {
+	public void setAuthTemplate(PaceInfo pi, String password, int pwRef, int terminalRef) {
 		
 		protocolOIDString = pi.getProtocolOID();		
 		passwordRef = pwRef;
+		terminalType = terminalRef;
 		
 		if (passwordRef==1) passwordBytes = calcSHA1(password.getBytes());
 		else passwordBytes = password.getBytes();
@@ -90,10 +96,11 @@ public class PaceOperator {
 	}
 	
 	
-	public PaceOperator(PaceInfo pi, PaceDomainParameterInfo pdpi, String password, int pwRef) throws Exception {
+	public void setAuthTemplate(PaceInfo pi, PaceDomainParameterInfo pdpi, String password, int pwRef, int terminalRef) throws Exception {
 		
 		protocolOIDString = pi.getProtocolOID();
 		passwordRef = pwRef;
+		terminalType = terminalRef;
 				
 		if (pi.getParameterId()>=0 && pi.getParameterId()<= 31)
 			throw new Exception("ParameterID number 0 to 31 is used for standardized domain parameters!");
@@ -111,13 +118,17 @@ public class PaceOperator {
 		getCryptoInformation(pi);
 	}
 	
+	public SecureMessaging performPace(SecureMessaging sm) {
+		//TODO 
+		return null;
+	}
 	
-	public SecureMessaging performPace(AmCardHandler ch) throws Exception {
-		cardHandler = ch;
+	public SecureMessaging performPace() throws Exception {		
+		
 		
 		
 		//send MSE:SetAT
-		ResponseAPDU rapdu = ch.transceive(new CommandAPDU(getMSESetAT(2)));
+		ResponseAPDU rapdu = cardHandler.transceive(new CommandAPDU(getMSESetAT(terminalType)));
 		//TODO in eigene Methode auslagern und Fehlermeldung von MSE:SetAT abfangen
 		
 		//send first GA and get nonce
@@ -137,14 +148,14 @@ public class PaceOperator {
 		byte[] kmac  = getKmac(S);
 		
 		// Authentication Token T_PCD berechnen 
-		PublicKey pkpcd = new PublicKey(protocolOIDString, Y2);	
+		EphemeralPublicKey pkpcd = new EphemeralPublicKey(protocolOIDString, Y2);	
 		byte[] tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		
 		// Authentication Token zur Karte schicken
 		byte[] tpicc = performMutualAuthentication(tpcd).getAuthToken86();
 		
 		// Authentication Token T_PICC berechnen 
-		PublicKey pkpicc = new PublicKey(protocolOIDString, X2);
+		EphemeralPublicKey pkpicc = new EphemeralPublicKey(protocolOIDString, X2);
 		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());
 		
 		//Prüfe ob tpicc = t'picc=MAC(kmac,X2)
@@ -152,7 +163,7 @@ public class PaceOperator {
 		
 		
 		
-		return null;
+		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
 	}
 	
 	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws Exception {
@@ -169,7 +180,7 @@ public class PaceOperator {
 		
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getData()==null) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
+		if (resp.getSW()!=36864) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
 		
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
@@ -195,7 +206,7 @@ public class PaceOperator {
 		
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getData()==null) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
+		if (resp.getSW()!=36864) throw new Exception("perform Key Agreement returns: "+HexString.bufferToHex(resp.getBytes()));
 		
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
@@ -221,7 +232,7 @@ public class PaceOperator {
 		
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getData()==null) throw new Exception("Map nonce returns: "+HexString.bufferToHex(resp.getBytes()));
+		if (resp.getSW()!=36864) throw new Exception("Map nonce returns: "+HexString.bufferToHex(resp.getBytes()));
 		
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
@@ -251,7 +262,7 @@ public class PaceOperator {
 	private DynamicAuthenticationData getNonce() throws Exception {
 		CommandAPDU capdu = new CommandAPDU(Hex.decode("10860000027C0000"));
 		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getData()==null) throw new Exception("Get nonce returns: "+HexString.bufferToHex(resp.getBytes()));
+		if (resp.getSW()!=36864) throw new Exception("Get nonce returns: "+HexString.bufferToHex(resp.getBytes()));
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
 		return dad;

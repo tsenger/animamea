@@ -14,8 +14,6 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 
-import de.tsenger.animamea.tools.Converter;
-
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  *
@@ -56,8 +54,8 @@ public class AmDESCrypto extends AmCryptoProvider {
 	 * @see de.tsenger.animamea.crypto.AmCryptoProvider#init(byte[], long)
 	 */
 	@Override
-	public void init(byte[] keyBytes, long ssc) {
-		sscBytes = Converter.longToByteArray(ssc);
+	public void init(byte[] keyBytes, byte[] ssc) {
+		sscBytes = ssc.clone();
 		initCiphers(keyBytes, new byte[blockSize]);
 	}
 
@@ -124,6 +122,15 @@ public class AmDESCrypto extends AmCryptoProvider {
         mac.doFinal(out, 0);
         
 		return out;
+	}
+
+
+	/* (non-Javadoc)
+	 * @see de.tsenger.animamea.crypto.AmCryptoProvider#getBlockSize()
+	 */
+	@Override
+	public int getBlockSize() {
+		return blockSize;
 	}
 
 }

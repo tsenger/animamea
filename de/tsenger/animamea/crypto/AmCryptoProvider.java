@@ -11,6 +11,7 @@ import javax.crypto.ShortBufferException;
 
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -40,7 +41,9 @@ public abstract class AmCryptoProvider {
 	 * @param ssc
 	 *            Send Sequence Counter
 	 */
-	public abstract void init(byte[] keyBytes, long ssc);
+	public abstract void init(byte[] keyBytes, byte[] ssc);
+	
+	public abstract int getBlockSize();
 	
 	public abstract byte[] decryptBlock(byte[] key, byte[] z);
 	
@@ -143,41 +146,28 @@ public abstract class AmCryptoProvider {
 
 	/**
 	 * Diese Methode füllt ein Byte-Array mit dem Wert 0x80 und mehreren 0x00
-	 * bis die Länge des übergebenen Byte-Array ein Vielfaches von 8 ist. Dies
-	 * ist die ISO9797-1 Padding-Methode 2.
+	 * bis die Länge des übergebenen Byte-Array ein Vielfaches der Blocklänge ist. Dies
+	 * ist die ISO9797-1 Padding-Methode 2 bzw. ISO7816d4-Padding
 	 * 
 	 * @param data
 	 *            Das Byte-Array welches aufgefüllt werden soll.
 	 * @return Das gefüllte Byte-Array.
 	 */
 	public byte[] addPadding(byte[] data) {
-
-		int i = 0;
-		byte[] tempdata = new byte[data.length + 8];
-
-		for (i = 0; i < data.length; i++) {
-			tempdata[i] = data[i];
-		}
-
-		tempdata[i] = (byte) 0x80;
-
-		for (i = i + 1; ((i) % 8) != 0; i++) {
-			tempdata[i] = (byte) 0;
-		}
-
-		byte[] filledArray = new byte[i];
-		System.arraycopy(tempdata, 0, filledArray, 0, i);
-		return filledArray;
+		
+		int len = data.length;
+		int nLen = ((len/getBlockSize())+1)*getBlockSize();
+		byte[] n = new byte[nLen];
+		System.arraycopy(data, 0, n, 0, data.length);
+		new ISO7816d4Padding().addPadding(n, len);
+		return n;
 	}
 
 	/**
 	 * Entfernt aus dem übergebenen Byte-Array das Padding nach ISO9797-1
-	 * Padding-Methode 2. Dazu werden aus dem übergebenen Byte-Array von hinten
-	 * beginnend Bytes mit dem Wert 0x00 gelöscht, sowie die der Wert 0x80 der
-	 * das Padding markiert.
+	 * Padding-Methode 2 bzw. ISO7816d4-Padding. 
 	 * 
-	 * @param Byte
-	 *            -Array aus dem das Padding entfernt werden soll
+	 * @param b Byte-Array aus dem das Padding entfernt werden soll
 	 * @return Padding-bereinigtes Byte-Array
 	 */
 	public byte[] removePadding(byte[] b) {

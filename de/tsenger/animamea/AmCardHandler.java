@@ -11,6 +11,7 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
+import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -21,12 +22,31 @@ public class AmCardHandler {
 	
 	private Card card = null;
 	private CardChannel channel = null;
+	private boolean debug = false;
+	private SecureMessaging sm = null;
 	
-	public ResponseAPDU transceive(CommandAPDU capdu) throws CardException {
-		System.out.println("<"+HexString.bufferToHex(capdu.getBytes()));
+	public ResponseAPDU transceive(CommandAPDU capdu) throws Exception {
+		if (debug) System.out.println("plain C-APDU:\n"+HexString.bufferToHex(capdu.getBytes()));
+		if (sm!=null)capdu = sm.wrap(capdu);
+		if ((debug)&&(sm!=null)) System.out.println("potected C-APDU:\n"+HexString.bufferToHex(capdu.getBytes()));
+		
 		ResponseAPDU resp = channel.transmit(capdu);
-		System.out.println(">"+HexString.bufferToHex(resp.getBytes())+"\n");
+		
+		if ((debug)&&(sm!=null)) System.out.println("potected R-APDU:\n"+HexString.bufferToHex(resp.getBytes()));
+		if (sm!=null) resp = sm.unwrap(resp);
+		if (debug) System.out.println("plain R-APDU:\n"+HexString.bufferToHex(resp.getBytes())+"\n");
 		return resp;
+	}
+	
+	/** Bei eingeschaltetem Debug-Modus werden alle CAPDU und RAPDU auf der Konsole ausgegeben.
+	 * @param b
+	 */
+	public void setDebugMode(boolean b) {
+		this.debug = b;
+	}
+	
+	public void setSecureMessaging(SecureMessaging sm) {
+		this.sm = sm;
 	}
 	
 	/** Establish connection to terminal and card on terminal.

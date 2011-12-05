@@ -10,10 +10,10 @@ import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 
-import javax.smartcardio.CardException;
 import javax.smartcardio.ResponseAPDU;
 
 import de.tsenger.animamea.AmCardHandler;
+import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -56,7 +56,9 @@ public class FileAccess {
 		if (fid.length!=2) throw new Exception("Length of FID must be 2.");
 		if ((fid[0]&(byte)0x10)==(byte)0x10) throw new Exception("Bit 8 of P1 must be 0 if READ BINARY with FID is used");
 		ResponseAPDU resp = ch.transceive(selectEF(fid));
+		if (resp.getSW1()!=0x90) throw new Exception("Can't read File (FID: "+HexString.bufferToHex(fid)+"). SW: "+resp.getSW());
 		resp = ch.transceive(readBinary((byte)0,(byte)0,(byte)0x8));
+		if (resp.getSW1()!=0x90) throw new Exception("Can't read File (FID: "+HexString.bufferToHex(fid)+"). SW: "+resp.getSW());
 		int fileLength = getLength(resp.getData());
 		return readFile(fileLength);
 	}
@@ -64,9 +66,9 @@ public class FileAccess {
 	/**
 	 * @param length Length of the file to read
 	 * @return file content
-	 * @throws CardException
+	 * @throws Exception 
 	 */
-	private byte[] readFile(int length) throws CardException {
+	private byte[] readFile(int length) throws Exception {
 		int remainingBytes = length;
 		ResponseAPDU resp;
 		byte[] fileData = new byte[length];

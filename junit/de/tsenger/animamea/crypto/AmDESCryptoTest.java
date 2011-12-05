@@ -20,7 +20,6 @@ import org.junit.Test;
 
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
-import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -48,8 +47,8 @@ public class AmDESCryptoTest {
 		cp_enc = new AmDESCrypto();
 		cp_mac = new AmDESCrypto();
 		
-		cp_enc.init(kenc, 0L);
-		cp_mac.init(kmac, Converter.ByteArrayToLong(Hex.decode("887022120C06C227")));
+		cp_enc.init(kenc, new byte[0]);
+		cp_mac.init(kmac, Hex.decode("887022120C06C227"));
 		
 	}
 

@@ -131,20 +131,20 @@ public class MSESetAT {
 	 */
 	public byte[] getBytes() {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		
+		if (do80CMR!=null) bos.write(do80CMR,0,do80CMR.length);
+		if (do83KeyReference!=null) bos.write(do83KeyReference,0,do83KeyReference.length);
+		if (do84PrivateKeyReference!=null) bos.write(do84PrivateKeyReference,0,do84PrivateKeyReference.length);
+		if (do7F4C_CHAT!=null) bos.write(do7F4C_CHAT,0,do7F4C_CHAT.length);
+		byte[] data = bos.toByteArray();
+		
+		bos.reset();
 		bos.write(CLASS);
 		bos.write(INS);
 		bos.write(P1P2,0,2);
-		int lc = 0;
-		if (do80CMR!=null) lc += do80CMR.length;
-		if (do83KeyReference!=null) lc += do83KeyReference.length;
-		if (do84PrivateKeyReference!=null) lc += do84PrivateKeyReference.length;
-		if (do7F4C_CHAT!=null) lc += do7F4C_CHAT.length;
-		
-		bos.write((byte) lc);
-		bos.write(do80CMR,0,do80CMR.length);
-		bos.write(do83KeyReference,0,do83KeyReference.length);
-		if (do84PrivateKeyReference!=null) bos.write(do84PrivateKeyReference,0,do84PrivateKeyReference.length);
-		bos.write(do7F4C_CHAT,0,do7F4C_CHAT.length);
+				
+		bos.write((byte) data.length);
+		bos.write(data, 0, data.length);
 		return bos.toByteArray();
 	}
 	
