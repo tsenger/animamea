@@ -1,6 +1,22 @@
 /**
- * 
+ *  Copyright 2011, Tobias Senger
+ *  
+ *  This file is part of animamea.
+ *
+ *  Animamea is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Animamea is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License   
+ *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.tsenger.animamea;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -8,13 +24,12 @@ import org.bouncycastle.crypto.digests.SHA256Digest;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class KeyDerivationFunction {
-	
+
 	private byte[] mergedData = null;
-	
-	
+
 	/**
 	 * Constants that help in determining whether or not a byte array is parity
 	 * adjusted.
@@ -32,93 +47,103 @@ public class KeyDerivationFunction {
 			8, 0, 8, 0, 0, 8, 8, 0, 0, 8, 0, 8, 8, 0, 4, 8, 8, 0, 8, 0, 0, 8,
 			8, 0, 0, 8, 0, 8, 8, 0, 8, 5, 0, 8, 0, 8, 8, 0, 0, 8, 8, 0, 8, 0,
 			6, 8 };
-	
+
 	/**
 	 * 
 	 * Das MRZ-Passwort besteht aus dem SHA1-Wert der Dokumentennummer +
 	 * Geburtsdatum + Gültigkeitsdatum (jeweils mit Prüfziffer)
 	 * 
-	 * @param documentNr Dokumentennummer plus Prüfziffer
-	 * @param dateOfBirth Geburtsdatum aus der MRZ plus Prüfziffer
-	 * @param dateOfExpiry Gültigkeitsdatum aus der MRZ plus Prüfziffer
+	 * @param documentNr
+	 *            Dokumentennummer plus Prüfziffer
+	 * @param dateOfBirth
+	 *            Geburtsdatum aus der MRZ plus Prüfziffer
+	 * @param dateOfExpiry
+	 *            Gültigkeitsdatum aus der MRZ plus Prüfziffer
 	 * @return K = SHA-1(Serial Number||Date of Birth||Date of Expiry)
 	 */
-	public static byte[] getMRZBytes(String documentNr, String dateOfBirth, String dateOfExpiry) {
+	public static byte[] getMRZBytes(String documentNr, String dateOfBirth,
+			String dateOfExpiry) {
 		String mrzInfo = documentNr + dateOfBirth + dateOfExpiry;
 		byte[] passwordBytes = mrzInfo.getBytes();
-		
+
 		byte[] K = new byte[20];
-		
+
 		SHA1Digest sha1 = new SHA1Digest();
 		sha1.update(passwordBytes, 0, passwordBytes.length);
 		sha1.doFinal(K, 0);
-		
-		return K;		
+
+		return K;
 	}
 
-	
 	/**
-	 * Constructor for Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel A.2.3
-	 *  
+	 * Constructor for Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel
+	 * A.2.3
+	 * 
 	 * @param K
-	 *            The shared secret Value (z.B. PIN, CAN, PUK als Byte Array oder abgeleitete
-	 *            MRZ siehe BSI TR-03110 Tabelle A.4)
+	 *            The shared secret Value (z.B. PIN, CAN, PUK als Byte Array
+	 *            oder abgeleitete MRZ siehe BSI TR-03110 Tabelle A.4)
 	 * @param c
-	 *            A 32-bit, big-endian integer counter. 1 for
-	 *            en-/decoding, 2 for MAC (checksum),
-	 *            3 for deriving encryption keys from a password
-	 * @throws Exception c must be 1, 2 or 3
+	 *            A 32-bit, big-endian integer counter. 1 for en-/decoding, 2
+	 *            for MAC (checksum), 3 for deriving encryption keys from a
+	 *            password
+	 * @throws Exception
+	 *             c must be 1, 2 or 3
 	 */
 	public KeyDerivationFunction(byte[] K, int c) throws Exception {
-		
-		if (c<=0||c>3) throw new Exception("c must be 1, 2 or 3!");
-		
+
+		if (c <= 0 || c > 3)
+			throw new Exception("c must be 1, 2 or 3!");
+
 		byte[] cBytes = intToByteArray(c);
-		
+
 		mergedData = new byte[K.length + cBytes.length];
 		System.arraycopy(K, 0, mergedData, 0, K.length);
 		System.arraycopy(cBytes, 0, mergedData, K.length, cBytes.length);
 	}
 
-	
 	/**
-	 * Constructor for Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel A.2.3
-	 *  
+	 * Constructor for Key Derivation Function (KDF) siehe BSI TR-03110 Kapitel
+	 * A.2.3
+	 * 
 	 * @param K
 	 *            The shared secret Value (z.B. PIN, CAN, PUK oder abgeleitete
 	 *            MRZ siehe BSI TR-03110 Tabelle A.4)
-	 * @param r   a nonce r
+	 * @param r
+	 *            a nonce r
 	 * @param c
-	 *            A 32-bit, big-endian integer counter. 1 for
-	 *            en-/decoding, 2 for MAC (checksum),
-	 *            3 for deriving encryption keys from a password
-	 * @throws Exception c must be 1, 2 or 3
+	 *            A 32-bit, big-endian integer counter. 1 for en-/decoding, 2
+	 *            for MAC (checksum), 3 for deriving encryption keys from a
+	 *            password
+	 * @throws Exception
+	 *             c must be 1, 2 or 3
 	 */
 	public KeyDerivationFunction(byte[] K, byte[] r, int c) throws Exception {
-		
-		if (c<=0||c>3) throw new Exception("c must be 1, 2 or 3!");
-		
+
+		if (c <= 0 || c > 3)
+			throw new Exception("c must be 1, 2 or 3!");
+
 		byte[] cBytes = intToByteArray(c);
-		
+
 		mergedData = new byte[K.length + +r.length + cBytes.length];
 		System.arraycopy(K, 0, mergedData, 0, K.length);
 		System.arraycopy(r, 0, mergedData, K.length, r.length);
-		System.arraycopy(cBytes, 0, mergedData, K.length + r.length, cBytes.length);
+		System.arraycopy(cBytes, 0, mergedData, K.length + r.length,
+				cBytes.length);
 	}
-	
+
 	/**
 	 * Erzeugt 3DES Schlüssel
 	 * 
 	 * @return 112bit-3DES-Schlüssel in 24 Bytes mit korrekten Parity-Bits
 	 */
 	public byte[] getDESedeKey() {
-		
+
 		byte[] checksum = new byte[20];
-		
+
 		SHA1Digest sha1 = new SHA1Digest();
 		sha1.update(mergedData, 0, mergedData.length);
 		sha1.doFinal(checksum, 0);
-		
+
 		byte[] ka = new byte[8];
 		byte[] kb = new byte[8];
 
@@ -135,9 +160,9 @@ public class KeyDerivationFunction {
 		System.arraycopy(ka, 0, key, 16, 8);
 
 		return key;
-		
+
 	}
-	
+
 	/**
 	 * Erzeugt AES-128 Schlüssel
 	 * 
@@ -146,7 +171,7 @@ public class KeyDerivationFunction {
 	public byte[] getAES128Key() {
 
 		byte[] checksum = new byte[20];
-		
+
 		SHA1Digest sha1 = new SHA1Digest();
 		sha1.update(mergedData, 0, mergedData.length);
 		sha1.doFinal(checksum, 0);
@@ -157,7 +182,7 @@ public class KeyDerivationFunction {
 		System.arraycopy(checksum, 0, keydata, 0, 16);
 		return keydata;
 	}
-	
+
 	/**
 	 * Erzeugt AES-192 Schlüssel
 	 * 
@@ -170,7 +195,7 @@ public class KeyDerivationFunction {
 		System.arraycopy(checksum, 0, keydata, 0, 24);
 		return keydata;
 	}
-	
+
 	/**
 	 * Erzeugt AES-256 Schlüssel
 	 * 
@@ -179,14 +204,14 @@ public class KeyDerivationFunction {
 	public byte[] getAES256Key() {
 
 		byte[] checksum = new byte[32];
-		
+
 		SHA256Digest sha256 = new SHA256Digest();
 		sha256.update(mergedData, 0, mergedData.length);
 		sha256.doFinal(checksum, 0);
 
 		return checksum;
 	}
-	
+
 	/**
 	 * Adjust the parity for a raw key array. This essentially means that each
 	 * byte in the array will have an odd number of '1' bits (the last bit in
@@ -202,7 +227,7 @@ public class KeyDerivationFunction {
 			key[i] ^= (PARITY[key[i] & 0xff] == 8) ? 1 : 0;
 		}
 	}
-	
+
 	/**
 	 * @param c
 	 * @return
@@ -211,11 +236,10 @@ public class KeyDerivationFunction {
 		// int -> byte[]
 		byte[] intBytes = new byte[4];
 		for (int i = 0; i < 4; ++i) {
-		    int shift = i << 3; // i * 8
-		    intBytes[3-i] = (byte)((c & (0xff << shift)) >>> shift);
+			int shift = i << 3; // i * 8
+			intBytes[3 - i] = (byte) ((c & (0xff << shift)) >>> shift);
 		}
 		return intBytes;
 	}
-	
 
 }

@@ -1,3 +1,22 @@
+/**
+ *  Copyright 2011, Tobias Senger
+ *  
+ *  This file is part of animamea.
+ *
+ *  Animamea is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Animamea is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License   
+ *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.tsenger.animamea.tools;
 
 import java.math.BigInteger;
@@ -17,9 +36,9 @@ public class Converter {
 	public static int toUnsignedInt(byte value) {
 		return (value & 0x7F) + (value < 0 ? 128 : 0);
 	}
-	
+
 	public static long ByteArrayToLong(byte[] bytes) {
-		
+
 		long lo = 0;
 		for (int i = 0; i < 8; i++) {
 			lo <<= 8;
@@ -36,7 +55,7 @@ public class Converter {
 	 *            a <code>long</code> to be converted.
 	 */
 	public static byte[] longToByteArray(long v) {
-		byte[] ivByes = new byte[8];	
+		byte[] ivByes = new byte[8];
 		ivByes[0] = (byte) (v >>> 56);
 		ivByes[1] = (byte) (v >>> 48);
 		ivByes[2] = (byte) (v >>> 40);

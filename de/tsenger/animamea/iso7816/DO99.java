@@ -1,6 +1,22 @@
 /**
- * 
+ *  Copyright 2011, Tobias Senger
+ *  
+ *  This file is part of animamea.
+ *
+ *  Animamea is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Animamea is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License   
+ *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package de.tsenger.animamea.iso7816;
 
 import java.io.IOException;
@@ -18,13 +34,13 @@ public class DO99 {
 	private byte[] data = null;
 	private DERTaggedObject to = null;
 
-	public DO99() {}
+	public DO99() {
+	}
 
 	public DO99(byte[] le) {
 		data = le.clone();
 		to = new DERTaggedObject(false, 0x19, new DEROctetString(le));
 	}
-	
 
 	public void fromByteArray(byte[] encodedData) {
 		ASN1InputStream asn1in = new ASN1InputStream(encodedData);
@@ -34,21 +50,21 @@ public class DO99 {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
+
 		DEROctetString ocs = (DEROctetString) to.getObject();
 		data = ocs.getOctets();
 
 	}
 
 	public byte[] getEncoded() {
-    	try {
+		try {
 			return to.getEncoded();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	return null;
-    }
+		return null;
+	}
 
 	public byte[] getData() {
 		return data;

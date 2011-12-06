@@ -17,10 +17,10 @@ import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class CertificateHolderAuthorizationTemplateTest {
-	
+
 	CertificateHolderAuthorizationTemplate chat = null;
 	DiscretionaryData dd = null;
 
@@ -29,13 +29,15 @@ public class CertificateHolderAuthorizationTemplateTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		dd = new DiscretionaryData(new byte[]{0,0,0,1,16});
+		dd = new DiscretionaryData(new byte[] { 0, 0, 0, 1, 16 });
 		chat = new CertificateHolderAuthorizationTemplate(id_AT, dd);
 	}
 
 	/**
-	 * Test method for {@link org.bouncycastle.asn1.ASN1Encodable#getEncoded(java.lang.String)}.
-	 * @throws IOException 
+	 * Test method for
+	 * {@link org.bouncycastle.asn1.ASN1Encodable#getEncoded(java.lang.String)}.
+	 * 
+	 * @throws IOException
 	 */
 	@Test
 	public void testGetEncodedString() throws IOException {

@@ -17,10 +17,10 @@ import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class DO87Test {
-	
+
 	DO87 do87 = null;
 	byte[] data = Hex.decode("0011223380000000");
 	byte[] asn1coded = Hex.decode("8709010011223380000000");
@@ -35,14 +35,15 @@ public class DO87Test {
 
 	/**
 	 * Test method for {@link de.tsenger.animamea.iso7816.DO87#DO87(byte[])}.
-	 * @throws IOException 
+	 * 
+	 * @throws IOException
 	 */
 	@Test
 	public void testDO87ByteArray() throws IOException {
 		System.out.println(HexString.bufferToHex(do87.getEncoded()));
 		assertTrue(Arrays.areEqual(asn1coded, do87.getEncoded()));
 	}
-	
+
 	/**
 	 * Test method for {@link de.tsenger.animamea.iso7816.DO87#DO87(byte[])}.
 	 */

@@ -11,15 +11,16 @@ import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class DO97Test {
-	
-	byte le = (byte)0x10;
-	byte[] le2 = new byte[]{(byte)0x81, (byte)0xF2};
+
+	byte le = (byte) 0x10;
+	byte[] le2 = new byte[] { (byte) 0x81, (byte) 0xF2 };
 	DO97 do97 = null;
-	byte[] asn1coded = new byte[]{(byte)0x97, (byte)0x01, (byte)0x10};
-	byte[] asn1coded2 = new byte[]{(byte)0x97, (byte)0x02, (byte)0x81, (byte)0xf2};
+	byte[] asn1coded = new byte[] { (byte) 0x97, (byte) 0x01, (byte) 0x10 };
+	byte[] asn1coded2 = new byte[] { (byte) 0x97, (byte) 0x02, (byte) 0x81,
+			(byte) 0xf2 };
 
 	/**
 	 * @throws java.lang.Exception
@@ -28,7 +29,6 @@ public class DO97Test {
 	public void setUp() throws Exception {
 		do97 = new DO97(le2);
 	}
-
 
 	/**
 	 * Test method for {@link de.tsenger.animamea.iso7816.DO97#DO97(byte)}.

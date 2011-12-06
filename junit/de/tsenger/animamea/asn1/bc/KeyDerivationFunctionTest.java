@@ -16,10 +16,10 @@ import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class KeyDerivationFunctionTest {
-	
+
 	KeyDerivationFunction kdf1 = null;
 	KeyDerivationFunction kdf2 = null;
 
@@ -31,7 +31,8 @@ public class KeyDerivationFunctionTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.KeyDerivationFunction#getDESedeKey()}.
+	 * Test method for
+	 * {@link de.tsenger.animamea.KeyDerivationFunction#getDESedeKey()}.
 	 */
 	@Test
 	public void testGetDESedeKey() {
@@ -39,18 +40,22 @@ public class KeyDerivationFunctionTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.KeyDerivationFunction#getAES128Key()}.
-	 * @throws Exception 
+	 * Test method for
+	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES128Key()}.
+	 * 
+	 * @throws Exception
 	 */
 	@Test
 	public void testGetAES128Key() throws Exception {
 		byte[] pinBytes = "123456".getBytes();
-		kdf1 = new KeyDerivationFunction(pinBytes,3);
-		assertTrue(Arrays.equals(kdf1.getAES128Key(), HexString.hexToBuffer("591468cda83d65219cccb8560233600f")));
+		kdf1 = new KeyDerivationFunction(pinBytes, 3);
+		assertTrue(Arrays.equals(kdf1.getAES128Key(),
+				HexString.hexToBuffer("591468cda83d65219cccb8560233600f")));
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.KeyDerivationFunction#getAES192Key()}.
+	 * Test method for
+	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES192Key()}.
 	 */
 	@Test
 	public void testGetAES192Key() {
@@ -58,7 +63,8 @@ public class KeyDerivationFunctionTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.KeyDerivationFunction#getAES256Key()}.
+	 * Test method for
+	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES256Key()}.
 	 */
 	@Test
 	public void testGetAES256Key() {

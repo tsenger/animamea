@@ -1,3 +1,22 @@
+/**
+ *  Copyright 2011, Tobias Senger
+ *  
+ *  This file is part of animamea.
+ *
+ *  Animamea is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Animamea is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License   
+ *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.tsenger.animamea.pace;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -11,7 +30,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 
 public class Crypto {
 	/**
@@ -132,8 +150,6 @@ public class Crypto {
 
 		return result;
 	}
-
-
 
 	/**
 	 * Berechnet den SHA1-Wert des ÃŒbergebenen Bytes-Array

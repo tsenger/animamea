@@ -12,7 +12,7 @@ import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- *
+ * 
  */
 public class ConverterTest {
 
@@ -27,14 +27,16 @@ public class ConverterTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.tools.Converter#longToByteArray(long)}.
+	 * Test method for
+	 * {@link de.tsenger.animamea.tools.Converter#longToByteArray(long)}.
 	 */
 	@Test
 	public void testLongToByteArray() {
 		ssc = Converter.ByteArrayToLong(array);
-		System.out.println(ssc);		
-		System.out.println(HexString.bufferToHex(Converter.longToByteArray(ssc)));
-		
+		System.out.println(ssc);
+		System.out
+				.println(HexString.bufferToHex(Converter.longToByteArray(ssc)));
+
 	}
 
 }
