@@ -39,6 +39,12 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.tools.HexString;
 
+/**
+ * Verpackt ungeschützte CAPDU in SecureMessaging und entpackt SM-geschützte RAPDU.
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class SecureMessaging {
 
 	private byte[] ks_enc = null;
@@ -72,11 +78,10 @@ public class SecureMessaging {
 	}
 
 	/**
-	 * Erzeugt aus einer Command-APDU ohne Secure Messaging eine Command-APDU
+	 * Erzeugt aus einer Plain-Command-APDU ohne Secure Messaging eine Command-APDU
 	 * mit Secure Messaging.
 	 * 
-	 * @param capdu
-	 *            Ungeschützte Command-APDU
+	 * @param capdu plain Command-APDU
 	 * @return CommandAPDU mit SM
 	 * @throws BadPaddingException
 	 * @throws IllegalBlockSizeException
@@ -107,12 +112,12 @@ public class SecureMessaging {
 
 		// Mask class byte and pad command header
 		header = new byte[4];
-		System.arraycopy(capdu.getBytes(), 0, header, 0, 4); // Die ersten 4
-																// Bytes der
-																// CAPDU sind
-																// der Header
-		header[0] = (byte) (header[0] | (byte) 0x0C); // Markiert das Secure
-														// Messaging im CLA-Byte
+		
+		// Die ersten 4 Bytes der CAPDU sind der Header
+		System.arraycopy(capdu.getBytes(), 0, header, 0, 4);
+		
+		// Markiert das Secure Messaging im CLA-Byte
+		header[0] = (byte) (header[0] | (byte) 0x0C); 
 
 		// build DO87
 		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4) {
@@ -144,7 +149,21 @@ public class SecureMessaging {
 		return new CommandAPDU(bOut.toByteArray());
 	}
 
-	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws Exception {
+	/**
+	 *  Erzeugt aus einer SM geschützten Response-APDU eine plain Response-APDU
+	 *  ohne Secure Messaging.
+	 * @param rapdu SM protected RAPDU
+	 * @return plain RAPDU
+	 * @throws IOException
+	 * @throws SecureMessagingException
+	 * @throws DataLengthException
+	 * @throws ShortBufferException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws IllegalStateException
+	 * @throws InvalidCipherTextException
+	 */
+	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws IOException, SecureMessagingException, DataLengthException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IllegalStateException, InvalidCipherTextException {
 
 		DO87 do87 = null;
 		DO99 do99 = null;
@@ -182,7 +201,7 @@ public class SecureMessaging {
 		}
 
 		if (do99 == null)
-			throw new Exception("Secure Messaging error"); // DO99 is mandatory
+			throw new SecureMessagingException("Secure Messaging error: mandatory DO99 not found"); // DO99 is mandatory
 															// and only absent
 															// if SM error
 															// occurs
@@ -199,8 +218,8 @@ public class SecureMessaging {
 		byte[] do8eData = do8E.getData();
 
 		if (!java.util.Arrays.equals(cc, do8eData))
-			throw new Exception("Checksum is incorrect!\nCC: "
-					+ HexString.bufferToHex(cc) + "\nDO8E: "
+			throw new SecureMessagingException("Checksum is incorrect!\n Calculated CC: "
+					+ HexString.bufferToHex(cc) + "\nCC in DO8E: "
 					+ HexString.bufferToHex(do8eData));
 
 		// Decrypt DO87

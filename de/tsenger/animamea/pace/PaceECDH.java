@@ -32,6 +32,8 @@ import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.ECPoint.Fp;
 
 /**
+ * PACE mit Elliptic Curve Diffie Hellman
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */

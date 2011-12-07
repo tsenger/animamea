@@ -25,6 +25,12 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
+/**
+ * Data Object mit Tag 87 beeinhaltet einen Padding-Indikator gefolgt von dem Cryptogram
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class DO87 {
 
 	private byte[] value_ = null;
@@ -36,44 +42,33 @@ public class DO87 {
 
 	public DO87(byte[] data) {
 		this.data = data.clone();
-		value_ = addOne(data);
+		value_ = addPaddingIndicator(data);
 		to = new DERTaggedObject(false, 7, new DEROctetString(value_));
 	}
 
-	private byte[] addOne(byte[] data) {
+	private byte[] addPaddingIndicator(byte[] data) {
 		byte[] ret = new byte[data.length + 1];
 		System.arraycopy(data, 0, ret, 1, data.length);
 		ret[0] = 1;
 		return ret;
 	}
 
-	private byte[] removeOne(byte[] value) {
+	private byte[] removePaddingIndicator(byte[] value) {
 		byte[] ret = new byte[value.length - 1];
 		System.arraycopy(value, 1, ret, 0, ret.length);
 		return ret;
 	}
 
-	public void fromByteArray(byte[] encodedData) {
+	public void fromByteArray(byte[] encodedData) throws IOException {
 		ASN1InputStream asn1in = new ASN1InputStream(encodedData);
-		try {
-			to = (DERTaggedObject) asn1in.readObject();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		to = (DERTaggedObject) asn1in.readObject();	
 		DEROctetString ocs = (DEROctetString) to.getObject();
 		value_ = ocs.getOctets();
-		data = removeOne(value_);
+		data = removePaddingIndicator(value_);
 	}
 
-	public byte[] getEncoded() {
-		try {
-			return to.getEncoded();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+	public byte[] getEncoded() throws IOException {
+		return to.getEncoded();
 	}
 
 	public byte[] getData() {

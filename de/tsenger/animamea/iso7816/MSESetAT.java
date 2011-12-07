@@ -32,6 +32,8 @@ import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
 import de.tsenger.animamea.asn1.DiscretionaryData;
 
 /**
+ * Die Klasse MSESetAT dient zur Konstruktions einer "MSE:Set AT"-APDU
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
@@ -56,9 +58,7 @@ public class MSESetAT {
 	private byte[] do84PrivateKeyReference = null;
 	private byte[] do7F4C_CHAT = null;
 
-	public MSESetAT() {
-		// TODO Auto-generated constructor stub
-	}
+	public MSESetAT() {}
 
 	/**
 	 * Setzt das zu verwendende Authentication Template (PACE, CA oder TA)

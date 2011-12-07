@@ -51,10 +51,8 @@ public class EphemeralPublicKey {
 	 *            Domain Parameter des verwendeten PACE-Protokolls (für DH:
 	 *            Public value (y) Tag 0x84, für ECDH: Public point (Y) Tag
 	 *            0x86)
-	 * @throws Exception
 	 */
-	public EphemeralPublicKey(String oidString, byte[] publicKeyData)
-			throws Exception {
+	public EphemeralPublicKey(String oidString, byte[] publicKeyData) {
 
 		oid06 = new DERObjectIdentifier(oidString);
 
@@ -72,10 +70,6 @@ public class EphemeralPublicKey {
 					publicKeyData));
 			vec.add(Y86);
 		}
-
-		else
-			throw new Exception("Unknown Protocol OID");
-
 		publicKey = new DERApplicationSpecific(0x49, vec);
 
 	}

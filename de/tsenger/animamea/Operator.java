@@ -38,22 +38,31 @@ public class Operator {
 	public static void main(String[] args) throws Exception {
 
 		AmCardHandler ch = new AmCardHandler();
-		ch.setDebugMode(false);
+		ch.setDebugMode(true);
 		ch.connect(0); // First terminal
 
 		FileAccess facs = new FileAccess(ch);
 		long millis = System.currentTimeMillis();
+		
+		//Lese Inhalt des EF.CardAccess
 		byte[] efcaBytes = facs.getFile(fid_efca);
 		System.out.println(HexString.bufferToHex(efcaBytes));
 
+		//Parse den Inhalt des EF.CardAccess
 		SecurityInfos si = new SecurityInfos();
 		si.decode(efcaBytes);
 		System.out.println(si);
 
+		//Initialisiere PACE mit dem ersten PACE-Info aus dem EF.CardAccess
+		//PIN: 123456, Passwort-Referenz 3=PIN, Terminaltyp 2=AuthenticationTerminal
 		PaceOperator pop = new PaceOperator(ch);
 		pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 2);
 
+		//Führe PACE durch
 		SecureMessaging sm = pop.performPace();
+		
+		//Wenn PACE erfolgreich durchgeführt wurde, wird sein SecureMessaging-Objekt
+		//mit gültigen Session-Keys zurückgeliefert.
 		if (sm != null) {
 			System.out.println("time: " + (System.currentTimeMillis() - millis)
 					+ " ms");

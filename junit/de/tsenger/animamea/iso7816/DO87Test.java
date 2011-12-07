@@ -50,7 +50,12 @@ public class DO87Test {
 	@Test
 	public void testDO87Decode() {
 		do87 = new DO87();
-		do87.fromByteArray(asn1coded);
+		try {
+			do87.fromByteArray(asn1coded);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		assertTrue(Arrays.areEqual(data, do87.getData()));
 	}
 

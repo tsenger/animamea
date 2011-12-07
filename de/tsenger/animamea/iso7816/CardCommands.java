@@ -24,6 +24,11 @@ import java.io.IOException;
 
 import javax.smartcardio.CommandAPDU;
 
+/**
+ * CardCommand stellt einige Standard-ISO7816-CommandAPDU zur Verfügung.
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class CardCommands {
 
 	private CardCommands() {

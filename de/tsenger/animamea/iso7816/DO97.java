@@ -25,6 +25,12 @@ import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
+/**
+ * Data Object mit dem Tag 97 beeinhaltet die "length expected"-Bytes der ungeschützen CAPDU
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class DO97 {
 
 	private byte[] data = null;;

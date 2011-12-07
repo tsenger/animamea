@@ -25,13 +25,27 @@ import static de.tsenger.animamea.iso7816.CardCommands.selectEF;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
+import javax.smartcardio.CardException;
 import javax.smartcardio.ResponseAPDU;
+
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.tools.HexString;
 
 /**
+ * FileAccess beinhaltet Methoden zum Zugriff auf EFs und DFs einer 
+ * ISO7816-kompatiblen Smartcard
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
@@ -95,12 +109,27 @@ public class FileAccess {
 	}
 
 	/**
+	 * Reads x bytes from EF which has been selected before. 
+	 * 
 	 * @param length
 	 *            Length of the file to read
 	 * @return file content
+	 * @throws SecureMessagingException 
+	 * @throws CardException 
+	 * @throws IOException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
 	 * @throws Exception
 	 */
-	private byte[] readFile(int length) throws Exception {
+	private byte[] readFile(int length) throws InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, IOException, CardException, SecureMessagingException{
 		int remainingBytes = length;
 		ResponseAPDU resp;
 		byte[] fileData = new byte[length];

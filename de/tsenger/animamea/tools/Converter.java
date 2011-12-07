@@ -25,6 +25,12 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
+/**
+ * Helfer-Klasse zum Konventieren verschiedener Datentypen und Strukturen
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class Converter {
 
 	/**

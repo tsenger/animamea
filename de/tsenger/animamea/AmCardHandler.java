@@ -19,6 +19,15 @@
 
 package de.tsenger.animamea;
 
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
 import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
@@ -27,7 +36,11 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+
 import de.tsenger.animamea.iso7816.SecureMessaging;
+import de.tsenger.animamea.iso7816.SecureMessagingException;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -41,7 +54,27 @@ public class AmCardHandler {
 	private boolean debug = false;
 	private SecureMessaging sm = null;
 
-	public ResponseAPDU transceive(CommandAPDU capdu) throws Exception {
+	/**
+	 * Sendet die übergebene CommandAPDU an die konnektierte Karte. 
+	 * Falls SecureMessaging initilisiert und gesetzt ist wird die APDU vor dem
+	 * Senden SM-geschützt. Die empfangende APDU wird SM befreit und zurückgegeben.
+	 * @param capdu Plain Command-APDU
+	 * @return plain Response-APDU
+	 * @throws CardException 
+	 * @throws IOException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
+	 * @throws SecureMessagingException 
+	 */
+	public ResponseAPDU transceive(CommandAPDU capdu) throws CardException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, IOException, SecureMessagingException {
 		if (debug)
 			System.out.println("plain C-APDU:\n"
 					+ HexString.bufferToHex(capdu.getBytes()));
@@ -63,6 +96,7 @@ public class AmCardHandler {
 					+ HexString.bufferToHex(resp.getBytes()) + "\n");
 		return resp;
 	}
+	
 
 	/**
 	 * Bei eingeschaltetem Debug-Modus werden alle CAPDU und RAPDU auf der
@@ -74,6 +108,10 @@ public class AmCardHandler {
 		this.debug = b;
 	}
 
+	/**
+	 * Aktiviert das SecureMessaging für alle nachfolgenden transceive-Aufrufe.
+	 * @param sm initialisiertes SecureMessaging-Objekt
+	 */
 	public void setSecureMessaging(SecureMessaging sm) {
 		this.sm = sm;
 	}

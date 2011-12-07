@@ -26,6 +26,8 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
+ * Data Object mit dem Tag 99 beeinhaltet das Status Word in einer RAPDU
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */

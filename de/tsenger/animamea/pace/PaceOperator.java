@@ -44,9 +44,17 @@ import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_2
 import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_256;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
+import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
@@ -54,6 +62,8 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.params.DHParameters;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
@@ -70,12 +80,16 @@ import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessaging;
+import de.tsenger.animamea.iso7816.SecureMessagingException;
 import de.tsenger.animamea.tools.HexString;
 
 /**
+ * PaceOperator stellt Methoden zur Durchführung des PACE-Protokolls zur Verfügung
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
+
 public class PaceOperator {
 
 	private Pace pace = null;
@@ -89,10 +103,22 @@ public class PaceOperator {
 	private int keyLength = 0;
 	private int terminalType = 0;
 
+	/** 
+	 * Konstruktor
+	 * @param ch AmCardHandler-Instanz über welches die Kartenkommandos gesendet werden.
+	 */
 	public PaceOperator(AmCardHandler ch) {
 		cardHandler = ch;
 	}
 
+	/**
+	 * Initialisiert PACE mit standardisierten Domain Parametern.
+	 * 
+	 * @param pi PACEInfo enthält die Crypto-Information zur Durchführung von PACE
+	 * @param password Das Password welches für PACE verwendet werden soll
+	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK)
+	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST)
+	 */
 	public void setAuthTemplate(PaceInfo pi, String password, int pwRef,
 			int terminalRef) {
 
@@ -117,6 +143,15 @@ public class PaceOperator {
 		getCryptoInformation(pi);
 	}
 
+	/**
+	 * Initialisiert PACE mit properitären Domain Parametern.
+	 * 
+	 * @param pi PACEInfo enthält alle Crypto-Information zur Durchführung von PACE
+	 * @param pdpi Enthält die properitären Domain Parameter für PACE
+	 * @param password Das Password welches für PACE verwendet werden soll
+	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK)
+	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST)
+	 */
 	public void setAuthTemplate(PaceInfo pi, PaceDomainParameterInfo pdpi,
 			String password, int pwRef, int terminalRef) throws Exception {
 
@@ -148,18 +183,35 @@ public class PaceOperator {
 		getCryptoInformation(pi);
 	}
 
-	public SecureMessaging performPace(SecureMessaging sm) {
-		// TODO
-		return null;
-	}
 
-	public SecureMessaging performPace() throws Exception {
+	/**
+	 * Führt alle Schritte des PACE-Protokolls durch und liefert bei Erfolg 
+	 * eine mit den ausgehandelten Schlüsseln intialisierte SecureMessaging-Instanz zurück.
+	 * 
+	 * @return Bei Erfolg von PACE wird eine mit den ausgehandelten Schlüsseln 
+	 * 			intialisierte SecureMessaging-Instanz zurückgegeben. Anderfalls <code>null</code>.
+	 * @throws PaceException 
+	 * @throws CardException 
+	 * @throws IOException 
+	 * @throws SecureMessagingException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
+	 * @throws Exception
+	 */
+	public SecureMessaging performPace() throws PaceException, CardException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, SecureMessagingException {
 
 		// send MSE:SetAT
 		int resp = sendMSESetAT(terminalType).getSW();
 		if (resp != 0x9000)
-			throw new Exception("MSE:Set AT failed. SW: "
-					+ Integer.toHexString(resp));
+			throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
 
 		// send first GA and get nonce
 		byte[] nonce_z = getNonce().getEncryptedNonce80();
@@ -190,15 +242,12 @@ public class PaceOperator {
 		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());
 
 		// Prüfe ob tpicc = t'picc=MAC(kmac,X2)
-		if (!Arrays.areEqual(tpicc, tpicc_strich))
-			throw new Exception("Authentication Tokens are different");
+		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
 
-		return new SecureMessaging(crypto, kenc, kmac,
-				new byte[crypto.getBlockSize()]);
+		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
 	}
 
-	private DynamicAuthenticationData performMutualAuthentication(
-			byte[] authToken) throws Exception {
+	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {
 
 		DynamicAuthenticationData dad85 = new DynamicAuthenticationData();
 		dad85.setAuthenticationToken85(authToken);
@@ -213,7 +262,7 @@ public class PaceOperator {
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
 		if (resp.getSW() != 36864)
-			throw new Exception("perform Key Agreement returns: "
+			throw new PaceException("perform Key Agreement returns: "
 					+ HexString.bufferToHex(resp.getBytes()));
 
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
@@ -223,10 +272,22 @@ public class PaceOperator {
 
 	/**
 	 * @return
+	 * @throws IOException 
+	 * @throws SecureMessagingException 
+	 * @throws CardException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
 	 * @throws Exception
 	 */
-	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK)
-			throws Exception {
+	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad83 = new DynamicAuthenticationData();
 		dad83.setEphemeralPK83(ephemeralPK);
@@ -241,8 +302,7 @@ public class PaceOperator {
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
 		if (resp.getSW() != 36864)
-			throw new Exception("perform Key Agreement returns: "
-					+ HexString.bufferToHex(resp.getBytes()));
+			throw new PaceException("perform Key Agreement returns: " + HexString.bufferToHex(resp.getBytes()));
 
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
@@ -251,10 +311,22 @@ public class PaceOperator {
 
 	/**
 	 * @return
+	 * @throws IOException 
+	 * @throws SecureMessagingException 
+	 * @throws CardException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
 	 * @throws Exception
 	 */
-	private DynamicAuthenticationData mapNonce(byte[] mappingData)
-			throws Exception {
+	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad81 = new DynamicAuthenticationData();
 		dad81.setMappingData81(mappingData);
@@ -269,15 +341,14 @@ public class PaceOperator {
 		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
 		ResponseAPDU resp = cardHandler.transceive(capdu);
 		if (resp.getSW() != 36864)
-			throw new Exception("Map nonce returns: "
-					+ HexString.bufferToHex(resp.getBytes()));
+			throw new PaceException("Map nonce returns: " + HexString.bufferToHex(resp.getBytes()));
 
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
 		return dad;
 	}
 
-	private ResponseAPDU sendMSESetAT(int terminalType) throws Exception {
+	private ResponseAPDU sendMSESetAT(int terminalType) throws PaceException, CardException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, IOException, SecureMessagingException {
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_PACE);
 		mse.setProtocol(protocolOIDString);
@@ -295,7 +366,7 @@ public class PaceOperator {
 			mse.setSTChat();
 			break;
 		default:
-			throw new Exception("Unknown Terminal Reference: " + terminalType);
+			throw new PaceException("Unknown Terminal Reference: " + terminalType);
 		}
 		return cardHandler.transceive(new CommandAPDU(mse.getBytes()));
 	}
@@ -305,14 +376,26 @@ public class PaceOperator {
 	 * the card.
 	 * 
 	 * @return
+	 * @throws SecureMessagingException 
+	 * @throws IOException 
+	 * @throws CardException 
+	 * @throws InvalidCipherTextException 
+	 * @throws IllegalStateException 
+	 * @throws ShortBufferException 
+	 * @throws InvalidAlgorithmParameterException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws DataLengthException 
+	 * @throws InvalidKeyException 
 	 * @throws Exception
 	 */
-	private DynamicAuthenticationData getNonce() throws Exception {
+	private DynamicAuthenticationData getNonce() throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {
 		CommandAPDU capdu = new CommandAPDU(Hex.decode("10860000027C0000"));
 		ResponseAPDU resp = cardHandler.transceive(capdu);
 		if (resp.getSW() != 36864)
-			throw new Exception("Get nonce returns: "
-					+ HexString.bufferToHex(resp.getBytes()));
+			throw new PaceException("Get nonce returns: " + HexString.bufferToHex(resp.getBytes()));
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());
 		return dad;

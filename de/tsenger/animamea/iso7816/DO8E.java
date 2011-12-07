@@ -26,6 +26,8 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
+ * Data Object mit dem Tag 8E beeinhaltet den MAC (cryptographic checksum)
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */

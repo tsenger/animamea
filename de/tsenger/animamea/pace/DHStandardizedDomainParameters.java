@@ -23,6 +23,12 @@ import java.math.BigInteger;
 
 import org.bouncycastle.crypto.params.DHParameters;
 
+/**
+ * Standardisierte DH Domain Parameter für PACE
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
 public class DHStandardizedDomainParameters {
 
 	public static DHParameters modp1024_160() {
