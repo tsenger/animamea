@@ -103,16 +103,16 @@ public class Converter {
 	 * @param curve
 	 *            Die Kurve auf der der Punkt liegen soll.
 	 * @return Point generiert aus den Input-Daten
-	 * @throws Exception
+	 * @throws IllegalArgumentException
 	 *             Falls das erste Byte nicht den Wert 0x04 enthält, enthält das
-	 *             übergebene Byte-Array offensichtlich keinen Punkt
+	 *             übergebene Byte-Array offensichtlich keinen unkomprimierten Punkt
 	 */
 	public static ECPoint byteArrayToECPoint(byte[] value, ECCurve.Fp curve)
-			throws Exception {
+			throws IllegalArgumentException {
 		byte[] x = new byte[(value.length - 1) / 2];
 		byte[] y = new byte[(value.length - 1) / 2];
 		if (value[0] != (byte) 0x04)
-			throw new Exception("No uncompressed Point found!");
+			throw new IllegalArgumentException("No uncompressed Point found!");
 		else {
 			System.arraycopy(value, 1, x, 0, (value.length - 1) / 2);
 			System.arraycopy(value, 1 + ((value.length - 1) / 2), y, 0,

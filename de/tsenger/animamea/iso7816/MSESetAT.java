@@ -160,7 +160,7 @@ public class MSESetAT {
 		// TODO noch zu implementieren, Tag 0x91
 	}
 
-	public void setCHAT(CertificateHolderAuthorizationTemplate chat) {
+	public void setCHAT(CertificateHolderAuthorizationTemplate chat) throws IOException {
 		do7F4C_CHAT = chat.getEncoded();
 	}
 
@@ -194,9 +194,10 @@ public class MSESetAT {
 
 	/**
 	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit AT.
+	 * @throws IOException 
 	 * 
 	 */
-	public void setATChat() {
+	public void setATChat() throws IOException {
 		DiscretionaryData disData = null;
 		try {
 			disData = new DiscretionaryData(new byte[] { (byte) 0x3F,
@@ -212,9 +213,10 @@ public class MSESetAT {
 
 	/**
 	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit IS.
+	 * @throws IOException 
 	 * 
 	 */
-	public void setISChat() {
+	public void setISChat() throws IOException {
 		DiscretionaryData disData = null;
 		try {
 			disData = new DiscretionaryData((byte) 0x23);
@@ -229,9 +231,10 @@ public class MSESetAT {
 
 	/**
 	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit ST.
+	 * @throws IOException 
 	 * 
 	 */
-	public void setSTChat() {
+	public void setSTChat() throws IOException {
 		DiscretionaryData disData = null;
 		try {
 			disData = new DiscretionaryData((byte) 0x03);

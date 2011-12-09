@@ -26,15 +26,18 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM;
 
 import java.io.IOException;
 
-import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-public class EphemeralPublicKey {
+/**
+ * EphemeralPublicKey nach TR-03110 V2.05 Kapitel D.3.4
+ * 
+ * @author Tobias Senger (tobias@t-senger.de)
+ *
+ */
+public class EphemeralPublicKey extends PublicKey{
 
-	private DERObjectIdentifier oid06 = null;
 	private DERTaggedObject y84 = null;
 	private DERTaggedObject Y86 = null;
 
@@ -54,10 +57,8 @@ public class EphemeralPublicKey {
 	 */
 	public EphemeralPublicKey(String oidString, byte[] publicKeyData) {
 
-		oid06 = new DERObjectIdentifier(oidString);
-
-		ASN1EncodableVector vec = new ASN1EncodableVector();
-		vec.add(oid06);
+		super(oidString);
+		
 
 		if (oidString.startsWith(id_PACE_DH_GM.toString())
 				|| oidString.startsWith(id_PACE_DH_IM.toString())) {
@@ -80,8 +81,36 @@ public class EphemeralPublicKey {
 	 * @return
 	 * @throws IOException
 	 */
+	@Override
 	public byte[] getEncoded() throws IOException {
 
 		return publicKey.getEncoded();
+	}
+
+	/* (non-Javadoc)
+	 * @see java.security.Key#getAlgorithm()
+	 */
+	@Override
+	public String getAlgorithm() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.security.Key#getFormat()
+	 */
+	@Override
+	public String getFormat() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see de.tsenger.animamea.asn1.PublicKey#setData(java.lang.Object)
+	 */
+	@Override
+	public void setData(Object pkData) {
+		// TODO Auto-generated method stub
+		
 	}
 }

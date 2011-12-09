@@ -33,15 +33,19 @@ import org.bouncycastle.asn1.DEROctetString;
 public class DiscretionaryData {
 
 	private DERApplicationSpecific dData = null;
+	private byte[] data = null;
+	
 
-	public DiscretionaryData(byte[] authorization) throws IOException {
-		DEROctetString auth = new DEROctetString(authorization);
-		dData = new DERApplicationSpecific(false, 0x13, auth);
+	public DiscretionaryData(byte[] data) throws IOException {
+		this.data = data.clone();
+		DEROctetString der = new DEROctetString(data);
+		dData = new DERApplicationSpecific(false, 0x13, der);
 	}
 
-	public DiscretionaryData(byte authorization) throws IOException {
-		DERInteger auth = new DERInteger(authorization);
-		dData = new DERApplicationSpecific(false, 0x13, auth);
+	public DiscretionaryData(byte data) throws IOException {
+		this.data = new byte[]{data};
+		DERInteger der = new DERInteger(data);
+		dData = new DERApplicationSpecific(false, 0x13, der);
 	}
 
 	public DERObject toASN1Object() {
@@ -51,5 +55,10 @@ public class DiscretionaryData {
 	public byte[] getEncoded() {
 		return dData.getDEREncoded();
 	}
+	
+	public byte[] getData() {
+		return data;
+	}
+	
 
 }

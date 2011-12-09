@@ -1,7 +1,7 @@
 /**
  * 
  */
-package junit.de.tsenger.animamea.asn1.bc;
+package junit.de.tsenger.animamea.asn1;
 
 import static org.junit.Assert.assertTrue;
 
