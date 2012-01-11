@@ -56,8 +56,11 @@ public class Operator {
 		//Initialisiere PACE mit dem ersten PACE-Info aus dem EF.CardAccess
 		//PIN: 123456, Passwort-Referenz 3=PIN, Terminaltyp 2=AuthenticationTerminal
 		PaceOperator pop = new PaceOperator(ch);
-		pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 2);
-
+	
+		if (si.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
+		pop.setAuthTemplate(si.getPaceInfoList().get(0), si.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
+		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 2); //Standardisierte PACE Domain Paramter
+		
 		//Führe PACE durch
 		SecureMessaging sm = pop.performPace();
 		

@@ -45,6 +45,7 @@ import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_2
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -65,14 +66,17 @@ import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.math.ec.ECCurve.Fp;
+import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.KeyDerivationFunction;
+import de.tsenger.animamea.asn1.AmDHPublicKey;
+import de.tsenger.animamea.asn1.AmECPublicKey;
 import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
 import de.tsenger.animamea.asn1.DynamicAuthenticationData;
-import de.tsenger.animamea.asn1.EphemeralPublicKey;
 import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
 import de.tsenger.animamea.asn1.PaceInfo;
 import de.tsenger.animamea.crypto.AmAESCrypto;
@@ -81,6 +85,7 @@ import de.tsenger.animamea.crypto.AmDESCrypto;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
+import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -230,21 +235,46 @@ public class PaceOperator {
 		byte[] kmac = getKmac(S);
 
 		// Authentication Token T_PCD berechnen
-		EphemeralPublicKey pkpcd = new EphemeralPublicKey(protocolOIDString, Y2);
-		byte[] tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
+		byte[] tpcd = calcAuthToken(Y2, kmac);
 
-		// Authentication Token zur Karte schicken
+		// Authentication Token T_PCD zur Karte schicken und Authentication Token T_PICC empfangen
 		byte[] tpicc = performMutualAuthentication(tpcd).getAuthToken86();
 
-		// Authentication Token T_PICC berechnen
-		EphemeralPublicKey pkpicc = new EphemeralPublicKey(protocolOIDString,
-				X2);
-		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());
+		// Authentication Token T_PICC' berechnen
+		byte[] tpicc_strich = calcAuthToken(X2, kmac);
 
-		// Prüfe ob tpicc = t'picc=MAC(kmac,X2)
+		// Prüfe ob T_PICC = T_PICC'
 		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
 
 		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
+	}
+	
+	/**
+	 * Der Authentication Token berechnet sich aus dem MAC (mit Schlüssel kmac) über 
+	 * einen PublicKey welcher den Object Identifier des verwendeten Protokolls und den 
+	 * von der empfangenen ephemeralen Public Key (Y2) enthält. 
+	 * Siehe dazu TR-03110 V2.05 Kapitel A.2.4 und D.3.4
+	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Paramter zur 
+	 * Berechnung des Authentication Token herangezogen.
+	 * 
+	 * @param Y2 Byte-Array welches ein DO84 (Ephemeral Public Key) enthält
+	 * @param kmac Schlüssel K_mac für die Berechnung des MAC
+	 * @return Authentication Token
+	 */
+	private byte[] calcAuthToken(byte[] Y2, byte[] kmac) {
+		byte[] tpcd = null;
+		if (pace instanceof PaceECDH) {
+			Fp curve = (Fp) ecdhParameters.getCurve();
+			ECPoint pointY = Converter.byteArrayToECPoint(Y2, curve);
+			AmECPublicKey pkpcd = new AmECPublicKey(protocolOIDString, pointY);
+			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
+		}
+		else if (pace instanceof PaceDH) {
+			BigInteger y = new BigInteger(Y2);
+			AmDHPublicKey pkpcd = new AmDHPublicKey(protocolOIDString, y);
+			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
+		}
+		return tpcd;
 	}
 
 	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {

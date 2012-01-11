@@ -26,17 +26,21 @@ import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
+ * Klasse für Public Key Data Objects 
+ * nach BSI TR-03110 V2.05 Kapitel D.3.3.
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class EllicpticCurvePublicKey extends PublicKey implements ECPublicKey{
+
+public class AmECPublicKey extends PublicKey implements ECPublicKey{
+	
+	private static final long serialVersionUID = 3574151885727849955L;
 	
 	private final String algorithm = "EC";
 	private final String format = "CVC";
@@ -50,28 +54,15 @@ public class EllicpticCurvePublicKey extends PublicKey implements ECPublicKey{
 	private DERTaggedObject f = null;
 	
 	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3574151885727849955L;
-
-	/**TODO Der Konstruktor macht nur Sinn wenn auch Setter-Methoden vorhanden sind.
-	 * Ansonsten sind mit diesem Konstruktor nur leer PK erzeugbar.
-	 * @param oidString
-	 */
-	public EllicpticCurvePublicKey(String oidString) {
-		super(oidString);
-	}
-	
-	/**
 	 * Konstruktor zum Dekodieren der übergebenen Sequenz
 	 * @param seq
 	 */
-	public EllicpticCurvePublicKey(DERSequence seq) {
+	public AmECPublicKey(DERSequence seq) {
 		super(seq);
 		decode(seq);
 	}
 	
-	public EllicpticCurvePublicKey(String oidString, BigInteger p, BigInteger a, BigInteger b, ECPoint G, BigInteger r, ECPoint Y, BigInteger f ) {
+	public AmECPublicKey(String oidString, BigInteger p, BigInteger a, BigInteger b, ECPoint G, BigInteger r, ECPoint Y, BigInteger f ) {
 		super(oidString);
 		this.p = new DERTaggedObject(false, 1, new DERInteger(p));
 		this.a = new DERTaggedObject(false, 2, new DERInteger(a));
@@ -87,6 +78,18 @@ public class EllicpticCurvePublicKey extends PublicKey implements ECPublicKey{
 		vec.add(this.r);
 		vec.add(this.Y);
 		vec.add(this.f);
+	}
+	
+	
+	/**
+	 * Konstruktor für Ephemeral Public Keys (TR-03110 V2.05 D.3.4)
+	 * @param oidString OID String
+	 * @param Y public point
+	 */
+	public AmECPublicKey(String oidString, ECPoint Y) {
+		super(oidString);
+		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded()));
+		vec.add(this.Y);
 	}
 
 	/* (non-Javadoc)
@@ -106,46 +109,67 @@ public class EllicpticCurvePublicKey extends PublicKey implements ECPublicKey{
 	}
 	
 	
+	/** Returns prime modulus p
+	 * @return
+	 */
 	public BigInteger getP() {
 		if (p==null) return null;
-		DERInteger derInt =(DERInteger) p.getObjectParser(DERTags.INTEGER, false);
-		return derInt.getPositiveValue();
+		DERInteger derInt = DERInteger.getInstance(p, false);
+		return derInt.getValue();
 	}
 	
+	/** Returns first coefficient a
+	 * @return
+	 */
 	public BigInteger getA() {
 		if (a==null) return null;
-		DERInteger derInt =(DERInteger) a.getObjectParser(DERTags.INTEGER, false);
-		return derInt.getPositiveValue();
+		DERInteger derInt = DERInteger.getInstance(a, false);
+		return derInt.getValue();
 	}
 	
+	/** Returns second coefficient b
+	 * @return
+	 */
 	public BigInteger getB() {
 		if (b==null) return null;
-		DERInteger derInt =(DERInteger) b.getObjectParser(DERTags.INTEGER, false);
-		return derInt.getPositiveValue();
+		DERInteger derInt = DERInteger.getInstance(b, false);
+		return derInt.getValue();
 	}
 	
+	/** Returns base point G
+	 * @return
+	 */
 	public byte[] getG() {
 		if (G==null) return null;
-		DEROctetString ostr =(DEROctetString) G.getObjectParser(DERTags.OCTET_STRING, false);
+		DEROctetString ostr = (DEROctetString) DEROctetString.getInstance(G, false);
 		return ostr.getOctets();
 	}
 	
+	/** Returns order of the base point r
+	 * @return
+	 */
 	public BigInteger getR() {
 		if (r==null) return null;
-		DERInteger derInt =(DERInteger) r.getObjectParser(DERTags.INTEGER, false);
-		return derInt.getPositiveValue();
+		DERInteger derInt = DERInteger.getInstance(r, false);
+		return derInt.getValue();
 	}
 	
+	/** Returns public point Y
+	 * @return
+	 */
 	public byte[] getY() {
 		if (Y==null) return null;
-		DEROctetString ostr =(DEROctetString) Y.getObjectParser(DERTags.OCTET_STRING, false);
+		DEROctetString ostr = (DEROctetString) DEROctetString.getInstance(Y, false);
 		return ostr.getOctets();
 	}
 	
+	/** Returns cofactor f
+	 * @return
+	 */
 	public BigInteger getF() {
 		if (f==null) return null;
-		DERInteger derInt =(DERInteger) f.getObjectParser(DERTags.INTEGER, false);
-		return derInt.getPositiveValue();
+		DERInteger derInt = DERInteger.getInstance(f, false);
+		return derInt.getValue();
 	}
 
 
@@ -154,13 +178,6 @@ public class EllicpticCurvePublicKey extends PublicKey implements ECPublicKey{
 	 */
 	@Override
 	public byte[] getEncoded() {
-		vec.add(this.p);
-		vec.add(this.a);
-		vec.add(this.b);
-		vec.add(this.G);
-		vec.add(this.r);
-		vec.add(this.Y);
-		vec.add(this.f);
 		return super.getDEREncoded();
 	}
 

@@ -20,6 +20,9 @@
 package de.tsenger.animamea.tools;
 
 import java.math.BigInteger;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECFieldElement;
@@ -32,6 +35,18 @@ import org.bouncycastle.math.ec.ECPoint;
  *
  */
 public class Converter {
+	
+	public static Date BCDtoDate(byte[] yymmdd) {
+		if( yymmdd==null || yymmdd.length!=6 ){
+	         throw new IllegalArgumentException("Argument must have length 6, was " + (yymmdd==null?0:yymmdd.length));
+	      }
+		int year  = 2000 + yymmdd[0]*10 + yymmdd[1];
+	    int month = yymmdd[2]*10 + yymmdd[3] - 1; // Java month index starts with 0...
+	    int day   = yymmdd[4]*10 + yymmdd[5];
+		GregorianCalendar gregCal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+		gregCal.set(year, month, day,0,0,0);
+		return gregCal.getTime();
+	}
 
 	/**
 	 * Converts a byte into a unsigned integer value.

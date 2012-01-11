@@ -16,31 +16,38 @@
  *  You should have received a copy of the GNU General Public License   
  *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.tsenger.animamea.asn1;
+package junit.de.tsenger.animamea.asn1;
+
+import java.math.BigInteger;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import de.tsenger.animamea.asn1.AmDHPublicKey;
+import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
- * 
+ *
  */
-public enum CertificationRoles {
+public class AmDHPublicKeyTest {
+	AmDHPublicKey pk = null;
 
-	CVCA(0xC0), 
-	DV_D(0x80), 
-	DV_F(0x40), 
-	Terminal(0x00);
-
-	private byte value;
-
-	private CertificationRoles(int value) {
-		this.value = (byte) value;
+	/**
+	 * @throws java.lang.Exception
+	 */
+	@Before
+	public void setUp() throws Exception {
+		pk = new AmDHPublicKey("0.4.0.127.2.2.3.2.2.2", new BigInteger("11111111",16), new BigInteger("22222222",16), new BigInteger("33333333",16), new BigInteger("44444444",16));
 	}
 
 	/**
-	 * Returns the value as a bitmap 
-	 * @return
+	 * Test method for {@link de.tsenger.animamea.asn1.AmDHPublicKey#getEncoded()}.
 	 */
-	public byte getValue() {
-		return value;
+	@Test
+	public void testGetEncoded() {
+		System.out.println(HexString.bufferToHex(pk.getEncoded()));
 	}
+
 
 }

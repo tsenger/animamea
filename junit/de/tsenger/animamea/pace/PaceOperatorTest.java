@@ -14,11 +14,8 @@ import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.asn1.EphemeralPublicKey;
 import de.tsenger.animamea.asn1.SecurityInfos;
-import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.pace.PaceOperator;
-import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -75,15 +72,7 @@ public class PaceOperatorTest {
 //		assertTrue(Arrays.areEqual(s, kmac));
 //	}
 
-	@Test
-	public void testAuthToken() throws Exception {
-		EphemeralPublicKey pkpicc = new EphemeralPublicKey(si.getPaceInfoList()
-				.get(0).getProtocolOID(), X2);
-		AmAESCrypto crypto = new AmAESCrypto();
 
-		byte[] tpicc_strich = crypto.getMAC(kmac, pkpicc.getEncoded());
-		System.out.println("t'picc: " + HexString.bufferToHex(tpicc_strich));
-	}
 
 	private byte[] readBinaryFile(String filename) {
 		FileInputStream in = null;
