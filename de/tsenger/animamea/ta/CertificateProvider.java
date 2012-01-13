@@ -16,47 +16,46 @@
  *  You should have received a copy of the GNU General Public License   
  *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.tsenger.sandbox;
+package de.tsenger.animamea.ta;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
-import org.bouncycastle.asn1.x9.X9ECParameters;
 
+import de.tsenger.animamea.asn1.CVCertificate;
 import de.tsenger.animamea.asn1.ECPrivateKey;
-import de.tsenger.animamea.tools.HexString;
 
 /**
+ * Hart verdrahteter Provider für TA-Zertifikate
+ * 
+ * Hier gibt's noch was zu tun ;)
+ * 
+ * 
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class PKCS8PrivateKey {
+public class CertificateProvider {
 	
-	public static void main(String[] args) throws IOException {
+	public CVCertificate getDVCert() throws IllegalArgumentException, IOException {
+		byte[] dvBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/DV_DEDVTIDBSIDE003_DETESTeID00002.cvcert");
+		return new CVCertificate(dvBytes);
+	}
+	
+	public CVCertificate getTerminalCert() throws IllegalArgumentException, IOException {
+		byte[] atBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/AT_DEATTIDBSIDE003_DEDVTIDBSIDE003.cvcert");
+		return new CVCertificate(atBytes);
+	}
+	
+	public ECPrivateKey getPrivateKey() throws IOException {
 		byte[] pkBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Key_DEATTIDBSIDE003.pkcs8");
-		
 		DERSequence pkSeq =  (DERSequence) DERSequence.fromByteArray(pkBytes);
-		
 		PrivateKeyInfo pkInfo = new PrivateKeyInfo(pkSeq);
-		
-		 AlgorithmIdentifier ecPublicKey = pkInfo.getAlgorithmId();
-		 System.out.println(ecPublicKey.getAlgorithm().toString());
-		 System.out.println(HexString.bufferToHex(ecPublicKey.getDEREncoded()));
-		 
-		 X9ECParameters ecp = new X9ECParameters((ASN1Sequence) ecPublicKey.getParameters());
-		 
-		 System.out.println("N: "+ecp.getN());
-		 
-			 
-		 ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.getPrivateKey());
-		 System.out.println("private Key: \n"+HexString.bufferToHex(ecpk.getPrivateKey()));
-		
+		ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.getPrivateKey());
+		return ecpk;
 	}
 	
 	private static byte[] readBinaryFile(String filename) {

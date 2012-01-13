@@ -299,16 +299,16 @@ public class SecureMessaging {
 			return 1;
 		if (cardcmd.length == 5)
 			return 2;
-		if (cardcmd.length == (5 + cardcmd[4]) && cardcmd[4] != 0)
+		if (cardcmd.length == (5 + (cardcmd[4]&0xff)) && cardcmd[4] != 0)
 			return 3;
-		if (cardcmd.length == (6 + cardcmd[4]) && cardcmd[4] != 0)
+		if (cardcmd.length == (6 + (cardcmd[4]&0xff)) && cardcmd[4] != 0)
 			return 4;
 		if (cardcmd.length == 7 && cardcmd[4] == 0)
 			return 5;
-		if (cardcmd.length == (7 + cardcmd[5] * 256 + cardcmd[6])
+		if (cardcmd.length == (7 + (cardcmd[5]&0xff) * 256 + (cardcmd[6]&0xff))
 				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
 			return 6;
-		if (cardcmd.length == (9 + cardcmd[5] * 256 + cardcmd[6])
+		if (cardcmd.length == (9 + (cardcmd[5]&0xff) * 256 + (cardcmd[6]&0xff))
 				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
 			return 7;
 		return 0;

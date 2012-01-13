@@ -23,6 +23,8 @@ import de.tsenger.animamea.asn1.SecurityInfos;
 import de.tsenger.animamea.iso7816.FileAccess;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.pace.PaceOperator;
+import de.tsenger.animamea.ta.CertificateProvider;
+import de.tsenger.animamea.ta.TAOperator;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -59,7 +61,7 @@ public class Operator {
 	
 		if (si.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
 		pop.setAuthTemplate(si.getPaceInfoList().get(0), si.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
-		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 2); //Standardisierte PACE Domain Paramter
+		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "819955", 2, 2); //Standardisierte PACE Domain Paramter
 		
 		//Führe PACE durch
 		SecureMessaging sm = pop.performPace();
@@ -72,6 +74,11 @@ public class Operator {
 			System.out.println("PACE established!");
 			ch.setSecureMessaging(sm);
 		}
+		
+		TAOperator top = new TAOperator(ch);
+		top.initialize(null, new CertificateProvider());
+		top.performTA();
+		
 		// byte[] resetRetryCounter = Hex.decode("002c020306313233343536");
 		// ch.transceive(new CommandAPDU(resetRetryCounter));
 		// pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 0);
