@@ -24,10 +24,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.Security;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
-
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
@@ -96,18 +92,9 @@ public abstract class AmCryptoProvider {
 	 * @param in
 	 *            ByteArray mit den zu verschlüsselnden Daten
 	 * @return ByteArray mit den entschlüsselten Daten.
-	 * @throws ShortBufferException
-	 * @throws IllegalBlockSizeException
-	 * @throws BadPaddingException
-	 * @throws DataLengthException
-	 * @throws IllegalStateException
-	 * @throws InvalidCipherTextException
-	 * @throws IOException
+	 * @throws AmCryptoException 
 	 */
-	public byte[] encrypt(byte[] in) throws ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			DataLengthException, IllegalStateException,
-			InvalidCipherTextException, IOException {
+	public byte[] encrypt(byte[] in) throws AmCryptoException {
 
 		ByteArrayInputStream bin = new ByteArrayInputStream(in);
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -115,21 +102,40 @@ public abstract class AmCryptoProvider {
 		int noBytesRead = 0; // number of bytes read from input
 		int noBytesProcessed = 0; // number of bytes processed
 
-		while ((noBytesRead = bin.read(buf)) >= 0) {
-			noBytesProcessed = encryptCipher.processBytes(buf, 0, noBytesRead,
-					obuf, 0);
-			bout.write(obuf, 0, noBytesProcessed);
+		try {
+			while ((noBytesRead = bin.read(buf)) >= 0) {
+				noBytesProcessed = encryptCipher.processBytes(buf, 0, noBytesRead,
+						obuf, 0);
+				bout.write(obuf, 0, noBytesProcessed);
+			}
+		} catch (DataLengthException e) {
+			throw new AmCryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new AmCryptoException(e);
+		} catch (IOException e) {
+			throw new AmCryptoException(e);
 		}
 
-		noBytesProcessed = encryptCipher.doFinal(obuf, 0);
+		try {
+			noBytesProcessed = encryptCipher.doFinal(obuf, 0);
+			bout.write(obuf, 0, noBytesProcessed);
+			
+			bout.flush();
 
-		bout.write(obuf, 0, noBytesProcessed);
+			bin.close();
+			bout.close();
+			return bout.toByteArray();
+		} catch (DataLengthException e) {
+			throw new AmCryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new AmCryptoException(e);
+		} catch (InvalidCipherTextException e) {
+			throw new AmCryptoException(e);
+		} catch (IOException e) {
+			throw new AmCryptoException(e);
+		}
 
-		bout.flush();
-
-		bin.close();
-		bout.close();
-		return bout.toByteArray();
+		
 	}
 
 	/**
@@ -139,18 +145,9 @@ public abstract class AmCryptoProvider {
 	 * @param in
 	 *            BytrArray mit den verschlüsselten Daten
 	 * @return ByteArray mit den entschlüsselten Daten
-	 * @throws ShortBufferException
-	 * @throws IllegalBlockSizeException
-	 * @throws BadPaddingException
-	 * @throws DataLengthException
-	 * @throws IllegalStateException
-	 * @throws InvalidCipherTextException
-	 * @throws IOException
+	 * @throws AmCryptoException 
 	 */
-	public byte[] decrypt(byte[] in) throws ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			DataLengthException, IllegalStateException,
-			InvalidCipherTextException, IOException {
+	public byte[] decrypt(byte[] in) throws AmCryptoException {
 
 		ByteArrayInputStream bin = new ByteArrayInputStream(in);
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -158,20 +155,40 @@ public abstract class AmCryptoProvider {
 		int noBytesRead = 0; // number of bytes read from input
 		int noBytesProcessed = 0; // number of bytes processed
 
-		while ((noBytesRead = bin.read(buf)) >= 0) {
-			noBytesProcessed = decryptCipher.processBytes(buf, 0, noBytesRead,
-					obuf, 0);
-			bout.write(obuf, 0, noBytesProcessed);
+		try {
+			while ((noBytesRead = bin.read(buf)) >= 0) {
+				noBytesProcessed = decryptCipher.processBytes(buf, 0, noBytesRead,
+						obuf, 0);
+				bout.write(obuf, 0, noBytesProcessed);
+			}
+		} catch (DataLengthException e) {
+			throw new AmCryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new AmCryptoException(e);
+		} catch (IOException e) {
+			throw new AmCryptoException(e);
 		}
-		noBytesProcessed = decryptCipher.doFinal(obuf, 0);
+		
+		try {
+			noBytesProcessed = decryptCipher.doFinal(obuf, 0);
 
-		bout.write(obuf, 0, noBytesProcessed);
+			bout.write(obuf, 0, noBytesProcessed);
 
-		bout.flush();
+			bout.flush();
 
-		bin.close();
-		bout.close();
-		return bout.toByteArray();
+			bin.close();
+			bout.close();
+			return bout.toByteArray();
+		} catch (DataLengthException e) {
+			throw new AmCryptoException(e);
+		} catch (IllegalStateException e) {
+			throw new AmCryptoException(e);
+		} catch (InvalidCipherTextException e) {
+			throw new AmCryptoException(e);
+		} catch (IOException e) {
+			throw new AmCryptoException(e);
+		}
+
 	}
 
 	/**

@@ -23,11 +23,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.sec.ECPrivateKeyStructure;
 
 import de.tsenger.animamea.asn1.CVCertificate;
-import de.tsenger.animamea.asn1.ECPrivateKey;
 
 /**
  * Hart verdrahteter Provider für TA-Zertifikate
@@ -40,21 +41,62 @@ import de.tsenger.animamea.asn1.ECPrivateKey;
  */
 public class CertificateProvider {
 	
-	public CVCertificate getDVCert() throws IllegalArgumentException, IOException {
+	public CVCertificate getCVCACert() {
+		byte[] cvcaBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/CVCA_DETESTeID00002_DETESTeID00001.cvcert");
+		CVCertificate cert = null;
+		try {
+			cert = new CVCertificate(cvcaBytes);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return cert;
+	}
+	
+	public CVCertificate getDVCert() {
 		byte[] dvBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/DV_DEDVTIDBSIDE003_DETESTeID00002.cvcert");
-		return new CVCertificate(dvBytes);
+		CVCertificate cert = null;
+		try {
+			cert = new CVCertificate(dvBytes);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return cert;
 	}
 	
-	public CVCertificate getTerminalCert() throws IllegalArgumentException, IOException {
+	public CVCertificate getTerminalCert() {
 		byte[] atBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/AT_DEATTIDBSIDE003_DEDVTIDBSIDE003.cvcert");
-		return new CVCertificate(atBytes);
+		CVCertificate cert = null;
+		try {
+			cert = new CVCertificate(atBytes);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return cert;
 	}
 	
-	public ECPrivateKey getPrivateKey() throws IOException {
+	public ECPrivateKeyStructure getPrivateKey() {
 		byte[] pkBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Key_DEATTIDBSIDE003.pkcs8");
-		DERSequence pkSeq =  (DERSequence) DERSequence.fromByteArray(pkBytes);
+		DERSequence pkSeq = null;
+		try {
+			pkSeq = (DERSequence) DERSequence.fromByteArray(pkBytes);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		PrivateKeyInfo pkInfo = new PrivateKeyInfo(pkSeq);
-		ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.getPrivateKey());
+		ECPrivateKeyStructure ecpk = new ECPrivateKeyStructure((ASN1Sequence) pkInfo.getPrivateKey());
 		return ecpk;
 	}
 	

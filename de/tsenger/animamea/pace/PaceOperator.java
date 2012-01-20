@@ -107,6 +107,7 @@ public class PaceOperator {
 	private String protocolOIDString = null;
 	private int keyLength = 0;
 	private int terminalType = 0;
+	private byte[] pk_picc = null;
 
 	/** 
 	 * Konstruktor
@@ -229,6 +230,9 @@ public class PaceOperator {
 		byte[] X2 = pace.getX2(Y1);
 		// X2 zur Karte schicken und Y2 empfangen.
 		byte[] Y2 = performKeyAgreement(X2).getEphemeralPK84();
+		
+		// Y2 ist PK_Picc der für die TA benötigt wird.
+		pk_picc = Y2.clone();
 
 		byte[] S = pace.getSharedSecret_K(Y2);
 		byte[] kenc = getKenc(S);
@@ -245,8 +249,17 @@ public class PaceOperator {
 
 		// Prüfe ob T_PICC = T_PICC'
 		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
-
+		
 		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
+	}
+	
+	/**
+	 * Liefert den ephemeralen Public Key des Chips zurück. Dieser wird für Terminal
+	 * Authentisierung nach V.2 benötigt.
+	 * @return
+	 */
+	public byte[] getPKpicc() {
+		return pk_picc;
 	}
 	
 	/**
@@ -254,7 +267,7 @@ public class PaceOperator {
 	 * einen PublicKey welcher den Object Identifier des verwendeten Protokolls und den 
 	 * von der empfangenen ephemeralen Public Key (Y2) enthält. 
 	 * Siehe dazu TR-03110 V2.05 Kapitel A.2.4 und D.3.4
-	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Paramter zur 
+	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Parameter zur 
 	 * Berechnung des Authentication Token herangezogen.
 	 * 
 	 * @param Y2 Byte-Array welches ein DO84 (Ephemeral Public Key) enthält

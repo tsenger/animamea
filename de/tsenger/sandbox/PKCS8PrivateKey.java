@@ -26,10 +26,11 @@ import java.io.IOException;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.sec.ECPrivateKeyStructure;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 
-import de.tsenger.animamea.asn1.ECPrivateKey;
+import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -51,11 +52,11 @@ public class PKCS8PrivateKey {
 		 
 		 X9ECParameters ecp = new X9ECParameters((ASN1Sequence) ecPublicKey.getParameters());
 		 
-		 System.out.println("N: "+ecp.getN());
-		 
-			 
-		 ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.getPrivateKey());
-		 System.out.println("private Key: \n"+HexString.bufferToHex(ecpk.getPrivateKey()));
+		 System.out.println("N: \n"+HexString.bufferToHex(Converter.bigIntToByteArray(ecp.getN())));
+				 
+		 ECPrivateKeyStructure ecpk2 = new ECPrivateKeyStructure((ASN1Sequence) pkInfo.getPrivateKey()); 
+		 //ECPrivateKey.getInstance(pkInfo.getPrivateKey());
+		 System.out.println("private Key: \n"+HexString.bufferToHex(Converter.bigIntToByteArray(ecpk2.getKey())));
 		
 	}
 	

@@ -57,6 +57,7 @@ public class MSESetAT {
 	private byte[] do83KeyName = null;
 	private byte[] do84PrivateKeyReference = null;
 	private byte[] do7F4C_CHAT = null;
+	private byte[] do91EphemeralPublicKEy = null;
 
 	public MSESetAT() {}
 
@@ -86,12 +87,8 @@ public class MSESetAT {
 	public void setProtocol(String protocol) {
 		DERObjectIdentifier oid = new DERObjectIdentifier(protocol);
 		DERTaggedObject to = new DERTaggedObject(false, 0x00, oid);
-		try {
-			do80CMR = to.getEncoded();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		do80CMR = to.getDEREncoded();
+
 	}
 
 	/**
@@ -102,14 +99,9 @@ public class MSESetAT {
 	 *            PUK
 	 */
 	public void setKeyReference(int kr) {
-		DERTaggedObject to = new DERTaggedObject(false, 0x03,
-				new DERInteger(kr));
-		try {
-			do83KeyReference = to.getEncoded();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		DERTaggedObject to = new DERTaggedObject(false, 0x03, new DERInteger(kr));
+		do83KeyReference = to.getDEREncoded();
+
 	}
 
 	/**
@@ -121,14 +113,9 @@ public class MSESetAT {
 	 *            (ISO 8859-1 kodiert)
 	 */
 	public void setKeyReference(String kr) {
-		DERTaggedObject to = new DERTaggedObject(false, 0x03,
-				new DEROctetString(kr.getBytes()));
-		try {
-			do83KeyName = to.getEncoded();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		DERTaggedObject to = new DERTaggedObject(false, 0x03, new DEROctetString(kr.getBytes()));
+		do83KeyName = to.getDEREncoded();
+
 	}
 
 	/**
@@ -142,31 +129,38 @@ public class MSESetAT {
 	 *            Private Keys angegeben
 	 */
 	public void setPrivateKeyReference(byte pkr) {
-		DERTaggedObject to = new DERTaggedObject(false, 0x04, new DERInteger(
-				pkr));
-		try {
-			do84PrivateKeyReference = to.getEncoded();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		DERTaggedObject to = new DERTaggedObject(false, 0x04, new DERInteger(pkr));
+		do84PrivateKeyReference = to.getDEREncoded();
+
 	}
 
-	public void setAuxiliaryAuthenticatedData() {
+	public void setAuxiliaryAuthenticatedData() throws Exception {
 		// TODO noch zu implementieren, Tag 0x67
+		throw new Exception("setAuxiliaryAuthenticationData not yet implemented!");
 	}
 
-	public void setEphemeralPublicKey() {
-		// TODO noch zu implementieren, Tag 0x91
+	/**
+	 * Setzt das Tag 0x91 (Ephemeral Public Key). Der PK muss bereits komprimiert 
+	 * (siehe comp()-Funktion in TR-03110) sein.
+	 * @param pubKey comp(ephemeral PK_PCD) -> TR-03110 A.2.2.3
+	 */
+	public void setEphemeralPublicKey(byte[] pubKey) {
+		DERTaggedObject to = new DERTaggedObject(false, 0x11, new DEROctetString(pubKey));
+		do91EphemeralPublicKEy = to.getDEREncoded();
 	}
 
+	/**
+	 * @param chat
+	 * @throws IOException
+	 */
 	public void setCHAT(CertificateHolderAuthorizationTemplate chat) throws IOException {
 		do7F4C_CHAT = chat.getEncoded();
 	}
 
-	/*
+	/**
 	 * Konstruiert aus den gesetzten Objekten eine MSE-Command-APDU und liefert
 	 * diese als Byte-Array zurück.
+	 * @return ByteArray mit MSE:SetAT APDU
 	 */
 	public byte[] getBytes() {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -175,9 +169,12 @@ public class MSESetAT {
 			bos.write(do80CMR, 0, do80CMR.length);
 		if (do83KeyReference != null)
 			bos.write(do83KeyReference, 0, do83KeyReference.length);
+		if (do83KeyName != null)
+			bos.write(do83KeyName, 0, do83KeyName.length);
 		if (do84PrivateKeyReference != null)
-			bos.write(do84PrivateKeyReference, 0,
-					do84PrivateKeyReference.length);
+			bos.write(do84PrivateKeyReference, 0, do84PrivateKeyReference.length);
+		if (do91EphemeralPublicKEy != null) 
+			bos.write(do91EphemeralPublicKEy, 0 , do91EphemeralPublicKEy.length);
 		if (do7F4C_CHAT != null)
 			bos.write(do7F4C_CHAT, 0, do7F4C_CHAT.length);
 		byte[] data = bos.toByteArray();

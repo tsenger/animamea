@@ -5,20 +5,13 @@ package junit.de.tsenger.animamea.crypto;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
-
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tsenger.animamea.crypto.AmAESCrypto;
+import de.tsenger.animamea.crypto.AmCryptoException;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -61,19 +54,10 @@ public class AmAESCryptoTest {
 	 * Test method for
 	 * {@link de.tsenger.animamea.crypto.AmAESCrypto#encrypt(java.io.InputStream, java.io.OutputStream)}
 	 * .
-	 * 
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 * @throws IllegalStateException
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws ShortBufferException
-	 * @throws DataLengthException
+	 * @throws AmCryptoException 
 	 */
 	@Test
-	public void testEncrypt() throws DataLengthException, ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			IllegalStateException, InvalidCipherTextException, IOException {
+	public void testEncrypt() throws AmCryptoException  {
 
 		aes_enc.init(key, new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, (byte) 5 });
@@ -85,19 +69,10 @@ public class AmAESCryptoTest {
 	 * Test method for
 	 * {@link de.tsenger.animamea.crypto.AmAESCrypto#decrypt(java.io.InputStream, java.io.OutputStream)}
 	 * .
-	 * 
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 * @throws IllegalStateException
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws ShortBufferException
-	 * @throws DataLengthException
+	 * @throws AmCryptoException 
 	 */
 	@Test
-	public void testDecrypt() throws DataLengthException, ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			IllegalStateException, InvalidCipherTextException, IOException {
+	public void testDecrypt() throws AmCryptoException {
 		aes_enc.init(key, new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				0, 0, (byte) 5 });
 		byte[] p = aes_enc.decrypt(encryptedBytes2);

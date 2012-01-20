@@ -95,7 +95,7 @@ public class Converter {
 	 * 
 	 * @param bi
 	 *            Das zu konvertierende BigInteger-Objekt.
-	 * @return Byte-Array ohen führendes 0-Byte
+	 * @return Byte-Array ohne führendes 0-Byte
 	 */
 	public static byte[] bigIntToByteArray(BigInteger bi) {
 		byte[] temp = bi.toByteArray();

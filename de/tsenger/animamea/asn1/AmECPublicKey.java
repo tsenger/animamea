@@ -115,7 +115,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	public BigInteger getP() {
 		if (p==null) return null;
 		DERInteger derInt = DERInteger.getInstance(p, false);
-		return derInt.getValue();
+		return derInt.getPositiveValue();
 	}
 	
 	/** Returns first coefficient a
@@ -124,7 +124,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	public BigInteger getA() {
 		if (a==null) return null;
 		DERInteger derInt = DERInteger.getInstance(a, false);
-		return derInt.getValue();
+		return derInt.getPositiveValue();
 	}
 	
 	/** Returns second coefficient b
@@ -133,7 +133,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	public BigInteger getB() {
 		if (b==null) return null;
 		DERInteger derInt = DERInteger.getInstance(b, false);
-		return derInt.getValue();
+		return derInt.getPositiveValue();
 	}
 	
 	/** Returns base point G
@@ -151,7 +151,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	public BigInteger getR() {
 		if (r==null) return null;
 		DERInteger derInt = DERInteger.getInstance(r, false);
-		return derInt.getValue();
+		return derInt.getPositiveValue();
 	}
 	
 	/** Returns public point Y
@@ -169,7 +169,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	public BigInteger getF() {
 		if (f==null) return null;
 		DERInteger derInt = DERInteger.getInstance(f, false);
-		return derInt.getValue();
+		return derInt.getPositiveValue();
 	}
 
 
@@ -190,13 +190,13 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 		for (int i = 1; i<seq.size(); i++) {
 			DERTaggedObject to = (DERTaggedObject) seq.getObjectAt(i);
 			switch(to.getTagNo()) {
-			case 1: p = to; break;
-			case 2: a = to; break;
-			case 3: b = to; break;
-			case 4: G = to; break;
-			case 5: r = to; break;
-			case 6: Y = to; break;
-			case 7: f = to; break;
+			case 1: p = to; vec.add(p); break;
+			case 2: a = to; vec.add(a); break;
+			case 3: b = to; vec.add(b); break;
+			case 4: G = to; vec.add(G); break;
+			case 5: r = to; vec.add(r); break;
+			case 6: Y = to; vec.add(Y); break;
+			case 7: f = to; vec.add(f); break;
 			}
 		}		
 	}

@@ -72,7 +72,7 @@ public abstract class PublicKey implements java.security.PublicKey{
 	 * 
 	 * @return
 	 */
-	public byte[] getDEREncoded() {
+	protected byte[] getDEREncoded() {
 		DERApplicationSpecific publicKey = new DERApplicationSpecific(0x49, vec);
 		return publicKey.getDEREncoded();
 	}

@@ -21,21 +21,13 @@ package de.tsenger.animamea.iso7816;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
 import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
+import de.tsenger.animamea.crypto.AmCryptoException;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.tools.HexString;
 
@@ -63,7 +55,6 @@ public class SecureMessaging {
 	 *            Session Key für Prüfsummenberechnung (K_mac)
 	 * @param initssc
 	 *            Initialer Wert des Send Sequence Counters
-	 * @throws Exception
 	 */
 	public SecureMessaging(AmCryptoProvider acp, byte[] ksenc, byte[] ksmac,
 			byte[] initialSSC) {
@@ -83,24 +74,9 @@ public class SecureMessaging {
 	 * 
 	 * @param capdu plain Command-APDU
 	 * @return CommandAPDU mit SM
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws NoSuchPaddingException
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeyException
-	 * @throws InvalidAlgorithmParameterException
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 * @throws IllegalStateException
-	 * @throws ShortBufferException
-	 * @throws DataLengthException
+	 * @throws SecureMessagingException 
 	 */
-	public CommandAPDU wrap(CommandAPDU capdu) throws InvalidKeyException,
-			NoSuchAlgorithmException, NoSuchPaddingException,
-			IllegalBlockSizeException, BadPaddingException,
-			InvalidAlgorithmParameterException, IOException,
-			DataLengthException, ShortBufferException, IllegalStateException,
-			InvalidCipherTextException {
+	public CommandAPDU wrap(CommandAPDU capdu) throws SecureMessagingException {
 
 		byte[] header = null;
 		byte lc = 0;
@@ -122,7 +98,11 @@ public class SecureMessaging {
 		// build DO87
 		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4) {
 			do87 = buildDO87(capdu.getData().clone());
-			lc += do87.getEncoded().length;
+			try {
+				lc += do87.getEncoded().length;
+			} catch (IOException e) {
+				throw new SecureMessagingException(e);
+			}
 		}
 
 		// build DO97
@@ -137,14 +117,18 @@ public class SecureMessaging {
 
 		// construct and return protected APDU
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		bOut.write(header);
-		bOut.write(lc);
-		if (do87 != null)
-			bOut.write(do87.getEncoded());
-		if (do97 != null)
-			bOut.write(do97.getEncoded());
-		bOut.write(do8E.getEncoded());
-		bOut.write(0);
+		try {
+			bOut.write(header);
+			bOut.write(lc);
+			if (do87 != null)
+				bOut.write(do87.getEncoded());
+			if (do97 != null)
+				bOut.write(do97.getEncoded());
+			bOut.write(do8E.getEncoded());
+			bOut.write(0);
+		} catch (IOException e) {
+			throw new SecureMessagingException(e);
+		}
 
 		return new CommandAPDU(bOut.toByteArray());
 	}
@@ -154,16 +138,9 @@ public class SecureMessaging {
 	 *  ohne Secure Messaging.
 	 * @param rapdu SM protected RAPDU
 	 * @return plain RAPDU
-	 * @throws IOException
 	 * @throws SecureMessagingException
-	 * @throws DataLengthException
-	 * @throws ShortBufferException
-	 * @throws IllegalBlockSizeException
-	 * @throws BadPaddingException
-	 * @throws IllegalStateException
-	 * @throws InvalidCipherTextException
 	 */
-	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws IOException, SecureMessagingException, DataLengthException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, IllegalStateException, InvalidCipherTextException {
+	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws SecureMessagingException{
 
 		DO87 do87 = null;
 		DO99 do99 = null;
@@ -179,22 +156,30 @@ public class SecureMessaging {
 			System.arraycopy(rapduBytes, pointer, subArray, 0,
 					rapduBytes.length - pointer);
 			ASN1InputStream asn1sp = new ASN1InputStream(subArray);
-			byte[] encodedBytes = asn1sp.readObject().getEncoded();
+			byte[] encodedBytes = null;
+			try {
+				encodedBytes = asn1sp.readObject().getEncoded();
+			} catch (IOException e) {
+				throw new SecureMessagingException(e);
+			}
 
 			ASN1InputStream asn1in = new ASN1InputStream(encodedBytes);
-
-			switch (encodedBytes[0]) {
-			case (byte) 0x87:
-				do87 = new DO87();
-				do87.fromByteArray(asn1in.readObject().getEncoded());
-				break;
-			case (byte) 0x99:
-				do99 = new DO99();
-				do99.fromByteArray(asn1in.readObject().getEncoded());
-				break;
-			case (byte) 0x8E:
-				do8E = new DO8E();
-				do8E.fromByteArray(asn1in.readObject().getEncoded());
+			try {
+				switch (encodedBytes[0]) {
+				case (byte) 0x87:
+					do87 = new DO87();
+					do87.fromByteArray(asn1in.readObject().getEncoded());
+					break;
+				case (byte) 0x99:
+					do99 = new DO99();
+					do99.fromByteArray(asn1in.readObject().getEncoded());
+					break;
+				case (byte) 0x8E:
+					do8E = new DO8E();
+					do8E.fromByteArray(asn1in.readObject().getEncoded());
+				}
+			} catch (IOException e) {
+				throw new SecureMessagingException(e);
 			}
 
 			pointer += encodedBytes.length;
@@ -208,9 +193,12 @@ public class SecureMessaging {
 
 		// Construct K (SSC||DO87||DO99)
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		if (do87 != null)
-			bout.write(do87.getEncoded());
-		bout.write(do99.getEncoded());
+		try {
+			if (do87 != null) bout.write(do87.getEncoded());
+			bout.write(do99.getEncoded());
+		} catch (IOException e) {
+			throw new SecureMessagingException(e);
+		}
 
 		crypto.init(ks_mac, ssc);
 		byte[] cc = crypto.getMAC(bout.toByteArray());
@@ -229,7 +217,11 @@ public class SecureMessaging {
 		if (do87 != null) {
 			crypto.init(ks_enc, ssc);
 			byte[] do87Data = do87.getData();
-			data = crypto.decrypt(do87Data);
+			try {
+				data = crypto.decrypt(do87Data);
+			} catch (AmCryptoException e) {
+				throw new SecureMessagingException(e);
+			}
 			// Build unwrapped RAPDU
 			unwrappedAPDUBytes = new byte[data.length + 2];
 			System.arraycopy(data, 0, unwrappedAPDUBytes, 0, data.length);
@@ -242,23 +234,28 @@ public class SecureMessaging {
 		return new ResponseAPDU(unwrappedAPDUBytes);
 	}
 
-	// encrypt data with KS.ENC and build DO87
-	private DO87 buildDO87(byte[] data) throws DataLengthException,
-			ShortBufferException, IllegalBlockSizeException,
-			BadPaddingException, IllegalStateException,
-			InvalidCipherTextException, IOException {
+	
+	/**
+	 * encrypt data with KS.ENC and build DO87
+	 * @param data
+	 * @return
+	 * @throws SecureMessagingException
+	 */
+	private DO87 buildDO87(byte[] data) throws SecureMessagingException  {
 
 		crypto.init(ks_enc, ssc);
-		byte[] enc_data = crypto.encrypt(data);
+		byte[] enc_data;
+		try {
+			enc_data = crypto.encrypt(data);
+		} catch (AmCryptoException e) {
+			throw new SecureMessagingException(e);
+		}
 
 		return new DO87(enc_data);
 
 	}
 
-	private DO8E buildDO8E(byte[] header, DO87 do87, DO97 do97)
-			throws IOException, DataLengthException, ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			IllegalStateException, InvalidCipherTextException {
+	private DO8E buildDO8E(byte[] header, DO87 do87, DO97 do97) throws SecureMessagingException {
 
 		ByteArrayOutputStream m = new ByteArrayOutputStream();
 
@@ -267,15 +264,20 @@ public class SecureMessaging {
 		 * vorhanden sind, wird der Header gepaddet. Ansonsten wird erst beim
 		 * Berechnen des MAC gepaddet.
 		 */
-		if (do87 != null || do97 != null)
-			m.write(crypto.addPadding(header));
-		else
-			m.write(header);
+		try {
+			if (do87 != null || do97 != null)
+				m.write(crypto.addPadding(header));
+			
+			else
+				m.write(header);
 
-		if (do87 != null)
-			m.write(do87.getEncoded());
-		if (do97 != null)
-			m.write(do97.getEncoded());
+			if (do87 != null)
+				m.write(do87.getEncoded());
+			if (do97 != null)
+				m.write(do97.getEncoded());
+		} catch (IOException e) {
+			throw new SecureMessagingException(e);
+		}
 
 		crypto.init(ks_mac, ssc);
 

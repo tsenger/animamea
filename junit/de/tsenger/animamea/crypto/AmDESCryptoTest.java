@@ -5,19 +5,12 @@ package junit.de.tsenger.animamea.crypto;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
-
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tsenger.animamea.crypto.AmCryptoException;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
 import de.tsenger.animamea.tools.HexString;
@@ -65,19 +58,10 @@ public class AmDESCryptoTest {
 	/**
 	 * Test method for
 	 * {@link de.tsenger.animamea.crypto.AmCryptoProvider#encrypt(byte[])}.
-	 * 
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 * @throws IllegalStateException
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws ShortBufferException
-	 * @throws DataLengthException
+	 * @throws AmCryptoException 
 	 */
 	@Test
-	public void testEncrypt() throws DataLengthException, ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			IllegalStateException, InvalidCipherTextException, IOException {
+	public void testEncrypt() throws AmCryptoException {
 		byte[] c = cp_enc.encrypt(plain1);
 		assertTrue(HexString.bufferToHex(c), Arrays.areEqual(c, cipher1));
 	}
@@ -85,19 +69,10 @@ public class AmDESCryptoTest {
 	/**
 	 * Test method for
 	 * {@link de.tsenger.animamea.crypto.AmCryptoProvider#decrypt(byte[])}.
-	 * 
-	 * @throws IOException
-	 * @throws InvalidCipherTextException
-	 * @throws IllegalStateException
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
-	 * @throws ShortBufferException
-	 * @throws DataLengthException
+	 * @throws AmCryptoException 
 	 */
 	@Test
-	public void testDecrypt() throws DataLengthException, ShortBufferException,
-			IllegalBlockSizeException, BadPaddingException,
-			IllegalStateException, InvalidCipherTextException, IOException {
+	public void testDecrypt() throws AmCryptoException {
 		byte[] p = cp_enc.decrypt(cipher1);
 		assertTrue(HexString.bufferToHex(p), Arrays.areEqual(p, plain1));
 	}
