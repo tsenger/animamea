@@ -33,10 +33,7 @@ import org.bouncycastle.crypto.params.ParametersWithIV;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-/**
- * @author Tobias Senger (tobias@t-senger.de)
- * 
- */
+
 public class AmAESCrypto extends AmCryptoProvider {
 
 	private byte[] keyBytes = null;
@@ -146,7 +143,7 @@ public class AmAESCrypto extends AmCryptoProvider {
 	 */
 	@Override
 	public byte[] decryptBlock(byte[] key, byte[] z) {
-		byte[] s = new byte[16];
+		byte[] s = new byte[blockSize];
 		KeyParameter encKey = new KeyParameter(key);
 		BlockCipher cipher = new AESFastEngine();
 		cipher.init(false, encKey);
@@ -165,7 +162,7 @@ public class AmAESCrypto extends AmCryptoProvider {
 	 */
 
 	public byte[] encryptBlock(byte[] key, byte[] z) {
-		byte[] s = new byte[16];
+		byte[] s = new byte[blockSize];
 		KeyParameter encKey = new KeyParameter(key);
 		BlockCipher cipher = new AESFastEngine();
 		cipher.init(true, encKey);

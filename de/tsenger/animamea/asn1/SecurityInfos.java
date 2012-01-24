@@ -41,6 +41,7 @@ public class SecurityInfos {
 	List<ChipAuthenticationDomainParameterInfo> chipAuthenticationDomainParameterInfoList = new ArrayList<ChipAuthenticationDomainParameterInfo>();
 	List<CardInfoLocator> cardInfoLocatorList = new ArrayList<CardInfoLocator>();
 	List<PrivilegedTerminalInfo> privilegedTerminalInfoList = new ArrayList<PrivilegedTerminalInfo>();
+	List<ChipAuthenticationPublicKeyInfo> chipAuthenticationPublicKeyInfoList = new ArrayList<ChipAuthenticationPublicKeyInfo>();
 
 	private byte[] encodedData = null;
 
@@ -68,32 +69,29 @@ public class SecurityInfos {
 					.getObjectAt(0);
 
 			switch (oid.toString().charAt(18)) {
+			case '1': 
+				chipAuthenticationPublicKeyInfoList.add(new ChipAuthenticationPublicKeyInfo(securityInfo[i]));
+				break;
 			case '2':
-				terminalAuthenticationInfoList
-						.add(new TerminalAuthenticationInfo(securityInfo[i]));
+				terminalAuthenticationInfoList.add(new TerminalAuthenticationInfo(securityInfo[i]));
 				break;
 			case '3':
 				if (oid.toString().length() == 23)
-					chipAuthenticationInfoList.add(new ChipAuthenticationInfo(
-							securityInfo[i]));
+					chipAuthenticationInfoList.add(new ChipAuthenticationInfo(securityInfo[i]));
 				else
-					chipAuthenticationDomainParameterInfoList
-							.add(new ChipAuthenticationDomainParameterInfo(
-									securityInfo[i]));
+					chipAuthenticationDomainParameterInfoList.add(new ChipAuthenticationDomainParameterInfo(securityInfo[i]));
 				break;
 			case '4':
 				if (oid.toString().length() == 23)
 					paceInfoList.add(new PaceInfo(securityInfo[i]));
 				else
-					paceDomainParameterInfoList
-							.add(new PaceDomainParameterInfo(securityInfo[i]));
+					paceDomainParameterInfoList.add(new PaceDomainParameterInfo(securityInfo[i]));
 				break;
 			case '6':
 				cardInfoLocatorList.add(new CardInfoLocator(securityInfo[i]));
 				break;
 			case '8':
-				privilegedTerminalInfoList.add(new PrivilegedTerminalInfo(
-						securityInfo[i]));
+				privilegedTerminalInfoList.add(new PrivilegedTerminalInfo(securityInfo[i]));
 				break;
 			} // SWITCH
 
@@ -111,6 +109,8 @@ public class SecurityInfos {
 				+ " ChipAuthenticationInfo objects \n"
 				+ chipAuthenticationDomainParameterInfoList.size()
 				+ " ChipAuthenticationDomainParameterInfo objects \n"
+				+ chipAuthenticationPublicKeyInfoList.size()
+				+ " ChipAuthenticationPublicKeyInfo objects \n"
 				+ paceInfoList.size() + " PaceInfo objects \n"
 				+ paceDomainParameterInfoList.size()
 				+ " PaceDomainParameterInfo objects \n"
@@ -125,6 +125,9 @@ public class SecurityInfos {
 			summary = summary + item.toString();
 		}
 		for (ChipAuthenticationDomainParameterInfo item : chipAuthenticationDomainParameterInfoList) {
+			summary = summary + item.toString();
+		}
+		for (ChipAuthenticationPublicKeyInfo item : chipAuthenticationPublicKeyInfoList) {
 			summary = summary + item.toString();
 		}
 		for (PaceInfo item : paceInfoList) {
@@ -169,6 +172,10 @@ public class SecurityInfos {
 
 	public List<PaceDomainParameterInfo> getPaceDomainParameterInfoList() {
 		return paceDomainParameterInfoList;
+	}
+	
+	public List<ChipAuthenticationPublicKeyInfo> getChipAuthenticationPublicKeyInfoList() {
+		return chipAuthenticationPublicKeyInfoList;
 	}
 
 }

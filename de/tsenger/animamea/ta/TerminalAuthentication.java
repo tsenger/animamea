@@ -40,10 +40,8 @@ public abstract class TerminalAuthentication {
 	
 	private final SecureRandom randomGenerator = new SecureRandom();
 	
-	private BigInteger PCD_ephSK_ECDH = null;
+	private BigInteger PCD_ephSK = null;
 	private ECPoint PCD_ephPK_ECDH = null;
-	
-	private BigInteger PCD_ephSK_DH = null;
 	private BigInteger PCD_ephPK_DH = null;
 	
 	private String dpType = null;
@@ -61,6 +59,7 @@ public abstract class TerminalAuthentication {
 		
 		dpType = caDomainParamter.getDPType(); 
 		
+		
 		if (dpType.equals("ECDH")) {
 			
 			ECCurve.Fp curve = (Fp) caDomainParamter.getECDHParameter().getCurve();
@@ -68,9 +67,9 @@ public abstract class TerminalAuthentication {
 			
 			byte[] rnd = new byte[(curve.getFieldSize() / 8)];
 			randomGenerator.nextBytes(rnd);
-			PCD_ephSK_ECDH = new BigInteger(1, rnd);
+			PCD_ephSK = new BigInteger(1, rnd);			
 						
-			PCD_ephPK_ECDH = pointG.multiply(PCD_ephSK_ECDH);
+			PCD_ephPK_ECDH = pointG.multiply(PCD_ephSK);
 			return PCD_ephPK_ECDH.getEncoded();
 		}
 		else if (dpType.equals("DH")) {
@@ -80,12 +79,16 @@ public abstract class TerminalAuthentication {
 			
 			byte[] rnd = new byte[g.bitLength() / 8];
 			randomGenerator.nextBytes(rnd);
-			PCD_ephSK_DH = new BigInteger(1, rnd);
+			PCD_ephSK = new BigInteger(1, rnd);
 			
-			PCD_ephPK_DH = g.modPow(PCD_ephSK_DH, p);
+			PCD_ephPK_DH = g.modPow(PCD_ephSK, p);
 			return bigIntToByteArray(PCD_ephPK_DH);
 		}
 		return null;
+	}
+	
+	public BigInteger getSecretKey() {
+		return PCD_ephSK;		
 	}
 
 	

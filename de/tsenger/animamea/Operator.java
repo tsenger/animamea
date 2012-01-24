@@ -21,15 +21,22 @@ package de.tsenger.animamea;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.cms.ContentInfo;
+import org.bouncycastle.asn1.cms.SignedData;
 
 import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.SecurityInfos;
+import de.tsenger.animamea.ca.CAOperator;
 import de.tsenger.animamea.iso7816.FileAccess;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.pace.PaceOperator;
 import de.tsenger.animamea.ta.CertificateProvider;
 import de.tsenger.animamea.ta.TAOperator;
-import de.tsenger.animamea.tools.HexString;
 
 /**
  * 
@@ -42,21 +49,23 @@ public class Operator {
 	static byte sfid = (byte) 0x1C;
 
 	public static void main(String[] args) throws Exception {
-
 		AmCardHandler ch = new AmCardHandler();
-//		ch.setDebugMode(true);
+		ch.setDebugMode(true);
 		ch.connect(0); // First terminal
 
 		FileAccess facs = new FileAccess(ch);
+		
 		long millis = System.currentTimeMillis();
 		
 		//Lese Inhalt des EF.CardAccess
 		byte[] efcaBytes = facs.getFile(fid_efca);
-		System.out.println("EF.CardAccess:\n"+HexString.bufferToHex(efcaBytes));
+		System.out.println("EF.CardAccess read\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
+//		System.out.println("EF.CardAccess:\n"+HexString.bufferToHex(efcaBytes));
 
 		//Parse den Inhalt des EF.CardAccess
 		SecurityInfos si = new SecurityInfos();
 		si.decode(efcaBytes);
+		System.out.println("\nEF.CardAccess decoded\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
 		System.out.println(si);
 
 		//Initialisiere PACE mit dem ersten PACE-Info aus dem EF.CardAccess
@@ -73,9 +82,8 @@ public class Operator {
 		//Wenn PACE erfolgreich durchgeführt wurde, wird sein SecureMessaging-Objekt
 		//mit gültigen Session-Keys zurückgeliefert.
 		if (sm != null) {
-			System.out.println("time: " + (System.currentTimeMillis() - millis)
+			System.out.println("\nPACE established!\ntime: " + (System.currentTimeMillis() - millis)
 					+ " ms");
-			System.out.println("PACE established!");
 			ch.setSecureMessaging(sm);
 		}
 		
@@ -84,16 +92,31 @@ public class Operator {
 		
 		DomainParameter dp = new DomainParameter(si.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
 		top.initialize(new CertificateProvider(), dp, pop.getPKpicc());
-		top.performTA();
+		byte[] ephSK_PCD = top.performTA();
 		
-		System.out.println("time: " + (System.currentTimeMillis() - millis)	+ " ms");
-		System.out.println("TA established!");
+		System.out.println("\nTA established!\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
+
 		
 		//Lese EF.CardSecurity
 		byte[] efcsBytes = facs.getFile(fid_efcs);
-		System.out.println("EF.CardSecurity:\n"+HexString.bufferToHex(efcsBytes));
 		
-		saveToFile("/home/tsenger/Desktop/EFCardSecurity.bin", efcsBytes);
+		//Extrahiere SecurityInfos
+		SecurityInfos efcs = decodeEFCardAccess(efcsBytes);
+		
+		// Erzeuge Chip Authentication Operator und übergebe CardHandler
+		CAOperator cop = new CAOperator(ch);
+		
+		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), top.getSecretKey(), ephSK_PCD);
+		SecureMessaging sm2 = cop.performCA();
+		if (sm2 != null) {
+			System.out.println("\nCA established!\ntime: " + (System.currentTimeMillis() - millis)
+					+ " ms");
+			ch.setSecureMessaging(sm2);
+		}
+		facs.getFile(fid_efca);
+		
+		
+//		saveToFile("/home/tsenger/Desktop/EFCardSecurity.bin", efcsBytes);
 		
 		// byte[] resetRetryCounter = Hex.decode("002c020306313233343536");
 		// ch.transceive(new CommandAPDU(resetRetryCounter));
@@ -103,6 +126,24 @@ public class Operator {
 		// byte[] efcsBytes = facs.getFile(fid_efcs);
 		// System.out.println(HexString.bufferToHex(efcsBytes));
 
+	}
+	
+	private static SecurityInfos decodeEFCardAccess(byte[] data) throws IOException {
+		ASN1Sequence asnSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(data);
+		ContentInfo contentInfo = new ContentInfo(asnSeq);
+		DERSequence derSeq = (DERSequence) contentInfo.getContent();
+		SignedData signedData = new SignedData(derSeq);;
+		ContentInfo contentInfo2 = signedData.getEncapContentInfo();
+		DEROctetString octString = (DEROctetString) contentInfo2.getContent();
+		
+		SecurityInfos si = new SecurityInfos();
+		try {
+			si.decode(octString.getOctets());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return si;
 	}
 	
 	/**Saves data with the name given in parameter efName into a local file.

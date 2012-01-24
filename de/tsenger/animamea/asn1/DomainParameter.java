@@ -45,9 +45,8 @@ public class DomainParameter {
 	 * TODO explizite DH Parameter werden noch nicht erkannt. 
 	 * @param algorithm OID
 	 * @param ref Referenz auf einen Domain Parameter
-	 * @throws Exception 
 	 */
-	public DomainParameter(AlgorithmIdentifier aid) throws Exception {
+	public DomainParameter(AlgorithmIdentifier aid) {
 		if (aid.getAlgorithm().toString().equals(BSIObjectIdentifiers.standardizedDomainParameters.toString())) {
 			
 			int dpref = ((DERInteger)aid.getParameters()).getPositiveValue().intValue(); 
@@ -102,7 +101,7 @@ public class DomainParameter {
 			ecdhParameters = new X9ECParameters((ASN1Sequence) aid.getParameters());
 		}
 		
-		else throw new Exception("unsupported Domain Parameters");
+		else throw new UnsupportedOperationException("unsupported Domain Parameters");
 	}
 	
 	public String getDPType() {

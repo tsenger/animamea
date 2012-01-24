@@ -114,21 +114,20 @@ public class KeyDerivationFunction {
 	 *            A 32-bit, big-endian integer counter. 1 for en-/decoding, 2
 	 *            for MAC (checksum), 3 for deriving encryption keys from a
 	 *            password
-	 * @throws Exception
+	 * @throws IllegalArgumentException
 	 *             c must be 1, 2 or 3
 	 */
-	public KeyDerivationFunction(byte[] K, byte[] r, int c) throws Exception {
+	public KeyDerivationFunction(byte[] K, byte[] r, int c) throws IllegalArgumentException {
 
 		if (c <= 0 || c > 3)
-			throw new Exception("c must be 1, 2 or 3!");
+			throw new IllegalArgumentException("c must be 1, 2 or 3!");
 
 		byte[] cBytes = intToByteArray(c);
 
 		mergedData = new byte[K.length + +r.length + cBytes.length];
 		System.arraycopy(K, 0, mergedData, 0, K.length);
 		System.arraycopy(r, 0, mergedData, K.length, r.length);
-		System.arraycopy(cBytes, 0, mergedData, K.length + r.length,
-				cBytes.length);
+		System.arraycopy(cBytes, 0, mergedData, K.length + r.length, cBytes.length);
 	}
 
 	/**
@@ -176,7 +175,7 @@ public class KeyDerivationFunction {
 		sha1.update(mergedData, 0, mergedData.length);
 		sha1.doFinal(checksum, 0);
 
-		// keydata = H(K||c)
+		// keydata = H(K||r||c)
 		// keydata sind die ersten 16 Byte der Hashfunktion über "mergedData"
 		byte[] keydata = new byte[16];
 		System.arraycopy(checksum, 0, keydata, 0, 16);

@@ -220,16 +220,16 @@ public class PaceOperator {
 			throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
 
 		// send first GA and get nonce
-		byte[] nonce_z = getNonce().getEncryptedNonce80();
+		byte[] nonce_z = getNonce().getDataObject(0);
 		byte[] nonce_s = decryptNonce(nonce_z);
 		byte[] X1 = pace.getX1(nonce_s);
 
 		// X1 zur Karte schicken und Y1 empfangen
-		byte[] Y1 = mapNonce(X1).getMappingData82();
+		byte[] Y1 = mapNonce(X1).getDataObject(2);
 
 		byte[] X2 = pace.getX2(Y1);
 		// X2 zur Karte schicken und Y2 empfangen.
-		byte[] Y2 = performKeyAgreement(X2).getEphemeralPK84();
+		byte[] Y2 = performKeyAgreement(X2).getDataObject(4);
 		
 		// Y2 ist PK_Picc der für die TA benötigt wird.
 		pk_picc = Y2.clone();
@@ -239,13 +239,13 @@ public class PaceOperator {
 		byte[] kmac = getKmac(S);
 
 		// Authentication Token T_PCD berechnen
-		byte[] tpcd = calcAuthToken(Y2, kmac);
+		byte[] tpcd = calcAuthToken(kmac, Y2);
 
 		// Authentication Token T_PCD zur Karte schicken und Authentication Token T_PICC empfangen
-		byte[] tpicc = performMutualAuthentication(tpcd).getAuthToken86();
+		byte[] tpicc = performMutualAuthentication(tpcd).getDataObject(6);
 
 		// Authentication Token T_PICC' berechnen
-		byte[] tpicc_strich = calcAuthToken(X2, kmac);
+		byte[] tpicc_strich = calcAuthToken(kmac, X2);
 
 		// Prüfe ob T_PICC = T_PICC'
 		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
@@ -270,20 +270,20 @@ public class PaceOperator {
 	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Parameter zur 
 	 * Berechnung des Authentication Token herangezogen.
 	 * 
-	 * @param Y2 Byte-Array welches ein DO84 (Ephemeral Public Key) enthält
+	 * @param data Byte-Array welches ein DO84 (Ephemeral Public Key) enthält
 	 * @param kmac Schlüssel K_mac für die Berechnung des MAC
 	 * @return Authentication Token
 	 */
-	private byte[] calcAuthToken(byte[] Y2, byte[] kmac) {
+	private byte[] calcAuthToken(byte[] kmac, byte[] data) {
 		byte[] tpcd = null;
 		if (pace instanceof PaceECDH) {
 			Fp curve = (Fp) ecdhParameters.getCurve();
-			ECPoint pointY = Converter.byteArrayToECPoint(Y2, curve);
+			ECPoint pointY = Converter.byteArrayToECPoint(data, curve);
 			AmECPublicKey pkpcd = new AmECPublicKey(protocolOIDString, pointY);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}
 		else if (pace instanceof PaceDH) {
-			BigInteger y = new BigInteger(Y2);
+			BigInteger y = new BigInteger(data);
 			AmDHPublicKey pkpcd = new AmDHPublicKey(protocolOIDString, y);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}
@@ -293,7 +293,7 @@ public class PaceOperator {
 	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {
 
 		DynamicAuthenticationData dad85 = new DynamicAuthenticationData();
-		dad85.setAuthenticationToken85(authToken);
+		dad85.addDataObject(5, authToken);
 		byte[] dadBytes = dad85.getDEREncoded();
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -333,7 +333,7 @@ public class PaceOperator {
 	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad83 = new DynamicAuthenticationData();
-		dad83.setEphemeralPK83(ephemeralPK);
+		dad83.addDataObject(3, ephemeralPK);
 		byte[] dadBytes = dad83.getDEREncoded();
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -372,7 +372,7 @@ public class PaceOperator {
 	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad81 = new DynamicAuthenticationData();
-		dad81.setMappingData81(mappingData);
+		dad81.addDataObject(1, mappingData);
 		byte[] dadBytes = dad81.getDEREncoded();
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -585,42 +585,27 @@ public class PaceOperator {
 	private void getCryptoInformation(PaceInfo pi) {
 		String protocolOIDString = pi.getProtocolOID();
 		if (protocolOIDString.equals(id_PACE_DH_GM_3DES_CBC_CBC.toString())
-				|| protocolOIDString.equals(id_PACE_DH_IM_3DES_CBC_CBC
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_3DES_CBC_CBC
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_3DES_CBC_CBC
-						.toString())) {
+				|| protocolOIDString.equals(id_PACE_DH_IM_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_3DES_CBC_CBC.toString())) {
 			keyLength = 112;
 			crypto = new AmDESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_128
-				.toString())
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_128
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_128
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128
-						.toString())) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128.toString())) {
 			keyLength = 128;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_192
-				.toString())
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_192
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_192
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192
-						.toString())) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192.toString())) {
 			keyLength = 192;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_256
-				.toString())
-				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_256
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_256
-						.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256
-						.toString())) {
+		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256.toString())) {
 			keyLength = 256;
 			crypto = new AmAESCrypto();
 		}

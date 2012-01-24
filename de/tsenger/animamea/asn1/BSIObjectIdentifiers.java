@@ -88,22 +88,22 @@ public interface BSIObjectIdentifiers {
 			id_CA + ".1");
 	public static final DERObjectIdentifier id_CA_DH_3DES_CBC_CBC = new DERObjectIdentifier(
 			id_CA_DH + ".1");
-	public static final DERObjectIdentifier id_CA_DH_3DES_CBC_CMAC_128 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_DH_AES_CBC_CMAC_128 = new DERObjectIdentifier(
 			id_CA_DH + ".2");
-	public static final DERObjectIdentifier id_CA_DH_3DES_CBC_CMAC_192 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_DH_AES_CBC_CMAC_192 = new DERObjectIdentifier(
 			id_CA_DH + ".3");
-	public static final DERObjectIdentifier id_CA_DH_3DES_CBC_CMAC_256 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_DH_AES_CBC_CMAC_256 = new DERObjectIdentifier(
 			id_CA_DH + ".4");
 
 	public static final DERObjectIdentifier id_CA_ECDH = new DERObjectIdentifier(
 			id_CA + ".2");
 	public static final DERObjectIdentifier id_CA_ECDH_3DES_CBC_CBC = new DERObjectIdentifier(
 			id_CA_ECDH + ".1");
-	public static final DERObjectIdentifier id_CA_ECDH_3DES_CBC_CMAC_128 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_ECDH_AES_CBC_CMAC_128 = new DERObjectIdentifier(
 			id_CA_ECDH + ".2");
-	public static final DERObjectIdentifier id_CA_ECDH_3DES_CBC_CMAC_192 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_ECDH_AES_CBC_CMAC_192 = new DERObjectIdentifier(
 			id_CA_ECDH + ".3");
-	public static final DERObjectIdentifier id_CA_ECDH_3DES_CBC_CMAC_256 = new DERObjectIdentifier(
+	public static final DERObjectIdentifier id_CA_ECDH_AES_CBC_CMAC_256 = new DERObjectIdentifier(
 			id_CA_ECDH + ".4");
 
 	// Chip Authentication Public Key OIDs

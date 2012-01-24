@@ -18,6 +18,7 @@
  */
 package de.tsenger.animamea.ta;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -42,14 +43,9 @@ import de.tsenger.animamea.iso7816.SecureMessagingException;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-/**
- * @author Tobias Senger (tobias@t-senger.de)
- *
- */
 public class TAOperator {
 	
 	private AmCardHandler cardHandler = null;
-	private final String car = null;
 	private CertificateProvider certProv = null;
 	private DomainParameter cadp = null;
 	private byte[] pkpicc = null;
@@ -60,19 +56,19 @@ public class TAOperator {
 
 	/** 
 	 * Konstruktor
-	 * @param ch AmCardHandler-Instanz über welches die Kartenkommandos gesendet werden.
+	 * @param ch AmCardHandler-Instanz über welche die Kartenkommandos gesendet werden.
 	 */
 	public TAOperator(AmCardHandler ch) {
 		cardHandler  = ch;
 	}
 	
 	/**
-	 * Initialisiert den TA Operator mit der initialen CAR aus PACE und einem
-	 * Zertifikats-Provider welche die passenden Zertifikate bereitstellt.
+	 * Initialisiert den TA Operator mit einem Zertifikatsprovider, den CA-DomainParamatern 
+	 * für die Berechnung des Public Key und dem Public Key aus PACE
 	 * 
-	 * @param car Certifate Authority Reference aus PACE
-	 * @param certProv
-	 * @param cadpi
+	 * @param certProv Zertifikat-Provider stellt die benötigten CV-Zertifikate bereit
+	 * @param cadp Chip Authentication Domain Parameter zur Berechnung des Public Key während TA
+	 * @param pkpicc Public Key aus PACE 
 	 */
 	public void initialize(CertificateProvider certProv, DomainParameter cadp, byte[] pkpicc) {
 		this.certProv = certProv;
@@ -90,11 +86,12 @@ public class TAOperator {
 	/**
 	 * Führt alle Schritte der Terminal Authentisierung durch. 
 	 * TODO: Link-Zertifikate werden zur Zeit nicht unterstützt
+	 * @return Terminal ephemeral Secret Key  
 	 * @throws CardException 
 	 * @throws SecureMessagingException 
 	 * @throws NoSuchProviderException 
 	 */
-	public void performTA() throws TAException, SecureMessagingException, CardException {
+	public byte[] performTA() throws TAException, SecureMessagingException, CardException {
 				
 		/*DV-Zertifikat*/
 		
@@ -136,12 +133,13 @@ public class TAOperator {
 		byte[] signature = ta.sign(message);
 		
 		sendExternalAuthenticate(signature);
+		
+		return ephemeralPKpcd;
 
 	}
-
 	
-	public byte[] getPKpcd() {
-		return ephemeralPKpcd;
+	public BigInteger getSecretKey() {
+		return ta.getSecretKey();
 	}
 	
 	private byte[] comp(byte[] publicKeyBytes, String type) {

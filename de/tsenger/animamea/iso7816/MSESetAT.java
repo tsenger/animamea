@@ -128,7 +128,7 @@ public class MSESetAT {
 	 *            Keys angegeben Bei RI wird der Index des zu verwendenden
 	 *            Private Keys angegeben
 	 */
-	public void setPrivateKeyReference(byte pkr) {
+	public void setPrivateKeyReference(int pkr) {
 		DERTaggedObject to = new DERTaggedObject(false, 0x04, new DERInteger(pkr));
 		do84PrivateKeyReference = to.getDEREncoded();
 
