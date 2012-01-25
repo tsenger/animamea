@@ -27,8 +27,6 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_C
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_192;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_256;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 
 import javax.smartcardio.CardException;
@@ -37,7 +35,7 @@ import javax.smartcardio.ResponseAPDU;
 
 import org.bouncycastle.math.ec.ECCurve.Fp;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.encoders.Hex;
+import org.bouncycastle.util.Arrays;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.KeyDerivationFunction;
@@ -103,7 +101,7 @@ public class CAOperator {
 		getCryptoInformation(caInfo);
 	}
 	
-	public SecureMessaging performCA() throws SecureMessagingException, CardException, IOException {
+	public SecureMessaging performCA() throws SecureMessagingException, CardException, CAException {
 		//send MSE:Set AT
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_CA);
@@ -112,7 +110,7 @@ public class CAOperator {
 		ch.transceive(new CommandAPDU(mse.getBytes()));
 		
 		// General Authenticate
-		DynamicAuthenticationData dad = sendGA();
+		DynamicAuthenticationData dad = sendGA(); //TODO Rückgabe der Karte prüfen (z.B. SW != 9000)
 		
 		//Schlüssel für Secure Messaging berechnen
 		byte[] rnd_picc = dad.getDataObject(1);
@@ -138,10 +136,10 @@ public class CAOperator {
 		}
 		
 		//Authentication Token vergleichen
-		byte[] tpcd = calcToken(kmac, caPK);
-		System.out.println("T_picc : "+HexString.bufferToHex(dad.getDataObject(2))+"\nT_pcd  : "+HexString.bufferToHex(tpcd));
-		
-		
+		byte[] tpcd = calcToken(kmac, ephPKPCD);
+		if (!Arrays.areEqual(tpcd, dad.getDataObject(2))) throw new CAException("Authentication Tokens are different");
+//		System.out.println("T_picc : "+HexString.bufferToHex(dad.getDataObject(2))+"\nT_pcd  : "+HexString.bufferToHex(tpcd));
+				
 		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
 	}
 	
@@ -151,6 +149,7 @@ public class CAOperator {
 			Fp curve = (Fp) dp.getECDHParameter().getCurve();
 			ECPoint point = Converter.byteArrayToECPoint(data, curve);
 			AmECPublicKey pk = new AmECPublicKey(protocol, point);
+			System.out.println("AuthToken: \n"+HexString.bufferToHex(pk.getEncoded()));
 			tpcd = crypto.getMAC(kmac, pk.getEncoded());
 		}
 		else if (ca instanceof ChipAuthenticationDH) {
@@ -161,18 +160,13 @@ public class CAOperator {
 		return tpcd;
 	}
 	
-	private DynamicAuthenticationData sendGA() throws IOException, SecureMessagingException, CardException {
+	private DynamicAuthenticationData sendGA() throws SecureMessagingException, CardException {
 		DynamicAuthenticationData dad80 = new DynamicAuthenticationData();
 		dad80.addDataObject(0, ephPKPCD);
 		byte[] dadBytes = dad80.getDEREncoded();
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		bos.write(Hex.decode("00860000"));
-		bos.write(dadBytes.length);
-		bos.write(dadBytes);
-		bos.write(0);
-		
-		ResponseAPDU resp = ch.transceive(new CommandAPDU(bos.toByteArray()));
+				
+		// Length Expected steht hier auf 0xFF weil CommandAPDU den Wert 0x00 nicht berücksichtigt.
+		ResponseAPDU resp = ch.transceive(new CommandAPDU(0x00, 0x86, 00, 00, dadBytes, 0xFF));
 		
 		DynamicAuthenticationData dad = new DynamicAuthenticationData();
 		dad.decode(resp.getData());

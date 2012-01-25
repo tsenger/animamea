@@ -19,24 +19,35 @@
 
 package de.tsenger.animamea;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+
+import javax.smartcardio.CardException;
+import javax.smartcardio.CommandAPDU;
 
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.SignedData;
+import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.SecurityInfos;
 import de.tsenger.animamea.ca.CAOperator;
+import de.tsenger.animamea.iso7816.CardCommands;
 import de.tsenger.animamea.iso7816.FileAccess;
 import de.tsenger.animamea.iso7816.SecureMessaging;
+import de.tsenger.animamea.iso7816.SecureMessagingException;
 import de.tsenger.animamea.pace.PaceOperator;
 import de.tsenger.animamea.ta.CertificateProvider;
 import de.tsenger.animamea.ta.TAOperator;
+import de.tsenger.animamea.tools.HexString;
 
 /**
  * 
@@ -74,7 +85,7 @@ public class Operator {
 	
 		if (si.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
 		pop.setAuthTemplate(si.getPaceInfoList().get(0), si.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
-		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "819955", 2, 2); //Standardisierte PACE Domain Paramter
+		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "985146", 2, 2); //Standardisierte PACE Domain Paramter
 		
 		//Führe PACE durch
 		SecureMessaging sm = pop.performPace();
@@ -106,15 +117,28 @@ public class Operator {
 		// Erzeuge Chip Authentication Operator und übergebe CardHandler
 		CAOperator cop = new CAOperator(ch);
 		
+		//Initialisiere und führe CA durch
 		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), top.getSecretKey(), ephSK_PCD);
 		SecureMessaging sm2 = cop.performCA();
+		
+		// Wenn CA erfolgreich war, wird ein neues SecureMessaging Object zurückgeliefert welches die neuen Schlüssel enthält
 		if (sm2 != null) {
 			System.out.println("\nCA established!\ntime: " + (System.currentTimeMillis() - millis)
 					+ " ms");
 			ch.setSecureMessaging(sm2);
 		}
-		facs.getFile(fid_efca);
 		
+		//Selektiere die eID-Anwendung
+		ch.transceive(CardCommands.selectApp(Hex.decode("E80704007F00070302")));
+		
+		// Lese eine Datengrupppe
+		byte dgno = 4;
+		byte[] dgdata= facs.getFile(dgno);
+		DERApplicationSpecific derapp = (DERApplicationSpecific) DERApplicationSpecific.fromByteArray(dgdata);
+		DERUTF8String name = (DERUTF8String) derapp.getObject();
+		System.out.println("DG0"+dgno+": "+ name);
+		
+		userInput(ch);
 		
 //		saveToFile("/home/tsenger/Desktop/EFCardSecurity.bin", efcsBytes);
 		
@@ -126,6 +150,33 @@ public class Operator {
 		// byte[] efcsBytes = facs.getFile(fid_efcs);
 		// System.out.println(HexString.bufferToHex(efcsBytes));
 
+	}
+	
+	private static void userInput(AmCardHandler ch) {
+		BufferedReader bin = new BufferedReader(new InputStreamReader(System.in));
+		
+		do {
+			String cmd=null;
+			try {
+				System.out.print("[] <-- ");
+				cmd = bin.readLine();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (cmd.equals("")) return;
+			byte[] resp = null;
+			try {
+				resp = ch.transceive(new CommandAPDU(Hex.decode(cmd))).getBytes();
+			} catch (SecureMessagingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CardException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("[] --> "+HexString.bufferToHex(resp));
+		} while(true);
 	}
 	
 	private static SecurityInfos decodeEFCardAccess(byte[] data) throws IOException {

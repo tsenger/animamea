@@ -38,6 +38,7 @@ import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.PublicKey;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
+import de.tsenger.animamea.tools.HexString;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -207,8 +208,9 @@ public class TAOperator {
 	 * @param dvCert
 	 * @throws SecureMessagingException 
 	 * @throws CardException 
+	 * @throws TAException 
 	 */
-	private ResponseAPDU sendPSOVerifyCertificate(CVCertificate dvCert) throws SecureMessagingException, CardException {
+	private ResponseAPDU sendPSOVerifyCertificate(CVCertificate dvCert) throws SecureMessagingException, CardException, TAException {
 		
 		byte[] certBody = dvCert.getBody().getDEREncoded();
 		byte[] certSignature = dvCert.getSignature().getDEREncoded();
@@ -219,8 +221,10 @@ public class TAOperator {
 		
 		
 		CommandAPDU pso = new CommandAPDU(0x00, 0x2A, 0x00, 0xBE, data);
-		
-		return cardHandler.transceive(pso);
+		ResponseAPDU resp = cardHandler.transceive(pso);
+		if (resp.getSW1()!=0x90) throw new TAException("PSO:Verify failed "+HexString.bufferToHex(resp.getBytes()));
+
+		return resp;
 	}
 
 	/**
@@ -228,15 +232,19 @@ public class TAOperator {
 	 * @return
 	 * @throws CardException
 	 * @throws SecureMessagingException
+	 * @throws TAException 
 	 */
-	private ResponseAPDU sendMSESetDST(String pubKeyRef) throws SecureMessagingException, CardException{
+	private ResponseAPDU sendMSESetDST(String pubKeyRef) throws SecureMessagingException, CardException, TAException{
 	
 		DERTaggedObject do83 = new DERTaggedObject(false, 0x03, new DEROctetString(pubKeyRef.getBytes()));
 		byte[] data = do83.getDEREncoded();
 		
 		CommandAPDU setdst = new CommandAPDU(0x00,0x22,0x81,0xB6,data);
 		
-		return cardHandler.transceive(setdst);
+		ResponseAPDU resp = cardHandler.transceive(setdst);
+		if (resp.getSW1()!=0x90) throw new TAException("MSE:Set AT failed "+HexString.bufferToHex(resp.getBytes()));
+		
+		return resp;
 	}
 
 
