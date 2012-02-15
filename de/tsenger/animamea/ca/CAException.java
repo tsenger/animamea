@@ -22,6 +22,7 @@ package de.tsenger.animamea.ca;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
+@SuppressWarnings("serial")
 public class CAException extends Exception {
 
 	/**

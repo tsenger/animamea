@@ -19,45 +19,50 @@
 
 package de.tsenger.animamea.asn1;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERSet;
 
 /**
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  */
 
-public class SecurityInfos {
+public class SecurityInfos extends ASN1Encodable {
 
-	List<TerminalAuthenticationInfo> terminalAuthenticationInfoList = new ArrayList<TerminalAuthenticationInfo>();
-	List<ChipAuthenticationInfo> chipAuthenticationInfoList = new ArrayList<ChipAuthenticationInfo>();
-	List<PaceInfo> paceInfoList = new ArrayList<PaceInfo>();
-	List<PaceDomainParameterInfo> paceDomainParameterInfoList = new ArrayList<PaceDomainParameterInfo>();
-	List<ChipAuthenticationDomainParameterInfo> chipAuthenticationDomainParameterInfoList = new ArrayList<ChipAuthenticationDomainParameterInfo>();
-	List<CardInfoLocator> cardInfoLocatorList = new ArrayList<CardInfoLocator>();
-	List<PrivilegedTerminalInfo> privilegedTerminalInfoList = new ArrayList<PrivilegedTerminalInfo>();
-	List<ChipAuthenticationPublicKeyInfo> chipAuthenticationPublicKeyInfoList = new ArrayList<ChipAuthenticationPublicKeyInfo>();
+	List<TerminalAuthenticationInfo> terminalAuthenticationInfoList = new ArrayList<TerminalAuthenticationInfo>(3);
+	List<ChipAuthenticationInfo> chipAuthenticationInfoList = new ArrayList<ChipAuthenticationInfo>(3);
+	List<PaceInfo> paceInfoList = new ArrayList<PaceInfo>(3);
+	List<PaceDomainParameterInfo> paceDomainParameterInfoList = new ArrayList<PaceDomainParameterInfo>(3);
+	List<ChipAuthenticationDomainParameterInfo> chipAuthenticationDomainParameterInfoList = new ArrayList<ChipAuthenticationDomainParameterInfo>(3);
+	List<CardInfoLocator> cardInfoLocatorList = new ArrayList<CardInfoLocator>(1);
+	List<PrivilegedTerminalInfo> privilegedTerminalInfoList = new ArrayList<PrivilegedTerminalInfo>(1);
+	List<ChipAuthenticationPublicKeyInfo> chipAuthenticationPublicKeyInfoList = new ArrayList<ChipAuthenticationPublicKeyInfo>(3);
 
 	private byte[] encodedData = null;
 
 	public SecurityInfos() {
 	}
 
-	/* *
+	/**
 	 * Decodes the byte array passed as argument. The decoded values are stored
 	 * in the member variables of this class that represent the components of
 	 * the corresponding ASN.1 type.
 	 * 
 	 * @param encodedData DOCUMENT ME!
 	 * 
-	 * @ throws IOException DOCUMENT ME!
+	 * @throws IOException DOCUMENT ME!
 	 */
-	public void decode(byte[] encodedData) throws Exception {
+	public void decode(byte[] encodedData) throws IOException {
 		this.encodedData = encodedData;
 		ASN1Set securityInfos = (ASN1Set) ASN1Object.fromByteArray(encodedData);
 		int anzahlObjekte = securityInfos.size();
@@ -176,6 +181,51 @@ public class SecurityInfos {
 	
 	public List<ChipAuthenticationPublicKeyInfo> getChipAuthenticationPublicKeyInfoList() {
 		return chipAuthenticationPublicKeyInfoList;
+	}
+
+	/**
+	 * The definition of SecurityInfos is
+     * <pre>
+     * SecurityInfos ::= SET OF SecurityInfo
+     * 
+     * SecurityInfo ::= SEQUENCE {
+     * 		protocol		OBJECT IDENTIFIER,
+     * 		requiredData	ANY DEFINED BY protocol,
+     * 		optionalData	ANY DEFINED BY protocol OPTIONAL
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		
+		for (TerminalAuthenticationInfo item : terminalAuthenticationInfoList) {
+			v.add(item);
+		}
+		for (ChipAuthenticationInfo item : chipAuthenticationInfoList) {
+			v.add(item);
+		}
+		for (ChipAuthenticationDomainParameterInfo item : chipAuthenticationDomainParameterInfoList) {
+			v.add(item);
+		}
+		for (ChipAuthenticationPublicKeyInfo item : chipAuthenticationPublicKeyInfoList) {
+			v.add(item);
+		}
+		for (PaceInfo item : paceInfoList) {
+			v.add(item);
+		}
+		for (PaceDomainParameterInfo item : paceDomainParameterInfoList) {
+			v.add(item);
+		}
+		for (CardInfoLocator item : cardInfoLocatorList) {
+			v.add(item);
+		}
+		for (PrivilegedTerminalInfo item : privilegedTerminalInfoList) {
+			v.add(item);
+		}
+		
+		return new DERSet(v);
 	}
 
 }

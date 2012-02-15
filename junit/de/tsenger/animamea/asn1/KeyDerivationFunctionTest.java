@@ -11,7 +11,7 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tsenger.animamea.KeyDerivationFunction;
+import de.tsenger.animamea.crypto.KeyDerivationFunction;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -32,7 +32,7 @@ public class KeyDerivationFunctionTest {
 
 	/**
 	 * Test method for
-	 * {@link de.tsenger.animamea.KeyDerivationFunction#getDESedeKey()}.
+	 * {@link de.tsenger.animamea.crypto.KeyDerivationFunction#getDESedeKey()}.
 	 */
 	@Test
 	public void testGetDESedeKey() {
@@ -41,7 +41,7 @@ public class KeyDerivationFunctionTest {
 
 	/**
 	 * Test method for
-	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES128Key()}.
+	 * {@link de.tsenger.animamea.crypto.KeyDerivationFunction#getAES128Key()}.
 	 * 
 	 * @throws Exception
 	 */
@@ -55,7 +55,7 @@ public class KeyDerivationFunctionTest {
 
 	/**
 	 * Test method for
-	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES192Key()}.
+	 * {@link de.tsenger.animamea.crypto.KeyDerivationFunction#getAES192Key()}.
 	 */
 	@Test
 	public void testGetAES192Key() {
@@ -64,7 +64,7 @@ public class KeyDerivationFunctionTest {
 
 	/**
 	 * Test method for
-	 * {@link de.tsenger.animamea.KeyDerivationFunction#getAES256Key()}.
+	 * {@link de.tsenger.animamea.crypto.KeyDerivationFunction#getAES256Key()}.
 	 */
 	@Test
 	public void testGetAES256Key() {

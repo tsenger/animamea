@@ -23,6 +23,7 @@ package de.tsenger.animamea.iso7816;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
+@SuppressWarnings("serial")
 public class SecureMessagingException extends Exception {
 
 	/**

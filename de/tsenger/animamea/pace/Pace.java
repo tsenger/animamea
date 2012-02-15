@@ -25,10 +25,6 @@ package de.tsenger.animamea.pace;
  */
 public abstract class Pace {
 
-	protected byte[] nonce_s = null;
-	protected byte[] sharedSecret_P = null;
-	protected byte[] sharedSecret_K = null;
-
 	/**
 	 * Berechnet das erste KeyPair. x1: privater Schlüssel (Zufallszahl) und X1:
 	 * öffentlicher Schlüssel.

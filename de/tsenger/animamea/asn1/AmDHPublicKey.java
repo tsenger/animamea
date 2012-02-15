@@ -32,7 +32,7 @@ import org.bouncycastle.asn1.DERTags;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class AmDHPublicKey extends PublicKey implements DHPublicKey{
+public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	
 	private static final long serialVersionUID = 5691151250780854614L;
 
@@ -100,7 +100,7 @@ public class AmDHPublicKey extends PublicKey implements DHPublicKey{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tsenger.animamea.asn1.PublicKey#decode(org.bouncycastle.asn1.DERSequence)
+	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
 	 */
 	@Override
 	protected void decode(DERSequence seq) {
@@ -161,6 +161,5 @@ public class AmDHPublicKey extends PublicKey implements DHPublicKey{
 		DHParameterSpec dhSpec = new DHParameterSpec(getP(), getG());
 		return dhSpec;
 	}
-
 
 }

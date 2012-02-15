@@ -34,10 +34,9 @@ public class CardCommands {
 	private CardCommands() {
 	}
 
-	public static CommandAPDU readBinary(byte sfid, byte readlength)
-			throws Exception {
+	public static CommandAPDU readBinary(byte sfid, byte readlength) {
 		if (sfid > 0x1F)
-			throw new Exception("Invalid Short File Identifier!");
+			throw new IllegalArgumentException("Invalid Short File Identifier!");
 		byte P1 = (byte) 0x80;
 		P1 = (byte) (P1 | sfid);
 		return new CommandAPDU(new byte[] { 0, (byte) 0xB0, P1, 0, readlength });

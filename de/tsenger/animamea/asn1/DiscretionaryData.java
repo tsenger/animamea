@@ -21,8 +21,8 @@ package de.tsenger.animamea.asn1;
 
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
 
@@ -30,34 +30,34 @@ import org.bouncycastle.asn1.DEROctetString;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class DiscretionaryData {
+public class DiscretionaryData extends ASN1Encodable{
 
-	private DERApplicationSpecific dData = null;
-	private byte[] data = null;
+	private DEROctetString data = null;
 	
-
-	public DiscretionaryData(byte[] data) throws IOException {
-		this.data = data.clone();
-		DEROctetString der = new DEROctetString(data);
-		dData = new DERApplicationSpecific(false, 0x13, der);
+	public DiscretionaryData(byte[] data) {
+		this.data = new DEROctetString(data);
 	}
 
-	public DiscretionaryData(byte data) throws IOException {
-		this.data = new byte[]{data};
-		DERInteger der = new DERInteger(data);
-		dData = new DERApplicationSpecific(false, 0x13, der);
+	public DiscretionaryData(byte data) {
+		this.data = new DEROctetString(new byte[]{data});
 	}
 
+	/* (non-Javadoc)
+	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	 */
+	@Override
 	public DERObject toASN1Object() {
-		return dData;
-	}
-
-	public byte[] getEncoded() {
-		return dData.getDEREncoded();
+		try {
+			return new DERApplicationSpecific(false, 0x13, data);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public byte[] getData() {
-		return data;
+		return data.getOctets();
 	}
 	
 

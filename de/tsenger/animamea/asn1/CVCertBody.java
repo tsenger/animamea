@@ -21,9 +21,12 @@ package de.tsenger.animamea.asn1;
 import java.io.IOException;
 import java.util.Date;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -35,17 +38,17 @@ import de.tsenger.animamea.tools.Converter;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class CVCertBody {
+public class CVCertBody extends ASN1Encodable{
 	
 	private DERApplicationSpecific cvcbody = null;
 	
 	private DERInteger profileIdentifier = null;
 	private DERIA5String authorityReference = null;	
-	private PublicKey publicKey = null;
+	private AmPublicKey publicKey = null;
 	private DERIA5String chr = null;
 	private CertificateHolderAuthorizationTemplate chat = null;
 	private DEROctetString effectiveDate = null;
-	private DEROctetString expirationeDate = null;
+	private DEROctetString expirationDate = null;
 	private DERSequence extensions = null;
 	
 	
@@ -77,13 +80,14 @@ public class CVCertBody {
 		
 		effectiveDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(5)).getObject(DERTags.OCTET_STRING);
 		
-		expirationeDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(6)).getObject(DERTags.OCTET_STRING);
+		expirationDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(6)).getObject(DERTags.OCTET_STRING);
 		
 		if (bodySeq.size()>7) {
 			extensions = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(7)).getObject(DERTags.SEQUENCE);
 		}
 	}
 	
+	@Override
 	public byte[] getDEREncoded() {
 		return cvcbody.getDEREncoded();
 	}
@@ -96,7 +100,7 @@ public class CVCertBody {
 		return authorityReference.getString();
 	}
 	
-	public PublicKey getPublicKey() {
+	public AmPublicKey getPublicKey() {
 		return publicKey;
 	}
 	
@@ -113,7 +117,7 @@ public class CVCertBody {
 	}
 	
 	public Date getExpirationDate() {
-		return Converter.BCDtoDate(expirationeDate.getOctets());
+		return Converter.BCDtoDate(expirationDate.getOctets());
 	}
 	
 	@Override
@@ -126,6 +130,39 @@ public class CVCertBody {
 				"\tCHAT (Role): "+ chat.getRole()+"\n" +
 				"\teffective Date: "+getEffectiveDateDate()+"\n" +
 				"\texpiration Date: "+getExpirationDate());		
+	}
+
+	/**
+	 * CVCertBody contains:
+	 * - Certificate Profile Identifier
+	 * - Certificate Authority Reference
+	 * - Public Key
+	 * - Certificate Holder Reference
+	 * - Certificate Holder Authorization Template
+	 * - Certificate Effective Date
+	 * - Certificate Expiration Date
+	 * - Certificate Extensions (OPTIONAL)
+	 * 
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		try {
+			v.add(new DERApplicationSpecific(0x29, profileIdentifier));
+			v.add(new DERApplicationSpecific(0x02, authorityReference));
+			v.add(publicKey);
+			v.add(new DERApplicationSpecific(0x20, chr));
+			v.add(chat);
+			v.add(new DERApplicationSpecific(0x25, effectiveDate));
+			v.add(new DERApplicationSpecific(0x24, expirationDate));
+			if (extensions!=null) v.add(new DERApplicationSpecific(0x05, extensions));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        
+        return new DERApplicationSpecific(0x4E, v);
 	}
 
 }

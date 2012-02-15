@@ -42,7 +42,7 @@ import de.tsenger.animamea.asn1.CVCertificate;
 public class CertificateProvider {
 	
 	public CVCertificate getCVCACert() {
-		byte[] cvcaBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/CVCA_DETESTeID00002_DETESTeID00001.cvcert");
+		byte[] cvcaBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/CVCA/CVCA_DETESTeID00002_DETESTeID00001.cvcert");
 		CVCertificate cert = null;
 		try {
 			cert = new CVCertificate(cvcaBytes);
@@ -57,7 +57,8 @@ public class CertificateProvider {
 	}
 	
 	public CVCertificate getDVCert() {
-		byte[] dvBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/DV_DEDVTIDBSIDE003_DETESTeID00002.cvcert");
+//		byte[] dvBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/DV_DEDVTIDBSIDE003_DETESTeID00002.cvcert");
+		byte[] dvBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/DV/DETESTeID00002_DEDVTIDBSIDE006.cvcert");
 		CVCertificate cert = null;
 		try {
 			cert = new CVCertificate(dvBytes);
@@ -72,7 +73,8 @@ public class CertificateProvider {
 	}
 	
 	public CVCertificate getTerminalCert() {
-		byte[] atBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/AT_DEATTIDBSIDE003_DEDVTIDBSIDE003.cvcert");
+//		byte[] atBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/AT_DEATTIDBSIDE003_DEDVTIDBSIDE003.cvcert");
+		byte[] atBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Terminal/DEATTIDBSIDE006.cvcert");
 		CVCertificate cert = null;
 		try {
 			cert = new CVCertificate(atBytes);
@@ -87,7 +89,8 @@ public class CertificateProvider {
 	}
 	
 	public ECPrivateKeyStructure getPrivateKey() {
-		byte[] pkBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Key_DEATTIDBSIDE003.pkcs8");
+//		byte[] pkBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Key_DEATTIDBSIDE003.pkcs8");
+		byte[] pkBytes = readBinaryFile("/home/tsenger/Dokumente/Programming/animamea/certs/Terminal/DEATTIDBSIDE006.pkcs8");
 		DERSequence pkSeq = null;
 		try {
 			pkSeq = (DERSequence) DERSequence.fromByteArray(pkBytes);

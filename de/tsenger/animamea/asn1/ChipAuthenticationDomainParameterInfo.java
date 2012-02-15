@@ -19,7 +19,10 @@
 
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -28,7 +31,7 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class ChipAuthenticationDomainParameterInfo {
+public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
 
 	private DERObjectIdentifier protocol = null;
 	private AlgorithmIdentifier domainParameter = null;
@@ -68,6 +71,27 @@ public class ChipAuthenticationDomainParameterInfo {
 				+ getDomainParameter().getAlgorithm() + "\n\t\t"
 				+ getDomainParameter().getParameters() + "\n\tKeyID "
 				+ getKeyId() + "\n";
+	}
+
+	/**
+	 * The definition of ChipAuthenticationDomainParameterInfo is
+     * <pre>
+     * ChipAuthenticationDomainParameterInfo ::= SEQUENCE {
+     *      protocol   			OBJECT IDENTIFIER(id-CA-DH | id-CA-ECDH),
+     *      domainParameter		AlgorithmIdentifier,
+     *      keyID				INTEGER OPTIONAL
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(protocol);
+		v.add(domainParameter); 
+		if (keyId!=null) v.add(keyId);
+		
+		return new DERSequence(v);
 	}
 
 }

@@ -18,8 +18,10 @@
  */
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERApplicationSpecific;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -30,10 +32,7 @@ import org.bouncycastle.asn1.DERSequence;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public abstract class PublicKey implements java.security.PublicKey{
-	
-
-	private static final long serialVersionUID = -7727955941480920278L;
+public abstract class AmPublicKey extends ASN1Encodable{
 	
 	private DERObjectIdentifier oid06 = null;
 	protected ASN1EncodableVector vec = new ASN1EncodableVector();
@@ -45,7 +44,7 @@ public abstract class PublicKey implements java.security.PublicKey{
 	 *            Algorithm Identifier beeinhaltet die OID des verwendeten
 	 *            Algorithmus
 	 */
-	public PublicKey(String oidString) {
+	public AmPublicKey(String oidString) {
 		oid06 = new DERObjectIdentifier(oidString);
 		vec.add(oid06);
 	}
@@ -54,7 +53,7 @@ public abstract class PublicKey implements java.security.PublicKey{
 	 * Konstruktur zum Decoden
 	 * @param seq ASN1 Sequenz welche die Public Key Struktur enthält.
 	 */
-	public PublicKey(DERSequence seq) {
+	public AmPublicKey(DERSequence seq) {
 		oid06 = (DERObjectIdentifier) seq.getObjectAt(0);		
 		vec.add(oid06);
 	}
@@ -67,14 +66,12 @@ public abstract class PublicKey implements java.security.PublicKey{
 	protected abstract void decode(DERSequence seq);
 
 	
-	/**
-	 * Liefert ein ASN1-kodierted Byte-Array des PublicKeys zurück
-	 * 
-	 * @return
+	/* (non-Javadoc)
+	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
 	 */
-	protected byte[] getDEREncoded() {
-		DERApplicationSpecific publicKey = new DERApplicationSpecific(0x49, vec);
-		return publicKey.getDEREncoded();
+	@Override
+	public DERObject toASN1Object() {
+		return new DERApplicationSpecific(0x49, vec);
 	}
 	
 	public String getOID() {

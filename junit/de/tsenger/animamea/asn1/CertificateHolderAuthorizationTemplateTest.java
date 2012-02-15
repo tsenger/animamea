@@ -41,7 +41,7 @@ public class CertificateHolderAuthorizationTemplateTest {
 	 */
 	@Test
 	public void testGetEncodedString() throws IOException {
-		System.out.println(HexString.bufferToHex(chat.getEncoded()));
+		System.out.println(HexString.bufferToHex(chat.getDEREncoded()));
 		fail("Not yet implemented");
 	}
 

@@ -25,19 +25,9 @@ import static de.tsenger.animamea.iso7816.CardCommands.selectEF;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
 import javax.smartcardio.CardException;
 import javax.smartcardio.ResponseAPDU;
-
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.tools.HexString;
@@ -66,18 +56,26 @@ public class FileAccess {
 	 *            Short File Identififier of the EF to read. Must be between
 	 *            0x01 and 0x1F.
 	 * @return Returns the content of the EF with the given SFID
-	 * @throws Exception
+	 * @throws CardException 
+	 * @throws SecureMessagingException 
 	 */
-	public byte[] getFile(byte sfid) throws Exception {
-		if (sfid > 0x1F)
-			throw new Exception("Invalid Short File Identifier!");
+	public byte[] getFile(byte sfid) throws SecureMessagingException, CardException{
+		
+		if (sfid > 0x1F) throw new IllegalArgumentException("Invalid Short File Identifier!");
 
 		ResponseAPDU resp = ch.transceive(readBinary(sfid, (byte) 0x08));
-		if (resp.getSW1() != 0x90)
-			throw new Exception("Can't read File (SFID: " + sfid + "). SW: "
-					+ resp.getSW());
-		int fileLength = getLength(resp.getData());
-		return readFile(fileLength);
+		if (resp.getSW1() != 0x90) return null;
+		
+		int fileLength = 0;
+		byte[] data = null;
+		
+		try {
+			fileLength = getLength(resp.getData());
+			data = readFile(fileLength);
+		} catch (IOException e) {
+			return null;
+		} 
+		return data;
 	}
 
 	/**
@@ -88,22 +86,19 @@ public class FileAccess {
 	 * @param fid
 	 *            A 2 byte array which contains the FID of the EF to read.
 	 * @return Returns the content of the EF with the given SFID
-	 * @throws Exception
+	 * @throws CardException 
+	 * @throws SecureMessagingException 
+	 * @throws IOException 
 	 */
-	public byte[] getFile(byte[] fid) throws Exception {
+	public byte[] getFile(byte[] fid) throws SecureMessagingException, CardException, IOException  {
 		if (fid.length != 2)
-			throw new Exception("Length of FID must be 2.");
+			throw new IllegalArgumentException("Length of FID must be 2.");
 		if ((fid[0] & (byte) 0x10) == (byte) 0x10)
-			throw new Exception(
-					"Bit 8 of P1 must be 0 if READ BINARY with FID is used");
+			throw new IllegalArgumentException("Bit 8 of P1 must be 0 if READ BINARY with FID is used");
 		ResponseAPDU resp = ch.transceive(selectEF(fid));
-		if (resp.getSW1() != 0x90)
-			throw new Exception("Can't read File (FID: "
-					+ HexString.bufferToHex(fid) + "). SW: " + resp.getSW());
+		if (resp.getSW1() != 0x90) throw new CardException("Couldn't select EF with FID "+HexString.bufferToHex(fid));
 		resp = ch.transceive(readBinary((byte) 0, (byte) 0, (byte) 0x8));
-		if (resp.getSW1() != 0x90)
-			throw new Exception("Can't read File (FID: "
-					+ HexString.bufferToHex(fid) + "). SW: " + resp.getSW());
+		if (resp.getSW1() != 0x90) throw new CardException("Couldn't read EF with FID "+HexString.bufferToHex(fid));
 		int fileLength = getLength(resp.getData());
 		return readFile(fileLength);
 	}
@@ -114,22 +109,10 @@ public class FileAccess {
 	 * @param length
 	 *            Length of the file to read
 	 * @return file content
-	 * @throws SecureMessagingException 
 	 * @throws CardException 
-	 * @throws IOException 
-	 * @throws InvalidCipherTextException 
-	 * @throws IllegalStateException 
-	 * @throws ShortBufferException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws DataLengthException 
-	 * @throws InvalidKeyException 
-	 * @throws Exception
+	 * @throws SecureMessagingException 
 	 */
-	private byte[] readFile(int length) throws InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, IOException, CardException, SecureMessagingException{
+	private byte[] readFile(int length) throws SecureMessagingException, CardException {
 		int remainingBytes = length;
 		ResponseAPDU resp;
 		byte[] fileData = new byte[length];
@@ -143,12 +126,10 @@ public class FileAccess {
 			byte off2 = (byte) (offset & 0x000000FF);
 
 			if (remainingBytes <= maxReadLength) {
-				resp = ch.transceive(readBinary(off1, off2,
-						(byte) remainingBytes));
+				resp = ch.transceive(readBinary(off1, off2,	(byte) remainingBytes));
 				remainingBytes = 0;
 			} else {
-				resp = ch.transceive(readBinary(off1, off2,
-						(byte) maxReadLength));
+				resp = ch.transceive(readBinary(off1, off2,	(byte) maxReadLength));
 				remainingBytes -= maxReadLength;
 			}
 			System.arraycopy(resp.getData(), 0, fileData, i * maxReadLength,
@@ -160,7 +141,7 @@ public class FileAccess {
 	}
 
 	/**
-	 * Get the length value from a TLV coded byte array This function is adapted
+	 * Get the length value from a TLV coded byte array. This function is adapted
 	 * from bouncycastle
 	 * 
 	 * @see org.bouncycastle.asn1.ASN1InputStream#readLength(InputStream s, int
@@ -200,8 +181,7 @@ public class FileAccess {
 			}
 
 			if (length < 0)
-				throw new IOException(
-						"corrupted stream - negative length found");
+				throw new IOException("corrupted stream - negative length found");
 
 		}
 		return length + size + 2; // +1 Tag, +1 Längenangabe

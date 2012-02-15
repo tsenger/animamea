@@ -22,6 +22,7 @@ package de.tsenger.animamea.crypto;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
+@SuppressWarnings("serial")
 public class AmCryptoException extends Exception {
 
 	/**

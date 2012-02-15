@@ -28,13 +28,6 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  *
- * The SubjectPublicKeyInfo object.
- * <pre>
- * SubjectPublicKeyInfo ::= SEQUENCE {
- *   algorithm			AlgorithmIdentifier,
- *   subjectPublicKey	BIT STRING
- * }
- * </pre>
  */
 public class SubjectPublicKeyInfo extends ASN1Encodable {
 	
@@ -57,8 +50,14 @@ public class SubjectPublicKeyInfo extends ASN1Encodable {
 		return subjectPublicKey.getBytes();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	/** 
+	 * The SubjectPublicKeyInfo object.
+	 * <pre>
+	 * SubjectPublicKeyInfo ::= SEQUENCE {
+	 *   algorithm			AlgorithmIdentifier,
+	 *   subjectPublicKey	BIT STRING
+	 * }
+	 * </pre>
 	 */
 	@Override
 	public DERObject toASN1Object() {

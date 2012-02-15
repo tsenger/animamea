@@ -21,6 +21,7 @@ package de.tsenger.animamea.asn1;
 
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DERObjectIdentifier;
@@ -28,25 +29,16 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTags;
 
-public class CertificateHolderAuthorizationTemplate {
+public class CertificateHolderAuthorizationTemplate extends ASN1Encodable{
 
 	private DERObjectIdentifier terminalType = null;
 	private DiscretionaryData auth = null;
-	private DERApplicationSpecific chat = null;
 	private byte role;
 	
 	public CertificateHolderAuthorizationTemplate(DERObjectIdentifier terminalType,
 			DiscretionaryData disData) {
 		this.terminalType = terminalType;
-		this.auth = disData;
-
-		ASN1EncodableVector v = new ASN1EncodableVector();
-		v.add(terminalType);
-		v.add(auth.toASN1Object());
-
-		this.chat = new DERApplicationSpecific(0x4c, v);
-
-		 
+		this.auth = disData;		 
 	}
 	
 	public CertificateHolderAuthorizationTemplate(DERSequence chatSeq) throws IOException {
@@ -55,17 +47,20 @@ public class CertificateHolderAuthorizationTemplate {
 		DEROctetString oct = (DEROctetString) ((DERApplicationSpecific) chatSeq.getObjectAt(1)).getObject(DERTags.OCTET_STRING);
 		this.auth = new DiscretionaryData(oct.getOctets());
 		
-		this.chat = new DERApplicationSpecific(0x4c, chatSeq);
-		
 	}
 
 
+	/* (non-Javadoc)
+	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	 */
+	@Override
 	public DERApplicationSpecific toASN1Object() {
-		return chat;
-	}
-
-	public byte[] getEncoded() throws IOException {
-		return chat.getEncoded();
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(terminalType);
+		v.add(auth);
+ 
+		return new DERApplicationSpecific(0x4c, v);
 	}
 	
 	public byte getRole(){

@@ -37,20 +37,12 @@ public class PaceDH extends Pace {
 
 	private final SecureRandom randomGenerator = new SecureRandom();
 	private BigInteger g = null;
-	private BigInteger g_strich = null;
 	private BigInteger p = null;
 
 	private BigInteger PCD_SK_x1 = null;
-	private BigInteger PCD_PK_X1 = null;
-
 	private BigInteger PCD_SK_x2 = null;
-	private BigInteger PCD_PK_X2 = null;
 
-	private BigInteger PICC_PK_Y1 = null;
-	private BigInteger PICC_PK_Y2 = null;
-
-	private BigInteger SharedSecret_P = null;
-	private BigInteger SharedSecret_K = null;
+	private byte[] nonce_s = null;
 
 	public PaceDH(DHParameters dhParameters) {
 		g = dhParameters.getG();
@@ -66,11 +58,14 @@ public class PaceDH extends Pace {
 	 */
 	@Override
 	public byte[] getX1(byte[] s) {
-		nonce_s = s.clone();
+		nonce_s  = s.clone();
+		
 		byte[] x1 = new byte[g.bitLength() / 8];
 		randomGenerator.nextBytes(x1);
 		PCD_SK_x1 = new BigInteger(1, x1);
-		PCD_PK_X1 = g.modPow(PCD_SK_x1, p);
+		
+		BigInteger PCD_PK_X1 = g.modPow(PCD_SK_x1, p);
+		
 		return bigIntToByteArray(PCD_PK_X1);
 	}
 
@@ -81,15 +76,18 @@ public class PaceDH extends Pace {
 	 */
 	@Override
 	public byte[] getX2(byte[] Y1) {
-		PICC_PK_Y1 = new BigInteger(1, Y1);
-		SharedSecret_P = PICC_PK_Y1.modPow(PCD_SK_x1, p);
-		sharedSecret_P = SharedSecret_P.abs().toByteArray();
-		g_strich = g.modPow(new BigInteger(1, nonce_s), p)
-				.multiply(SharedSecret_P).mod(p);
+		BigInteger PICC_PK_Y1 = new BigInteger(1, Y1);
+		
+		BigInteger SharedSecret_P = PICC_PK_Y1.modPow(PCD_SK_x1, p);
+		
+		BigInteger g_strich = g.modPow(new BigInteger(1, nonce_s), p).multiply(SharedSecret_P).mod(p);
+		
 		byte[] x2 = new byte[g.bitLength() / 8];
 		randomGenerator.nextBytes(x2);
 		PCD_SK_x2 = new BigInteger(1, x2);
-		PCD_PK_X2 = g_strich.modPow(PCD_SK_x2, p);
+		
+		BigInteger PCD_PK_X2 = g_strich.modPow(PCD_SK_x2, p);
+		
 		return bigIntToByteArray(PCD_PK_X2);
 	}
 
@@ -100,10 +98,9 @@ public class PaceDH extends Pace {
 	 */
 	@Override
 	public byte[] getSharedSecret_K(byte[] Y2) {
-		PICC_PK_Y2 = new BigInteger(1, Y2);
-		SharedSecret_K = PICC_PK_Y2.modPow(PCD_SK_x2, p);
-		sharedSecret_K = bigIntToByteArray(SharedSecret_K);
-		return sharedSecret_K;
+		BigInteger PICC_PK_Y2 = new BigInteger(1, Y2);
+		BigInteger SharedSecret_K = PICC_PK_Y2.modPow(PCD_SK_x2, p);
+		return bigIntToByteArray(SharedSecret_K);
 	}
 
 }

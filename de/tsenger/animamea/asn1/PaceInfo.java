@@ -19,7 +19,10 @@
 
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -27,12 +30,12 @@ import org.bouncycastle.asn1.DERSequence;
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  */
-public class PaceInfo {
+public class PaceInfo extends ASN1Encodable{
 
 	private DERObjectIdentifier protocol = null;
 	private DERInteger version = null;
 	private DERInteger parameterId = null;
-
+	
 	public PaceInfo(DERSequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		version = (DERInteger) seq.getObjectAt(1);
@@ -50,9 +53,9 @@ public class PaceInfo {
 		return version.getValue().intValue();
 	}
 
-	public int getParameterId() {
+	public Integer getParameterId() {
 		if (parameterId == null)
-			return -1;// ID nicht vorhanden
+			return null;// ID nicht vorhanden
 		else
 			return parameterId.getValue().intValue();
 	}
@@ -61,5 +64,42 @@ public class PaceInfo {
 	public String toString() {
 		return "PaceInfo\n\tOID: " + getProtocolOID() + "\n\tVersion: "
 				+ getVersion() + "\n\tParameterId: " + getParameterId() + "\n";
+	}
+
+	/**
+	 * The definition of PaceInfo is
+     * <pre>
+     * PaceInfo ::= SEQUENCE {
+     *      protocol	OBJECT IDENTIFIER(
+	 *					id-PACE-DH-GM-3DES-CBC-CBC |
+	 *					id-PACE-DH-GM-AES-CBC-CMAC-128 |
+	 *					id-PACE-DH-GM-AES-CBC-CMAC-192 |
+	 *					id-PACE-DH-GM-AES-CBC-CMAC-256 |
+	 *					id-PACE-ECDH-GM-3DES-CBC-CBC |
+	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-128 |
+	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-192 |
+	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-256,
+	 *					id-PACE-DH-IM-3DES-CBC-CBC |
+	 *					id-PACE-DH-IM-AES-CBC-CMAC-128 |
+	 *					id-PACE-DH-IM-AES-CBC-CMAC-192 |
+	 *					id-PACE-DH-IM-AES-CBC-CMAC-256 |
+	 *					id-PACE-ECDH-IM-3DES-CBC-CBC |
+	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-128 |
+	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-192 |
+	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-256),
+     *      version		INTEGER, -- SHOULD be 2
+     *      parameterId	INTEGER OPTIONAL
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(protocol);
+		v.add(version); 
+		if (parameterId!=null) v.add(parameterId);
+		
+		return new DERSequence(v);
 	}
 }

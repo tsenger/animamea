@@ -17,7 +17,7 @@
  *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.tsenger.animamea.pace;
+package de.tsenger.animamea.crypto;
 
 import java.math.BigInteger;
 

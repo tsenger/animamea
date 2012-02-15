@@ -18,7 +18,7 @@
  */
 package de.tsenger.animamea.ca;
 
-import java.math.BigInteger;
+import java.security.PrivateKey;
 
 import org.bouncycastle.crypto.params.DHParameters;
 
@@ -40,7 +40,7 @@ public class ChipAuthenticationDH extends ChipAuthentication {
 	 * @see de.tsenger.animamea.ca.ChipAuthentication#getSharedSecret_K(java.math.BigInteger, byte[])
 	 */
 	@Override
-	public byte[] getSharedSecret_K(BigInteger ephskpcd, byte[] pkpicc) {
+	public byte[] getSharedSecret_K(PrivateKey ephskpcd, byte[] pkpicc) {
 		// TODO Auto-generated method stub
 		return null;
 	}

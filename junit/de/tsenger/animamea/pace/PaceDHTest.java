@@ -3,7 +3,7 @@
  */
 package junit.de.tsenger.animamea.pace;
 
-import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp1024_160;
+import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp1024_160;
 import static org.junit.Assert.assertTrue;
 
 import org.bouncycastle.util.Arrays;

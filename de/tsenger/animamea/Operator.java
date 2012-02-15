@@ -21,9 +21,11 @@ package de.tsenger.animamea;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.KeyPair;
 
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
@@ -60,10 +62,13 @@ public class Operator {
 	static byte sfid = (byte) 0x1C;
 
 	public static void main(String[] args) throws Exception {
+		
+		//CardHandler erzeugen und erstes Terminal verbinden
 		AmCardHandler ch = new AmCardHandler();
 		ch.setDebugMode(true);
 		ch.connect(0); // First terminal
 
+		// Klasse FileAccess bietet Methoden zum Dateizugriff
 		FileAccess facs = new FileAccess(ch);
 		
 		long millis = System.currentTimeMillis();
@@ -74,18 +79,18 @@ public class Operator {
 //		System.out.println("EF.CardAccess:\n"+HexString.bufferToHex(efcaBytes));
 
 		//Parse den Inhalt des EF.CardAccess
-		SecurityInfos si = new SecurityInfos();
-		si.decode(efcaBytes);
+		SecurityInfos efca = new SecurityInfos();
+		efca.decode(efcaBytes);
 		System.out.println("\nEF.CardAccess decoded\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
-		System.out.println(si);
+//		System.out.println(efca);
 
 		//Initialisiere PACE mit dem ersten PACE-Info aus dem EF.CardAccess
 		//PIN: 123456, Passwort-Referenz 3=PIN, Terminaltyp 2=AuthenticationTerminal
 		PaceOperator pop = new PaceOperator(ch);
 	
-		if (si.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
-		pop.setAuthTemplate(si.getPaceInfoList().get(0), si.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
-		else pop.setAuthTemplate(si.getPaceInfoList().get(0), "985146", 2, 2); //Standardisierte PACE Domain Paramter
+		if (efca.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
+			pop.setAuthTemplate(efca.getPaceInfoList().get(0), efca.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
+		else pop.setAuthTemplate(efca.getPaceInfoList().get(0), "819955", 2, 2); //Standardisierte PACE Domain Paramter
 		
 		//Führe PACE durch
 		SecureMessaging sm = pop.performPace();
@@ -101,30 +106,38 @@ public class Operator {
 		//Erzeuge neuen Terminal Authentication Operator und übergebe den CardHandler
 		TAOperator top = new TAOperator(ch);
 		
-		DomainParameter dp = new DomainParameter(si.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
+		//TA benötigt zur Berechnung des ephemeralen PCD public Key die DomainParameter für die CA
+		DomainParameter dp = new DomainParameter(efca.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
+		
+		// TA ausführen, Rückgabe ist der ephemerale PCD Public Key
+		
 		top.initialize(new CertificateProvider(), dp, pop.getPKpicc());
-		byte[] ephSK_PCD = top.performTA();
+		KeyPair ephPCDKeyPair = top.performTA();
 		
 		System.out.println("\nTA established!\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
 
 		
 		//Lese EF.CardSecurity
 		byte[] efcsBytes = facs.getFile(fid_efcs);
+		System.out.println("EF.CardSecurity read\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
+
 		
 		//Extrahiere SecurityInfos
 		SecurityInfos efcs = decodeEFCardAccess(efcsBytes);
+//		System.out.println("\nEF.CardSecurity \n: " + efcs);
+		System.out.println("\nEF.CardSecurity decoded\ntime: " + (System.currentTimeMillis() - millis)	+ " ms");
+
 		
 		// Erzeuge Chip Authentication Operator und übergebe CardHandler
 		CAOperator cop = new CAOperator(ch);
 		
 		//Initialisiere und führe CA durch
-		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), top.getSecretKey(), ephSK_PCD);
+		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), ephPCDKeyPair);
 		SecureMessaging sm2 = cop.performCA();
 		
 		// Wenn CA erfolgreich war, wird ein neues SecureMessaging Object zurückgeliefert welches die neuen Schlüssel enthält
 		if (sm2 != null) {
-			System.out.println("\nCA established!\ntime: " + (System.currentTimeMillis() - millis)
-					+ " ms");
+			System.out.println("\nCA established!\ntime: " + (System.currentTimeMillis() - millis)+ " ms");
 			ch.setSecureMessaging(sm2);
 		}
 		
@@ -152,6 +165,8 @@ public class Operator {
 
 	}
 	
+	
+	// Nimmt CAPDU über die Konsole entgegen und sendet sie SM-geschützt zur Karte
 	private static void userInput(AmCardHandler ch) {
 		BufferedReader bin = new BufferedReader(new InputStreamReader(System.in));
 		
@@ -169,10 +184,9 @@ public class Operator {
 			try {
 				resp = ch.transceive(new CommandAPDU(Hex.decode(cmd))).getBytes();
 			} catch (SecureMessagingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.out.println("got a SecureMessaging Error");
 			} catch (CardException e) {
-				// TODO Auto-generated catch block
+				System.out.println("got a Card Error");
 				e.printStackTrace();
 			}
 			System.out.println("[] --> "+HexString.bufferToHex(resp));
@@ -188,12 +202,9 @@ public class Operator {
 		DEROctetString octString = (DEROctetString) contentInfo2.getContent();
 		
 		SecurityInfos si = new SecurityInfos();
-		try {
-			si.decode(octString.getOctets());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		si.decode(octString.getOctets());
+	
 		return si;
 	}
 	
@@ -205,13 +216,18 @@ public class Operator {
     */
 	private static boolean saveToFile(String fileName, byte[] data) {
 		boolean success = false;		
+		
 		try {
 			File file = new File(fileName);
-			FileOutputStream fos = new FileOutputStream( file );
+			FileOutputStream fos;
+			fos = new FileOutputStream( file );
 			fos.write(data);
 			fos.close();
 			success = true;
-		} catch ( Exception e ) { e.printStackTrace(); }
+		} 
+		catch (FileNotFoundException e) {} 
+		catch (IOException e) {}
+		
 		return success;
 	} 
 

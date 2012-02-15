@@ -19,7 +19,10 @@
 
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -28,7 +31,7 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class PaceDomainParameterInfo {
+public class PaceDomainParameterInfo extends ASN1Encodable {
 
 	private DERObjectIdentifier protocol = null;
 	private AlgorithmIdentifier domainParameter = null;
@@ -43,8 +46,8 @@ public class PaceDomainParameterInfo {
 		}
 	}
 
-	public String getProtocolOID() {
-		return protocol.toString();
+	public DERObjectIdentifier getProtocol() {
+		return protocol;
 	}
 
 	public AlgorithmIdentifier getDomainParameter() {
@@ -60,10 +63,35 @@ public class PaceDomainParameterInfo {
 
 	@Override
 	public String toString() {
-		return "PaceDomainParameterInfo\n\tOID: " + getProtocolOID()
+		return "PaceDomainParameterInfo\n\tOID: " + getProtocol()
 				+ "\n\tDomainParameter: \n\t\t"
 				+ getDomainParameter().getAlgorithm() + "\n\t\t"
 				+ getDomainParameter().getParameters() + "\n\tParameterId: "
 				+ getParameterId() + "\n";
+	}
+
+	/**
+	 * The definition of PaceDomainParameterInfo is
+     * <pre>
+     * PaceDomainParameterInfo ::= SEQUENCE {
+     *      protocol		OBJECT IDENTIFIER(,
+     *      				id-PACE-DH-GM |
+     *      				id-PACE-ECDH-GM |
+     *      				id-PACE-DH-IM |
+     *      				id-PACE-ECDH-IM),
+     *      domainParameter	AlgorithmIdentifier,
+     *      parameterId		INTEGER OPTIONAL
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(protocol);
+		v.add(domainParameter);
+		if (parameterId!=null) v.add(parameterId);
+		
+		return new DERSequence(v);
 	}
 }

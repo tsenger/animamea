@@ -22,6 +22,7 @@ package de.tsenger.animamea.ta;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
+@SuppressWarnings("serial")
 public class TAException extends Exception {
 	
 	/**

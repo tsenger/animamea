@@ -39,49 +39,38 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_3DES
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_128;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_192;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_256;
-import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp1024_160;
-import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_224;
-import static de.tsenger.animamea.pace.DHStandardizedDomainParameters.modp2048_256;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
+import javax.crypto.spec.DHPublicKeySpec;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.sec.SECNamedCurves;
-import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
-import org.bouncycastle.asn1.x9.X9ECParameters;
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECCurve.Fp;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.Arrays;
-import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
-import de.tsenger.animamea.KeyDerivationFunction;
 import de.tsenger.animamea.asn1.AmDHPublicKey;
 import de.tsenger.animamea.asn1.AmECPublicKey;
 import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
+import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.DynamicAuthenticationData;
 import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
 import de.tsenger.animamea.asn1.PaceInfo;
 import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
+import de.tsenger.animamea.crypto.KeyDerivationFunction;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
@@ -99,8 +88,6 @@ public class PaceOperator {
 
 	private Pace pace = null;
 	private AmCryptoProvider crypto = null;
-	private DHParameters dhParameters = null;
-	private X9ECParameters ecdhParameters = null;
 	private AmCardHandler cardHandler = null;
 	private int passwordRef = 0;
 	private byte[] passwordBytes = null;
@@ -108,13 +95,14 @@ public class PaceOperator {
 	private int keyLength = 0;
 	private int terminalType = 0;
 	private byte[] pk_picc = null;
+	private DomainParameter dp = null;
 
 	/** 
 	 * Konstruktor
 	 * @param ch AmCardHandler-Instanz über welches die Kartenkommandos gesendet werden.
 	 */
 	public PaceOperator(AmCardHandler ch) {
-		cardHandler = ch;
+		cardHandler = ch;;
 	}
 
 	/**
@@ -125,8 +113,7 @@ public class PaceOperator {
 	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK)
 	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST)
 	 */
-	public void setAuthTemplate(PaceInfo pi, String password, int pwRef,
-			int terminalRef) {
+	public void setAuthTemplate(PaceInfo pi, String password, int pwRef, int terminalRef) {
 
 		protocolOIDString = pi.getProtocolOID();
 		passwordRef = pwRef;
@@ -137,14 +124,14 @@ public class PaceOperator {
 		else
 			passwordBytes = password.getBytes();
 
-		getStandardizedDomainParameters(pi.getParameterId());
+		dp = new DomainParameter(pi.getParameterId());
 
 		if (protocolOIDString.startsWith(id_PACE_DH_GM.toString())
 				|| protocolOIDString.startsWith(id_PACE_DH_IM.toString()))
-			pace = new PaceDH(dhParameters);
+			pace = new PaceDH(dp.getDHParameter());
 		else if (protocolOIDString.startsWith(id_PACE_ECDH_GM.toString())
 				|| protocolOIDString.startsWith(id_PACE_ECDH_IM.toString()))
-			pace = new PaceECDH(ecdhParameters);
+			pace = new PaceECDH(dp.getECParameter());
 
 		getCryptoInformation(pi);
 	}
@@ -157,19 +144,19 @@ public class PaceOperator {
 	 * @param password Das Password welches für PACE verwendet werden soll
 	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK)
 	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST)
+	 * @throws PaceException 
 	 */
-	public void setAuthTemplate(PaceInfo pi, PaceDomainParameterInfo pdpi,
-			String password, int pwRef, int terminalRef) throws Exception {
+	public void setAuthTemplate(PaceInfo pi, PaceDomainParameterInfo pdpi, String password, int pwRef, int terminalRef) throws PaceException{
 
 		protocolOIDString = pi.getProtocolOID();
 		passwordRef = pwRef;
 		terminalType = terminalRef;
 
 		if (pi.getParameterId() >= 0 && pi.getParameterId() <= 31)
-			throw new Exception(
+			throw new IllegalArgumentException(
 					"ParameterID number 0 to 31 is used for standardized domain parameters!");
 		if (pi.getParameterId() != pdpi.getParameterId())
-			throw new Exception(
+			throw new IllegalArgumentException(
 					"PaceInfo doesn't match the PaceDomainParameterInfo");
 
 		if (pwRef == 1)
@@ -181,10 +168,10 @@ public class PaceOperator {
 
 		if (protocolOIDString.startsWith(id_PACE_DH_GM.toString())
 				|| protocolOIDString.startsWith(id_PACE_DH_IM.toString()))
-			pace = new PaceDH(dhParameters);
+			pace = new PaceDH(dp.getDHParameter());
 		else if (protocolOIDString.startsWith(id_PACE_ECDH_GM.toString())
 				|| protocolOIDString.startsWith(id_PACE_ECDH_IM.toString()))
-			pace = new PaceECDH(ecdhParameters);
+			pace = new PaceECDH(dp.getECParameter());
 
 		getCryptoInformation(pi);
 	}
@@ -198,26 +185,13 @@ public class PaceOperator {
 	 * 			intialisierte SecureMessaging-Instanz zurückgegeben. Anderfalls <code>null</code>.
 	 * @throws PaceException 
 	 * @throws CardException 
-	 * @throws IOException 
 	 * @throws SecureMessagingException 
-	 * @throws InvalidCipherTextException 
-	 * @throws IllegalStateException 
-	 * @throws ShortBufferException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws DataLengthException 
-	 * @throws InvalidKeyException 
-	 * @throws Exception
 	 */
-	public SecureMessaging performPace() throws PaceException, CardException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, SecureMessagingException {
+	public SecureMessaging performPace() throws PaceException, SecureMessagingException, CardException {
 
 		// send MSE:SetAT
 		int resp = sendMSESetAT(terminalType).getSW();
-		if (resp != 0x9000)
-			throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
+		if (resp != 0x9000)	throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
 
 		// send first GA and get nonce
 		byte[] nonce_z = getNonce().getDataObject(0);
@@ -242,7 +216,9 @@ public class PaceOperator {
 		byte[] tpcd = calcAuthToken(kmac, Y2);
 
 		// Authentication Token T_PCD zur Karte schicken und Authentication Token T_PICC empfangen
-		byte[] tpicc = performMutualAuthentication(tpcd).getDataObject(6);
+		DynamicAuthenticationData dad = performMutualAuthentication(tpcd);
+		byte[] tpicc = dad.getDataObject(6);
+		System.out.println(new String(dad.getDataObject(7)));
 
 		// Authentication Token T_PICC' berechnen
 		byte[] tpicc_strich = calcAuthToken(kmac, X2);
@@ -258,13 +234,41 @@ public class PaceOperator {
 	 * Authentisierung nach V.2 benötigt.
 	 * @return
 	 */
-	public byte[] getPKpicc() {
-		return pk_picc;
+	public PublicKey getPKpicc() {
+		
+		KeyFactory fact = null;
+		PublicKey pubKey = null;
+		KeySpec pubKeySpec = null;
+		
+		if (dp.getDPType().equals("ECDH")) {
+			ECPoint q = Converter.byteArrayToECPoint(pk_picc, (Fp) dp.getECParameter().getCurve());
+			pubKeySpec = new ECPublicKeySpec(q, dp.getECParameter());	
+			
+		} else if (dp.getDPType().equals("DH")) {
+			BigInteger y = new BigInteger(1, pk_picc);
+			pubKeySpec = new DHPublicKeySpec(y, dp.getDHParameter().getP(), dp.getDHParameter().getG());
+		}
+		
+		try {
+			fact = KeyFactory.getInstance(dp.getDPType(), "BC");
+			pubKey = fact.generatePublic(pubKeySpec);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return pubKey;
 	}
 	
 	/**
 	 * Der Authentication Token berechnet sich aus dem MAC (mit Schlüssel kmac) über 
-	 * einen PublicKey welcher den Object Identifier des verwendeten Protokolls und den 
+	 * einen AmPublicKey welcher den Object Identifier des verwendeten Protokolls und den 
 	 * von der empfangenen ephemeralen Public Key (Y2) enthält. 
 	 * Siehe dazu TR-03110 V2.05 Kapitel A.2.4 und D.3.4
 	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Parameter zur 
@@ -277,7 +281,7 @@ public class PaceOperator {
 	private byte[] calcAuthToken(byte[] kmac, byte[] data) {
 		byte[] tpcd = null;
 		if (pace instanceof PaceECDH) {
-			Fp curve = (Fp) ecdhParameters.getCurve();
+			Fp curve = (Fp) dp.getECParameter().getCurve();
 			ECPoint pointY = Converter.byteArrayToECPoint(data, curve);
 			AmECPublicKey pkpcd = new AmECPublicKey(protocolOIDString, pointY);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
@@ -289,109 +293,47 @@ public class PaceOperator {
 		}
 		return tpcd;
 	}
+	
+	private DynamicAuthenticationData sendGeneralAuthenticate(boolean chaining, byte[] data) throws SecureMessagingException, CardException, PaceException {
+		
+		CommandAPDU capdu = new CommandAPDU(chaining?0x10:0x00, 0x86, 0x00, 0x00, data, 0xFF);
+				
+		ResponseAPDU resp = cardHandler.transceive(capdu);
+		
+		if (resp.getSW() != 36864)
+			throw new PaceException("General Authentication returns: " + HexString.bufferToHex(resp.getBytes()));
 
-	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {
+		DynamicAuthenticationData dad = new DynamicAuthenticationData(resp.getData());
+		return dad;
+	}
+
+	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws SecureMessagingException, CardException, PaceException {
 
 		DynamicAuthenticationData dad85 = new DynamicAuthenticationData();
 		dad85.addDataObject(5, authToken);
-		byte[] dadBytes = dad85.getDEREncoded();
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		bos.write(Hex.decode("00860000"));
-		bos.write(dadBytes.length);
-		bos.write(dadBytes);
-		bos.write(0);
-
-		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
-		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getSW() != 36864)
-			throw new PaceException("perform Key Agreement returns: "
-					+ HexString.bufferToHex(resp.getBytes()));
-
-		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.getData());
-		return dad;
+		
+		return sendGeneralAuthenticate(false, dad85.getDEREncoded());
 	}
 
-	/**
-	 * @return
-	 * @throws IOException 
-	 * @throws SecureMessagingException 
-	 * @throws CardException 
-	 * @throws InvalidCipherTextException 
-	 * @throws IllegalStateException 
-	 * @throws ShortBufferException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws DataLengthException 
-	 * @throws InvalidKeyException 
-	 * @throws Exception
-	 */
-	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
+
+	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws PaceException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad83 = new DynamicAuthenticationData();
 		dad83.addDataObject(3, ephemeralPK);
-		byte[] dadBytes = dad83.getDEREncoded();
-
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		bos.write(Hex.decode("10860000"));
-		bos.write(dadBytes.length);
-		bos.write(dadBytes);
-		bos.write(0);
-
-		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
-		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getSW() != 36864)
-			throw new PaceException("perform Key Agreement returns: " + HexString.bufferToHex(resp.getBytes()));
-
-		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.getData());
-		return dad;
+		
+		return sendGeneralAuthenticate(true, dad83.getDEREncoded());
 	}
 
-	/**
-	 * @return
-	 * @throws IOException 
-	 * @throws SecureMessagingException 
-	 * @throws CardException 
-	 * @throws InvalidCipherTextException 
-	 * @throws IllegalStateException 
-	 * @throws ShortBufferException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws DataLengthException 
-	 * @throws InvalidKeyException 
-	 * @throws Exception
-	 */
-	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws PaceException, IOException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, SecureMessagingException {
+
+	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws SecureMessagingException, CardException, PaceException {
 
 		DynamicAuthenticationData dad81 = new DynamicAuthenticationData();
 		dad81.addDataObject(1, mappingData);
-		byte[] dadBytes = dad81.getDEREncoded();
 
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		bos.write(Hex.decode("10860000"));
-		bos.write(dadBytes.length);
-		bos.write(dadBytes);
-		bos.write(0);
-
-		CommandAPDU capdu = new CommandAPDU(bos.toByteArray());
-		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getSW() != 36864)
-			throw new PaceException("Map nonce returns: " + HexString.bufferToHex(resp.getBytes()));
-
-		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.getData());
-		return dad;
+		return sendGeneralAuthenticate(true, dad81.getDEREncoded());
 	}
 
-	private ResponseAPDU sendMSESetAT(int terminalType) throws PaceException, CardException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, IOException, SecureMessagingException {
+	private ResponseAPDU sendMSESetAT(int terminalType) throws PaceException, SecureMessagingException, CardException {
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_PACE);
 		mse.setProtocol(protocolOIDString);
@@ -411,72 +353,49 @@ public class PaceOperator {
 		default:
 			throw new PaceException("Unknown Terminal Reference: " + terminalType);
 		}
-		return cardHandler.transceive(new CommandAPDU(mse.getBytes()));
+		return cardHandler.transceive(mse.getCommandAPDU());
+	}
+
+
+	private DynamicAuthenticationData getNonce() throws PaceException, SecureMessagingException, CardException {
+		
+		byte[] data = new byte[]{0x7C,0x00};
+		
+		return sendGeneralAuthenticate(true, data);
 	}
 
 	/**
-	 * Send a plain General Authentication Command to get a encrypted nonce from
-	 * the card.
-	 * 
+	 * @param z
 	 * @return
-	 * @throws SecureMessagingException 
-	 * @throws IOException 
-	 * @throws CardException 
-	 * @throws InvalidCipherTextException 
-	 * @throws IllegalStateException 
-	 * @throws ShortBufferException 
-	 * @throws InvalidAlgorithmParameterException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws NoSuchPaddingException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws DataLengthException 
-	 * @throws InvalidKeyException 
-	 * @throws Exception
 	 */
-	private DynamicAuthenticationData getNonce() throws PaceException, InvalidKeyException, DataLengthException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, ShortBufferException, IllegalStateException, InvalidCipherTextException, CardException, IOException, SecureMessagingException {
-		CommandAPDU capdu = new CommandAPDU(Hex.decode("10860000027C0000"));
-		ResponseAPDU resp = cardHandler.transceive(capdu);
-		if (resp.getSW() != 36864)
-			throw new PaceException("Get nonce returns: " + HexString.bufferToHex(resp.getBytes()));
-		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.getData());
-		return dad;
-	}
-
 	private byte[] decryptNonce(byte[] z) {
-
-		byte[] derivatedPassword = null;
-		try {
-			derivatedPassword = getKey(keyLength, passwordBytes, 3);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		byte[] derivatedPassword = getKey(keyLength, passwordBytes, 3);
 		return crypto.decryptBlock(derivatedPassword, z);
 	}
 
+	/**
+	 * @param sharedSecret_S
+	 * @return
+	 */
 	private byte[] getKenc(byte[] sharedSecret_S) {
-		try {
-			return getKey(keyLength, sharedSecret_S, 1);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		return getKey(keyLength, sharedSecret_S, 1);
 	}
 
+	/**
+	 * @param sharedSecret_S
+	 * @return
+	 */
 	private byte[] getKmac(byte[] sharedSecret_S) {
-		try {
-			return getKey(keyLength, sharedSecret_S, 2);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+		return getKey(keyLength, sharedSecret_S, 2);
 	}
 
-	private byte[] getKey(int keyLength, byte[] K, int c) throws Exception {
+	/**
+	 * @param keyLength
+	 * @param K
+	 * @param c
+	 * @return
+	 */
+	private byte[] getKey(int keyLength, byte[] K, int c)  {
 
 		byte[] key = null;
 
@@ -499,66 +418,14 @@ public class PaceOperator {
 		return key;
 	}
 
-	// TODO Funktioniert momentan nur mit EC
-	private void getProprietaryDomainParameters(PaceDomainParameterInfo pdpi)
-			throws Exception {
-		if (pdpi.getDomainParameter().getAlgorithm().toString()
-				.contains(BSIObjectIdentifiers.id_ecc.toString())) {
-			ASN1Sequence seq = (ASN1Sequence) pdpi.getDomainParameter()
-					.getParameters().getDERObject().toASN1Object();
-			ecdhParameters = new X9ECParameters(seq);
+	
+	private void getProprietaryDomainParameters(PaceDomainParameterInfo pdpi) throws PaceException {
+		if (pdpi.getDomainParameter().getAlgorithm().toString().contains(BSIObjectIdentifiers.id_ecc.toString())) {
+			dp = new DomainParameter(pdpi.getDomainParameter());
 		} else
-			throw new Exception(
-					"Can't decode properietary domain parameters in PaceDomainParameterInfo!");
+			throw new PaceException("Can't decode properietary domain parameters in PaceDomainParameterInfo!");
 	}
 
-	private void getStandardizedDomainParameters(int parameterId) {
-
-		switch (parameterId) {
-		case 0:
-			dhParameters = modp1024_160();
-			break;
-		case 1:
-			dhParameters = modp2048_224();
-			break;
-		case 3:
-			dhParameters = modp2048_256();
-			break;
-		case 8:
-			ecdhParameters = SECNamedCurves.getByName("secp192r1");
-			break;
-		case 9:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp192r1");
-			break;
-		case 10:
-			ecdhParameters = SECNamedCurves.getByName("secp224r1");
-			break;
-		case 11:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp224r1");
-			break;
-		case 12:
-			ecdhParameters = SECNamedCurves.getByName("secp256r1");
-			break;
-		case 13:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp256r1");
-			break;
-		case 14:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp320r1");
-			break;
-		case 15:
-			ecdhParameters = SECNamedCurves.getByName("secp384r1");
-			break;
-		case 16:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp384r1");
-			break;
-		case 17:
-			ecdhParameters = TeleTrusTNamedCurves.getByName("brainpoolp512r1");
-			break;
-		case 18:
-			ecdhParameters = SECNamedCurves.getByName("secp521r1");
-			break;
-		}
-	}
 
 	/**
 	 * Berechnet den SHA1-Wert des übergebenen Bytes-Array
@@ -571,8 +438,7 @@ public class PaceOperator {
 		MessageDigest md = null;
 		try {
 			md = MessageDigest.getInstance("SHA");
-		} catch (NoSuchAlgorithmException ex) {
-		}
+		} catch (NoSuchAlgorithmException ex) {} 
 
 		md.update(input);
 		return md.digest();

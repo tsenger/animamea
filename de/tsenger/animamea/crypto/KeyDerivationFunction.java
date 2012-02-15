@@ -17,7 +17,7 @@
  *  along with animamea.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package de.tsenger.animamea;
+package de.tsenger.animamea.crypto;
 
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -86,13 +86,13 @@ public class KeyDerivationFunction {
 	 *            A 32-bit, big-endian integer counter. 1 for en-/decoding, 2
 	 *            for MAC (checksum), 3 for deriving encryption keys from a
 	 *            password
-	 * @throws Exception
+	 * @throws IllegalArgumentException
 	 *             c must be 1, 2 or 3
 	 */
-	public KeyDerivationFunction(byte[] K, int c) throws Exception {
+	public KeyDerivationFunction(byte[] K, int c)  {
 
 		if (c <= 0 || c > 3)
-			throw new Exception("c must be 1, 2 or 3!");
+			throw new IllegalArgumentException("c must be 1, 2 or 3!");
 
 		byte[] cBytes = intToByteArray(c);
 

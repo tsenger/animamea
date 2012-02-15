@@ -19,9 +19,10 @@
 package de.tsenger.animamea.ta;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
@@ -29,15 +30,18 @@ import javax.smartcardio.ResponseAPDU;
 
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.jce.provider.JCEDHPublicKey;
+import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.asn1.AmECPublicKey;
+import de.tsenger.animamea.asn1.AmPublicKey;
 import de.tsenger.animamea.asn1.CVCertificate;
 import de.tsenger.animamea.asn1.DomainParameter;
-import de.tsenger.animamea.asn1.PublicKey;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
+import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -49,9 +53,9 @@ public class TAOperator {
 	private AmCardHandler cardHandler = null;
 	private CertificateProvider certProv = null;
 	private DomainParameter cadp = null;
-	private byte[] pkpicc = null;
+	private PublicKey pkpicc = null;
 	private TerminalAuthentication ta = null;
-	private byte[] ephemeralPKpcd = null;
+	private PublicKey ephemeralPKpcd = null;
 	
 
 
@@ -71,28 +75,27 @@ public class TAOperator {
 	 * @param cadp Chip Authentication Domain Parameter zur Berechnung des Public Key während TA
 	 * @param pkpicc Public Key aus PACE 
 	 */
-	public void initialize(CertificateProvider certProv, DomainParameter cadp, byte[] pkpicc) {
+	public void initialize(CertificateProvider certProv, DomainParameter cadp, PublicKey pkpicc) {
 		this.certProv = certProv;
 		this.cadp = cadp;
 		this.pkpicc  = pkpicc;
 		
-		PublicKey cvcaPubKey = certProv.getCVCACert().getBody().getPublicKey();
+		AmPublicKey cvcaPubKey = certProv.getCVCACert().getBody().getPublicKey();
 		if(cvcaPubKey instanceof AmECPublicKey) {
 			AmECPublicKey ecpk = (AmECPublicKey)cvcaPubKey;
 			ta = new TerminalAuthenticationECDSA(cadp, ecpk, certProv.getPrivateKey().getKey());
-		}
+		} //TODO RSA
 		
 	}
 	
 	/**
 	 * Führt alle Schritte der Terminal Authentisierung durch. 
 	 * TODO: Link-Zertifikate werden zur Zeit nicht unterstützt
-	 * @return Terminal ephemeral Secret Key  
+	 * @return Keypair des Terminals 
 	 * @throws CardException 
 	 * @throws SecureMessagingException 
-	 * @throws NoSuchProviderException 
 	 */
-	public byte[] performTA() throws TAException, SecureMessagingException, CardException {
+	public KeyPair performTA() throws TAException, SecureMessagingException, CardException {
 				
 		/*DV-Zertifikat*/
 		
@@ -109,11 +112,12 @@ public class TAOperator {
 		sendPSOVerifyCertificate(certProv.getTerminalCert());
 		
 		// 3. MSE:Set AT
-		// Erzeuge den ephemeral Public Key des Terminals:
-		ephemeralPKpcd = ta.getEphemeralPKpcd(); //Wird auch noch bei CA benötigt.
+		// Erzeuge die ephemeralen Keys des Terminals:
+		KeyPair pair = ta.getEphemeralPCDKeyPair();
+		ephemeralPKpcd = pair.getPublic();
 		
 		// Komprimierte Version des ephemeralen Public Keys:
-		byte[] compEphPK = comp(ephemeralPKpcd, cadp.getDPType());
+		byte[] compEphPK = comp(ephemeralPKpcd);
 		
 		String protocolOID = certProv.getTerminalCert().getBody().getPublicKey().getOID();
 		String pkname = certProv.getTerminalCert().getBody().getCHR();
@@ -124,7 +128,7 @@ public class TAOperator {
 		
 		// 5. External Authenticate
 		// Komprimierter ephemeraler Public Key des Chips aus PACE: ID_PICC = Comp(ephPK_PICC)
-		byte[] idpicc = comp(pkpicc, cadp.getDPType());
+		byte[] idpicc = comp(pkpicc);
 		
 		byte[] message = new byte[idpicc.length+rpicc.length+compEphPK.length];
 		System.arraycopy(idpicc, 0, message, 0, idpicc.length);
@@ -135,21 +139,16 @@ public class TAOperator {
 		
 		sendExternalAuthenticate(signature);
 		
-		return ephemeralPKpcd;
+		return pair;
 
 	}
 	
-	public BigInteger getSecretKey() {
-		return ta.getSecretKey();
-	}
-	
-	private byte[] comp(byte[] publicKeyBytes, String type) {
-		if (type.equals("ECDH")) {
-			byte[] compValue = new byte[(publicKeyBytes.length-1)/2];
-			System.arraycopy(publicKeyBytes, 1, compValue, 0, compValue.length);
-			return compValue;
+	private byte[] comp(java.security.PublicKey publicKey) {
+		if (publicKey.getAlgorithm().equals("ECDH")) {
+			BigInteger x = ((JCEECPublicKey)publicKey).getQ().getX().toBigInteger();
+			return Converter.bigIntToByteArray(x);
 		}
-		else if (type.equals("DH")) {
+		else if (publicKey.getAlgorithm().equals("DH")) {
 			MessageDigest md = null;
 			try {
 				md = MessageDigest.getInstance("SHA1");
@@ -157,7 +156,7 @@ public class TAOperator {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			md.update(publicKeyBytes); 
+			md.update(((JCEDHPublicKey)publicKey).getY().toByteArray()); 
 	      	return md.digest();
 		}
 		return null;
@@ -199,7 +198,7 @@ public class TAOperator {
 		mse.setProtocol(protocolOIDString);
 		mse.setKeyReference(pkname);
 		mse.setEphemeralPublicKey(epubkey);
-		cardHandler.transceive(new CommandAPDU(mse.getBytes()));
+		cardHandler.transceive(mse.getCommandAPDU());
 		
 		
 	}

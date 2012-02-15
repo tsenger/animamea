@@ -30,7 +30,7 @@ import org.bouncycastle.asn1.DERTags;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class AmRSAPublicKey extends PublicKey implements RSAPublicKey{
+public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 
 	private static final long serialVersionUID = -7184069684377504157L;
 	
@@ -83,7 +83,7 @@ public class AmRSAPublicKey extends PublicKey implements RSAPublicKey{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tsenger.animamea.asn1.PublicKey#decode(org.bouncycastle.asn1.DERSequence)
+	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
 	 */
 	@Override
 	protected void decode(DERSequence seq) {

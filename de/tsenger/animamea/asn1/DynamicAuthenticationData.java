@@ -23,9 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERApplicationSpecific;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.asn1.DERTags;
@@ -37,10 +39,42 @@ import org.bouncycastle.asn1.DERTags;
  * @author Tobias Senger
  * 
  */
-public class DynamicAuthenticationData {
+public class DynamicAuthenticationData extends ASN1Encodable{
 	
 	private final List<DERTaggedObject> objects = new ArrayList<DERTaggedObject>(3);
 
+	
+	/**
+	 * Constructor for encoding
+	 */
+	public DynamicAuthenticationData() {
+	}
+	
+	
+	/**
+	 * Constructor for decoding
+	 * @param data
+	 */
+	public DynamicAuthenticationData(byte[] data) {
+
+		DERApplicationSpecific das = null;
+		ASN1Sequence seq = null;
+		
+		try {
+			das = (DERApplicationSpecific) DERApplicationSpecific.fromByteArray(data);
+			seq = ASN1Sequence.getInstance(das.getObject(DERTags.SEQUENCE));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+		for (int i = 0; i < seq.size(); i++) {
+			DERTaggedObject temp = (DERTaggedObject) seq.getObjectAt(i);
+			objects.add(temp);
+		}
+
+	}
 	
 	/**
 	 * Fügt ein Tagged Object mit dem Tag (0x80 & tagno) ein.
@@ -67,7 +101,11 @@ public class DynamicAuthenticationData {
 	}
 
 
-	public byte[] getDEREncoded() {
+	/* (non-Javadoc)
+	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	 */
+	@Override
+	public DERObject toASN1Object() {
 		
 		ASN1EncodableVector asn1vec = new ASN1EncodableVector();
 		
@@ -75,29 +113,6 @@ public class DynamicAuthenticationData {
 			asn1vec.add(item);
 		}
 
-		DERApplicationSpecific dynamicAuthenticationData = new DERApplicationSpecific(0x1C, asn1vec); // Application specific + 0x1c = 0x7C
-		return dynamicAuthenticationData.getDEREncoded();
-	}
-
-	
-	public void decode(byte[] data) {
-
-		DERApplicationSpecific das = null;
-		ASN1Sequence seq = null;
-		
-		try {
-			das = (DERApplicationSpecific) DERApplicationSpecific.fromByteArray(data);
-			seq = ASN1Sequence.getInstance(das.getObject(DERTags.SEQUENCE));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-		for (int i = 0; i < seq.size(); i++) {
-			DERTaggedObject temp = (DERTaggedObject) seq.getObjectAt(i);
-			objects.add(temp);
-		}
-
+		return new DERApplicationSpecific(0x1C, asn1vec); // Application specific + 0x1c = 0x7C
 	}
 }

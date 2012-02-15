@@ -22,6 +22,8 @@ package de.tsenger.animamea.iso7816;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import javax.smartcardio.CommandAPDU;
+
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
@@ -51,7 +53,8 @@ public class MSESetAT {
 	private final byte CLASS = (byte) 0x00;
 	private final byte INS = (byte) 0x22; // Instruction Byte: Message Security
 											// Environment
-	private byte[] P1P2 = null;
+	private byte P1=0;
+	private final byte P2=(byte)0xA4;
 	private byte[] do80CMR = null;
 	private byte[] do83KeyReference = null;
 	private byte[] do83KeyName = null;
@@ -70,12 +73,9 @@ public class MSESetAT {
 	 *            {@link de.tsenger.androsmex.pace.MSECommand.setAT_TA}
 	 */
 	public void setAT(int at) {
-		if (at == setAT_PACE)
-			P1P2 = new byte[] { (byte) 0xC1, (byte) 0xA4 };
-		if (at == setAT_CA)
-			P1P2 = new byte[] { (byte) 0x41, (byte) 0xA4 };
-		if (at == setAT_TA)
-			P1P2 = new byte[] { (byte) 0x81, (byte) 0xA4 };
+		if (at == setAT_PACE) P1 = (byte) 0xC1;			
+		if (at == setAT_CA)	P1 = (byte) 0x41;
+		if (at == setAT_TA)	P1 = (byte) 0x81;
 	}
 
 	/**
@@ -134,9 +134,9 @@ public class MSESetAT {
 
 	}
 
-	public void setAuxiliaryAuthenticatedData() throws Exception {
+	public void setAuxiliaryAuthenticatedData() throws UnsupportedOperationException {
 		// TODO noch zu implementieren, Tag 0x67
-		throw new Exception("setAuxiliaryAuthenticationData not yet implemented!");
+		throw new UnsupportedOperationException("setAuxiliaryAuthenticationData not yet implemented!");
 	}
 
 	/**
@@ -151,18 +151,16 @@ public class MSESetAT {
 
 	/**
 	 * @param chat
-	 * @throws IOException
 	 */
-	public void setCHAT(CertificateHolderAuthorizationTemplate chat) throws IOException {
-		do7F4C_CHAT = chat.getEncoded();
+	public void setCHAT(CertificateHolderAuthorizationTemplate chat) {
+		do7F4C_CHAT = chat.getDEREncoded();
 	}
 
 	/**
-	 * Konstruiert aus den gesetzten Objekten eine MSE-Command-APDU und liefert
-	 * diese als Byte-Array zurück.
+	 * Konstruiert aus den gesetzten Objekten eine MSE-Command-APDU 
 	 * @return ByteArray mit MSE:SetAT APDU
 	 */
-	public byte[] getBytes() {
+	public CommandAPDU getCommandAPDU() {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
 		if (do80CMR != null)
@@ -179,30 +177,17 @@ public class MSESetAT {
 			bos.write(do7F4C_CHAT, 0, do7F4C_CHAT.length);
 		byte[] data = bos.toByteArray();
 
-		bos.reset();
-		bos.write(CLASS);
-		bos.write(INS);
-		bos.write(P1P2, 0, 2);
-
-		bos.write((byte) data.length);
-		bos.write(data, 0, data.length);
-		return bos.toByteArray();
+		return new CommandAPDU(CLASS, INS, P1, P2, data);
 	}
 
 	/**
 	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit AT.
-	 * @throws IOException 
 	 * 
 	 */
-	public void setATChat() throws IOException {
-		DiscretionaryData disData = null;
-		try {
-			disData = new DiscretionaryData(new byte[] { (byte) 0x3F,
-					(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 });
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void setATChat() {
+		
+		DiscretionaryData disData = new DiscretionaryData(new byte[] { (byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 });
+		
 		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
 				BSIObjectIdentifiers.id_AT, disData);
 		setCHAT(chat);
@@ -210,17 +195,11 @@ public class MSESetAT {
 
 	/**
 	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit IS.
-	 * @throws IOException 
 	 * 
 	 */
-	public void setISChat() throws IOException {
-		DiscretionaryData disData = null;
-		try {
-			disData = new DiscretionaryData((byte) 0x23);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void setISChat() {
+		DiscretionaryData disData = new DiscretionaryData((byte) 0x23);
+	
 		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
 				BSIObjectIdentifiers.id_IS, disData);
 		setCHAT(chat);
@@ -231,14 +210,10 @@ public class MSESetAT {
 	 * @throws IOException 
 	 * 
 	 */
-	public void setSTChat() throws IOException {
-		DiscretionaryData disData = null;
-		try {
-			disData = new DiscretionaryData((byte) 0x03);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void setSTChat() {
+		
+		DiscretionaryData disData = new DiscretionaryData((byte) 0x03);
+		
 		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
 				BSIObjectIdentifiers.id_ST, disData);
 		setCHAT(chat);

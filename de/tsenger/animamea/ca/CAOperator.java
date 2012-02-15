@@ -28,17 +28,20 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_C
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_256;
 
 import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
-import org.bouncycastle.math.ec.ECCurve.Fp;
+import org.bouncycastle.jce.provider.JCEDHPublicKey;
+import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.Arrays;
 
 import de.tsenger.animamea.AmCardHandler;
-import de.tsenger.animamea.KeyDerivationFunction;
 import de.tsenger.animamea.asn1.AmDHPublicKey;
 import de.tsenger.animamea.asn1.AmECPublicKey;
 import de.tsenger.animamea.asn1.ChipAuthenticationInfo;
@@ -48,10 +51,10 @@ import de.tsenger.animamea.asn1.DynamicAuthenticationData;
 import de.tsenger.animamea.crypto.AmAESCrypto;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
+import de.tsenger.animamea.crypto.KeyDerivationFunction;
 import de.tsenger.animamea.iso7816.MSESetAT;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
-import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -61,8 +64,8 @@ import de.tsenger.animamea.tools.HexString;
 public class CAOperator {
 	
 	private AmCardHandler ch = null;
-	private BigInteger ephSKPCD = null;
-	private byte[] ephPKPCD = null;
+	private PrivateKey ephSKPCD = null;
+	private PublicKey ephPKPCD = null;
 	private byte[] caPK = null;
 	private DomainParameter dp = null;
 	private int caPKref;
@@ -79,7 +82,7 @@ public class CAOperator {
 		this.ch = ch;
 	}
 	
-	public void initialize(ChipAuthenticationInfo caInfo, ChipAuthenticationPublicKeyInfo caPKInfo, BigInteger ephSKPCD, byte[] pkPCD) throws CAException {
+	public void initialize(ChipAuthenticationInfo caInfo, ChipAuthenticationPublicKeyInfo caPKInfo, KeyPair ephPCDKeyPair) throws CAException {
 		this.protocol = caInfo.getProtocolOID().toString();
 				
 		this.caPK = caPKInfo.getPublicKey().getPublicKey();
@@ -90,13 +93,15 @@ public class CAOperator {
 		this.dp = new DomainParameter(caPKInfo.getPublicKey().getAlgorithm());
 		
 		if (dp.getDPType().equals("ECDH")) {
-			ca = new ChipAuthenticationECDH(dp.getECDHParameter());
+			ca = new ChipAuthenticationECDH(dp.getECParameter());
 		} else if (dp.getDPType().equals("DH")) {
 			ca = new ChipAuthenticationDH(dp.getDHParameter());
 		}
 		
-		this.ephSKPCD = ephSKPCD;
-		this.ephPKPCD = pkPCD;
+		this.ephSKPCD = ephPCDKeyPair.getPrivate();
+		this.ephPKPCD = ephPCDKeyPair.getPublic();
+		
+		System.out.println("AmPublicKey PCD: \n"+HexString.bufferToHex(ephPKPCD.getEncoded()));
 		
 		getCryptoInformation(caInfo);
 	}
@@ -107,7 +112,7 @@ public class CAOperator {
 		mse.setAT(MSESetAT.setAT_CA);
 		mse.setProtocol(protocol);
 		mse.setPrivateKeyReference(caPKref);
-		ch.transceive(new CommandAPDU(mse.getBytes()));
+		ch.transceive(mse.getCommandAPDU());
 		
 		// General Authenticate
 		DynamicAuthenticationData dad = sendGA(); //TODO Rückgabe der Karte prüfen (z.B. SW != 9000)
@@ -137,23 +142,21 @@ public class CAOperator {
 		
 		//Authentication Token vergleichen
 		byte[] tpcd = calcToken(kmac, ephPKPCD);
-		if (!Arrays.areEqual(tpcd, dad.getDataObject(2))) throw new CAException("Authentication Tokens are different");
-//		System.out.println("T_picc : "+HexString.bufferToHex(dad.getDataObject(2))+"\nT_pcd  : "+HexString.bufferToHex(tpcd));
+		if (!Arrays.areEqual(tpcd, dad.getDataObject(2))) throw new CAException("Authentication Tokens are different. Cards Token:\n"+
+		HexString.bufferToHex(dad.getDataObject(2))+"calculated Token:\n"+HexString.bufferToHex(tpcd));
 				
 		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
 	}
 	
-	private byte[] calcToken(byte[] kmac, byte[] data) {
+	private byte[] calcToken(byte[] kmac, PublicKey data) {
 		byte[] tpcd = null;
 		if (ca instanceof ChipAuthenticationECDH) {
-			Fp curve = (Fp) dp.getECDHParameter().getCurve();
-			ECPoint point = Converter.byteArrayToECPoint(data, curve);
+			ECPoint point = ((JCEECPublicKey)data).getQ();
 			AmECPublicKey pk = new AmECPublicKey(protocol, point);
-			System.out.println("AuthToken: \n"+HexString.bufferToHex(pk.getEncoded()));
 			tpcd = crypto.getMAC(kmac, pk.getEncoded());
 		}
 		else if (ca instanceof ChipAuthenticationDH) {
-			BigInteger y = new BigInteger(data);
+			BigInteger y = ((JCEDHPublicKey)data).getY();
 			AmDHPublicKey pk = new AmDHPublicKey(protocol, y);
 			tpcd = crypto.getMAC(kmac, pk.getEncoded());
 		}
@@ -162,14 +165,13 @@ public class CAOperator {
 	
 	private DynamicAuthenticationData sendGA() throws SecureMessagingException, CardException {
 		DynamicAuthenticationData dad80 = new DynamicAuthenticationData();
-		dad80.addDataObject(0, ephPKPCD);
+		dad80.addDataObject(0, ((JCEECPublicKey)ephPKPCD).getQ().getEncoded());
 		byte[] dadBytes = dad80.getDEREncoded();
 				
-		// Length Expected steht hier auf 0xFF weil CommandAPDU den Wert 0x00 nicht berücksichtigt.
+		//TODO Length Expected steht hier auf 0xFF weil CommandAPDU den Wert 0x00 nicht berücksichtigt.
 		ResponseAPDU resp = ch.transceive(new CommandAPDU(0x00, 0x86, 00, 00, dadBytes, 0xFF));
 		
-		DynamicAuthenticationData dad = new DynamicAuthenticationData();
-		dad.decode(resp.getData());
+		DynamicAuthenticationData dad = new DynamicAuthenticationData(resp.getData());
 		
 		return dad;
 	}

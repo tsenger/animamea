@@ -20,8 +20,11 @@ package de.tsenger.animamea.asn1;
 
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1StreamParser;
 import org.bouncycastle.asn1.DERApplicationSpecific;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTags;
 
@@ -29,7 +32,7 @@ import org.bouncycastle.asn1.DERTags;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class CVCertificate {
+public class CVCertificate extends ASN1Encodable{
 		
 	private CVCertBody certBody = null;
 	private CVCertSignature certSignature = null;
@@ -60,6 +63,26 @@ public class CVCertificate {
 	
 	public CVCertBody getBody() {
 		return certBody;
+	}
+
+	/** 
+	 * The definition of CVCertificate is
+     * <pre>
+     * CVCertificate ::=  SEQUENCE {
+     *      body     	CVCertBody
+     *      signature	CVCertSignature
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+        
+        v.add(certBody);
+        v.add(certSignature);
+        
+        return new DERApplicationSpecific(0x21, v);
 	}
 
 }

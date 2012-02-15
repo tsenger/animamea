@@ -22,10 +22,10 @@ import static de.tsenger.animamea.tools.Converter.bigIntToByteArray;
 import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.util.Random;
+import java.security.PrivateKey;
 
-import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.jce.provider.JCEECPrivateKey;
+import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.ECPoint.Fp;
@@ -36,29 +36,25 @@ import org.bouncycastle.math.ec.ECPoint.Fp;
  */
 public class ChipAuthenticationECDH extends ChipAuthentication {
 	
-	private final ECPoint ephSK_PCD = null;
 	private ECPoint PK_PICC = null;
-	private ECPoint pointG = null;
 	private ECCurve.Fp curve = null;
+
 	
-	private final SecureRandom randomGenerator = new SecureRandom();
-	
-	
-	public ChipAuthenticationECDH(X9ECParameters cp) {
-		pointG  = cp.getG();
-		curve  = (org.bouncycastle.math.ec.ECCurve.Fp) cp.getCurve();
-		Random rnd = new Random();
-		randomGenerator.setSeed(rnd.nextLong());
+	public ChipAuthenticationECDH(ECParameterSpec ecp) {
+		curve  = (org.bouncycastle.math.ec.ECCurve.Fp) ecp.getCurve();
+
 	}
 
 	/* (non-Javadoc)
 	 * @see de.tsenger.animamea.ca.ChipAuthentication#getSharedSecret_K(byte[])
 	 */
 	@Override
-	public byte[] getSharedSecret_K(BigInteger ephskpcd, byte[] pkpicc) {
+	public byte[] getSharedSecret_K(PrivateKey ephskpcd, byte[] pkpicc) {
+		;
+		BigInteger privKey = ((JCEECPrivateKey)ephskpcd).getD();
 		PK_PICC = byteArrayToECPoint(pkpicc, curve);
 		
-		ECPoint.Fp K = (Fp) PK_PICC.multiply(ephskpcd);
+		ECPoint.Fp K = (Fp) PK_PICC.multiply(privKey);
 		byte[] sharedSecret_K = bigIntToByteArray(K.getX().toBigInteger());
 		return sharedSecret_K;
 	}

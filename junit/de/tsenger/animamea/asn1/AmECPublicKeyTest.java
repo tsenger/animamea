@@ -74,7 +74,7 @@ public class AmECPublicKeyTest {
 		
 		DERApplicationSpecific publikKey = (DERApplicationSpecific) derBody.getObjectAt(2);
 		DERSequence derPK= (DERSequence)publikKey.getObject(DERTags.SEQUENCE);
-		System.out.println("PublicKey:\n"+HexString.bufferToHex(derPK.getEncoded()));
+		System.out.println("AmPublicKey:\n"+HexString.bufferToHex(derPK.getEncoded()));
 		
 		pk = new AmECPublicKey(derPK);
 //		Y = de.tsenger.animamea.tools.Converter.byteArrayToECPoint(pk.getY(), (Fp) org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves.getByName("brainpoolp224r1").getG().getCurve());
@@ -87,7 +87,7 @@ public class AmECPublicKeyTest {
 	}
 
 	/**
-	 * Test method for {@link de.tsenger.animamea.asn1.PublicKey#PublicKey(org.bouncycastle.asn1.DERSequence)}.
+	 * Test method for {@link de.tsenger.animamea.asn1.AmPublicKey#PublicKey(org.bouncycastle.asn1.DERSequence)}.
 	 */
 	@Test
 	public void testPublicKeyDERSequence() {

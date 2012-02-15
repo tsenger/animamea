@@ -18,7 +18,7 @@
  */
 package de.tsenger.animamea.ca;
 
-import java.math.BigInteger;
+import java.security.PrivateKey;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -26,5 +26,5 @@ import java.math.BigInteger;
  */
 public abstract class ChipAuthentication {
 	
-	public abstract byte[] getSharedSecret_K(BigInteger ephskpcd, byte[] pkpicc);
+	public abstract byte[] getSharedSecret_K(PrivateKey ephskpcd, byte[] pkpicc);
 }

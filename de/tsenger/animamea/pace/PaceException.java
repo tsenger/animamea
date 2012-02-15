@@ -22,6 +22,7 @@ package de.tsenger.animamea.pace;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
+@SuppressWarnings("serial")
 public class PaceException extends Exception {
 
 	/**

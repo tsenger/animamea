@@ -38,7 +38,7 @@ import org.bouncycastle.math.ec.ECPoint;
  *
  */
 
-public class AmECPublicKey extends PublicKey implements ECPublicKey{
+public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	
 	private static final long serialVersionUID = 3574151885727849955L;
 	
@@ -182,7 +182,7 @@ public class AmECPublicKey extends PublicKey implements ECPublicKey{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tsenger.animamea.asn1.PublicKey#decode(org.bouncycastle.asn1.DERSequence)
+	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
 	 */
 	@Override
 	protected void decode(DERSequence seq) {

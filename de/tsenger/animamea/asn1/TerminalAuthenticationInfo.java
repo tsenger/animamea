@@ -19,7 +19,10 @@
 
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -27,7 +30,7 @@ import org.bouncycastle.asn1.DERSequence;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class TerminalAuthenticationInfo {
+public class TerminalAuthenticationInfo extends ASN1Encodable{
 
 	private DERObjectIdentifier protocol = null;
 	private DERInteger version = null;
@@ -35,17 +38,15 @@ public class TerminalAuthenticationInfo {
 
 	/**
 	 * @param derSequence
-	 * @throws Exception
-	 *             Throws Exception if FileId is used with version 2
 	 */
-	public TerminalAuthenticationInfo(DERSequence seq) throws Exception {
+	public TerminalAuthenticationInfo(DERSequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		version = (DERInteger) seq.getObjectAt(1);
 		if (seq.size() > 2) {
 			fileID = (DERSequence) seq.getObjectAt(2);
 		}
 		if (version.getValue().intValue() == 2 && fileID != null)
-			throw new Exception("FileID MUST NOT be used for version 2!");
+			throw new IllegalArgumentException("FileID MUST NOT be used for version 2!");
 	}
 
 	public String getProtocolOID() {
@@ -68,6 +69,27 @@ public class TerminalAuthenticationInfo {
 		return "TerminalAuthenticationInfo\n\tOID: " + getProtocolOID()
 				+ "\n\tVersion: " + getVersion() + "\n\tEF.CVCA: "
 				+ getEFCVCA() + "\n";
+	}
+
+	/**
+	 * The definition of TerminalAuthenticationInfo is
+     * <pre>
+     * TerminalAuthenticationInfo ::= SEQUENCE {
+     *      protocol	OBJECT IDENTIFIER(id-TA),
+     *      version		INTEGER, -- MUST be 1 or 2
+     *      efCVCA		FileID OPTIONAL -- MUST NOT be used for version 2
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(protocol);
+		v.add(version);
+		if (fileID!=null) v.add(fileID);
+		
+		return new DERSequence(v);
 	}
 
 }

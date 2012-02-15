@@ -19,6 +19,9 @@
 
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -28,7 +31,7 @@ import de.tsenger.animamea.tools.HexString;
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  */
-public class FileID {
+public class FileID extends ASN1Encodable{
 
 	private DEROctetString fid = null;
 	private DEROctetString sfid = null;
@@ -55,6 +58,25 @@ public class FileID {
 	public String toString() {
 		return "FileID \n\tFID: " + HexString.bufferToHex(getFID())
 				+ "\n\tSFID: " + getSFID() + "\n";
+	}
+
+	/**
+	 * The definition of FileID is
+     * <pre>
+     * FileID ::= SEQUENCE {
+     *      fid		OCTET STRING (SIZE(2)),
+     *      sfid	OCTET STRING (SIZE(1)) OPTIONAL
+     * }
+     * </pre>
+	 */
+	@Override
+	public DERObject toASN1Object() {
+		
+		ASN1EncodableVector v = new ASN1EncodableVector();
+		v.add(fid);
+		if (sfid!=null) v.add(sfid);
+		
+		return new DERSequence(v);
 	}
 
 }

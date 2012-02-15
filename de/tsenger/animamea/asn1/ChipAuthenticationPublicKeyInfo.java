@@ -70,13 +70,20 @@ public class ChipAuthenticationPublicKeyInfo extends ASN1Encodable{
 		return "ChipAuthenticationPublicKeyInfo \n\tprotocol: "
 				+ getProtocol() + "\n\tSubjectPublicKeyInfo: \n\t\t"
 				+ "Algorithm: "+ getPublicKey().getAlgorithm().getAlgorithm() + "\n\t\t"
-				+ "PublicKey:" + HexString.bufferToHex(getPublicKey().getPublicKey()) + "\n\tKeyID "
+				+ "AmPublicKey:" + HexString.bufferToHex(getPublicKey().getPublicKey()) + "\n\tKeyID "
 				+ getKeyId() + "\n";
 	}
 	
 	
-	/* (non-Javadoc)
-	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	/**
+	 * The definition of ChipAuthenticationPublicKeyInfo is
+     * <pre>
+     * ChipAuthenticationPublicKeyInfo ::= SEQUENCE {
+     *      protocol					OBJECT IDENTIFIER(id-PK-DH | id-PK-ECDH),
+     *      chipAuthenticationPublicKey	SubjectPublicKeyInfo,
+     *      keyID						INTEGER OPTIONAL
+     * }
+     * </pre>
 	 */
 	@Override
 	public DERObject toASN1Object() {

@@ -5,7 +5,7 @@ package junit.de.tsenger.animamea.pace;
 
 import static org.junit.Assert.assertTrue;
 
-import org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves;
+import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Before;
@@ -48,7 +48,7 @@ public class PaceECDHTest {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		pace = new PaceECDH(TeleTrusTNamedCurves.getByName("brainpoolp256r1"));
+		pace = new PaceECDH(ECNamedCurveTable.getParameterSpec("brainpoolp256r1"));
 	}
 
 	/**
