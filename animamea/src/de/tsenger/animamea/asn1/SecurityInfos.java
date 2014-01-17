@@ -23,21 +23,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERSet;
+
+import de.tsenger.animamea.tools.HexString;
 
 /**
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  */
 
-public class SecurityInfos extends ASN1Encodable {
+public class SecurityInfos extends ASN1Object {
 
 	List<TerminalAuthenticationInfo> terminalAuthenticationInfoList = new ArrayList<TerminalAuthenticationInfo>(3);
 	List<ChipAuthenticationInfo> chipAuthenticationInfoList = new ArrayList<ChipAuthenticationInfo>(3);
@@ -64,14 +64,14 @@ public class SecurityInfos extends ASN1Encodable {
 	 */
 	public void decode(byte[] encodedData) throws IOException {
 		this.encodedData = encodedData;
-		ASN1Set securityInfos = (ASN1Set) ASN1Object.fromByteArray(encodedData);
+		ASN1Set securityInfos = (ASN1Set) ASN1Primitive.fromByteArray(encodedData);
 		int anzahlObjekte = securityInfos.size();
-		DERSequence securityInfo[] = new DERSequence[anzahlObjekte];
+		ASN1Sequence securityInfo[] = new ASN1Sequence[anzahlObjekte];
 
 		for (int i = 0; i < anzahlObjekte; i++) {
-			securityInfo[i] = (DERSequence) securityInfos.getObjectAt(i);
-			DERObjectIdentifier oid = (DERObjectIdentifier) securityInfo[i]
-					.getObjectAt(0);
+			System.out.println(HexString.bufferToHex(securityInfos.getObjectAt(i).toASN1Primitive().getEncoded()));
+			securityInfo[i] = (ASN1Sequence) securityInfos.getObjectAt(i);
+			DERObjectIdentifier oid = (DERObjectIdentifier) securityInfo[i].getObjectAt(0);
 
 			switch (oid.toString().charAt(18)) {
 			case '1': 
@@ -196,8 +196,7 @@ public class SecurityInfos extends ASN1Encodable {
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		
 		for (TerminalAuthenticationInfo item : terminalAuthenticationInfoList) {
@@ -225,7 +224,7 @@ public class SecurityInfos extends ASN1Encodable {
 			v.add(item);
 		}
 		
-		return new DERSet(v);
+		return ASN1Set.getInstance(v);
 	}
 
 }

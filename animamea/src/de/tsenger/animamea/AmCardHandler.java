@@ -39,7 +39,7 @@ import de.tsenger.animamea.tools.HexString;
  */
 public class AmCardHandler {
 
-	private Card card = null;
+	private Card card = null;;
 	private CardChannel channel = null;
 	private SecureMessaging sm = null;
 	private boolean connected = false;

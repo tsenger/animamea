@@ -19,10 +19,11 @@
 
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -30,7 +31,7 @@ import org.bouncycastle.asn1.DERSequence;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class TerminalAuthenticationInfo extends ASN1Encodable{
+public class TerminalAuthenticationInfo extends ASN1Object{
 
 	private DERObjectIdentifier protocol = null;
 	private DERInteger version = null;
@@ -39,7 +40,7 @@ public class TerminalAuthenticationInfo extends ASN1Encodable{
 	/**
 	 * @param derSequence
 	 */
-	public TerminalAuthenticationInfo(DERSequence seq) {
+	public TerminalAuthenticationInfo(ASN1Sequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		version = (DERInteger) seq.getObjectAt(1);
 		if (seq.size() > 2) {
@@ -64,11 +65,12 @@ public class TerminalAuthenticationInfo extends ASN1Encodable{
 			return new FileID(fileID);
 	}
 
+	
 	@Override
 	public String toString() {
 		return "TerminalAuthenticationInfo\n\tOID: " + getProtocolOID()
-				+ "\n\tVersion: " + getVersion() + "\n\tEF.CVCA: "
-				+ getEFCVCA() + "\n";
+				+ "\n\tVersion: " + getVersion() + 
+				(fileID!=null?"\n\tEF.CVCA: " + getEFCVCA() + "\n":"\n");
 	}
 
 	/**
@@ -82,8 +84,7 @@ public class TerminalAuthenticationInfo extends ASN1Encodable{
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(protocol);
 		v.add(version);

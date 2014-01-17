@@ -22,7 +22,6 @@ import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp1024
 import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp2048_224;
 import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp2048_256;
 
-import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
@@ -60,7 +59,7 @@ public class DomainParameter {
 		} 
 		
 		else if (aid.getAlgorithm().toString().equals(BSIObjectIdentifiers.id_ecPublicKey)) {
-			X9ECParameters x9ecp = new X9ECParameters((ASN1Sequence) aid.getParameters());
+			X9ECParameters x9ecp = X9ECParameters.getInstance(aid.getParameters());
 			ecSpec = new ECParameterSpec(x9ecp.getCurve(), x9ecp.getG(), x9ecp.getN());
 		} //TODO properitäre DH Domain Parameter 
 		

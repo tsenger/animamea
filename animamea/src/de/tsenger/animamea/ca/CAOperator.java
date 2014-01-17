@@ -27,6 +27,7 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_C
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_192;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_256;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -36,6 +37,7 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.jce.provider.JCEDHPublicKey;
 import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.math.ec.ECPoint;
@@ -164,7 +166,14 @@ public class CAOperator {
 	private DynamicAuthenticationData sendGA() throws SecureMessagingException, CardException {
 		DynamicAuthenticationData dad80 = new DynamicAuthenticationData();
 		dad80.addDataObject(0, ((JCEECPublicKey)ephPKPCD).getQ().getEncoded());
-		byte[] dadBytes = dad80.getDEREncoded();
+		
+		byte[] dadBytes = null;
+		try {
+			dadBytes = dad80.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 				
 		//TODO Length Expected steht hier auf 0xFF weil CommandAPDU den Wert 0x00 nicht berücksichtigt.
 		ResponseAPDU resp = ch.transceive(new CommandAPDU(0x00, 0x86, 00, 00, dadBytes, 0xFF));

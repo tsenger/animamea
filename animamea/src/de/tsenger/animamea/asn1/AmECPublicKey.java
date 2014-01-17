@@ -20,8 +20,11 @@ package de.tsenger.animamea.asn1;
 
 import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
@@ -64,13 +67,13 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	
 	public AmECPublicKey(String oidString, BigInteger p, BigInteger a, BigInteger b, ECPoint G, BigInteger r, ECPoint Y, BigInteger f ) {
 		super(oidString);
-		this.p = new DERTaggedObject(false, 1, new DERInteger(p));
-		this.a = new DERTaggedObject(false, 2, new DERInteger(a));
-		this.b = new DERTaggedObject(false, 3, new DERInteger(b));
+		this.p = new DERTaggedObject(false, 1, new ASN1Integer(p));
+		this.a = new DERTaggedObject(false, 2, new ASN1Integer(a));
+		this.b = new DERTaggedObject(false, 3, new ASN1Integer(b));
 		this.G = new DERTaggedObject(false, 4, new DEROctetString(G.getEncoded()));
-		this.r = new DERTaggedObject(false, 5, new DERInteger(r));
+		this.r = new DERTaggedObject(false, 5, new ASN1Integer(r));
 		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded()));
-		this.f = new DERTaggedObject(false, 7, new DERInteger(f));
+		this.f = new DERTaggedObject(false, 7, new ASN1Integer(f));
 		vec.add(this.p);
 		vec.add(this.a);
 		vec.add(this.b);
@@ -178,7 +181,11 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	@Override
 	public byte[] getEncoded() {
-		return super.getDEREncoded();
+		try {
+			return super.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)

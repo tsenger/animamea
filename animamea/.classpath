@@ -6,8 +6,9 @@
 			<accessrule kind="accessible" pattern="javax/smartcardio/**"/>
 		</accessrules>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/tsenger/Dokumente/Programming/bcprov-jdk16-146.jar" sourcepath="/home/tsenger/Dokumente/Programming/bcprov-jdk16-146_src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="/home/tsenger/Dokumente/Programming/log4j-1.2.16.jar"/>
+	<classpathentry kind="lib" path="/home/tsenger/Dokumente/Programming/bcpkix-jdk15on-150.jar" sourcepath="/home/tsenger/Dokumente/Programming/bcpkix-jdk15on-150/src.zip"/>
+	<classpathentry kind="lib" path="/home/tsenger/Dokumente/Programming/bcprov-jdk15on-150.jar" sourcepath="/home/tsenger/Dokumente/Programming/bcprov-jdk15on-150/src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

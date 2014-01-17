@@ -44,7 +44,7 @@ public class FileSystem {
 
 		in = new FileInputStream(efCardAccessFile);
 		in.read(buffer, 0, buffer.length);
-		
+		in.close();
 
 		return buffer;
 	}

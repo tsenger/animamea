@@ -128,7 +128,7 @@ public class PaceECDH extends Pace {
 		
 		ECPoint PICC_PK_Y2 = byteArrayToECPoint(Y2, curve);
 		ECPoint.Fp K = (Fp) PICC_PK_Y2.multiply(PCD_SK_x2);
-		return bigIntToByteArray(K.getX().toBigInteger());
+		return bigIntToByteArray(K.getAffineXCoord().toBigInteger());
 	}
 
 }

@@ -21,9 +21,10 @@ package de.tsenger.animamea.asn1;
 
 import java.io.IOException;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.DERObject;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
@@ -32,12 +33,12 @@ import org.bouncycastle.asn1.DERSet;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class PrivilegedTerminalInfo extends ASN1Encodable{
+public class PrivilegedTerminalInfo extends ASN1Object{
 
 	private DERObjectIdentifier protocol = null;
 	private SecurityInfos secinfos = null;
 
-	public PrivilegedTerminalInfo(DERSequence seq) throws IOException {
+	public PrivilegedTerminalInfo(ASN1Sequence seq) throws IOException {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 
 		DERSet derSet = (DERSet) seq.getObjectAt(1);
@@ -72,8 +73,7 @@ public class PrivilegedTerminalInfo extends ASN1Encodable{
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(protocol);
 		v.add(secinfos);

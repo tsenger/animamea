@@ -55,7 +55,7 @@ public class ChipAuthenticationECDH extends ChipAuthentication {
 		PK_PICC = byteArrayToECPoint(pkpicc, curve);
 		
 		ECPoint.Fp K = (Fp) PK_PICC.multiply(privKey);
-		byte[] sharedSecret_K = bigIntToByteArray(K.getX().toBigInteger());
+		byte[] sharedSecret_K = bigIntToByteArray(K.getAffineXCoord().toBigInteger());
 		return sharedSecret_K;
 	}
 

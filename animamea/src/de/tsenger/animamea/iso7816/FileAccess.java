@@ -85,60 +85,119 @@ public class FileAccess {
 	 * 
 	 * @param fid
 	 *            A 2 byte array which contains the FID of the EF to read.
+	 * @param autoDetectingFileLength 
+	 * 			  determine automaticly the length of the selected EF by 
+	 * 			  reading the first bytes of the EF which contains TLV  
 	 * @return Returns the content of the EF with the given SFID
 	 * @throws CardException 
 	 * @throws SecureMessagingException 
 	 * @throws IOException 
 	 */
-	public byte[] getFile(byte[] fid) throws SecureMessagingException, CardException, IOException  {
+	public byte[] getFile(byte[] fid, boolean autoDetectingFileLength) throws SecureMessagingException, CardException, IOException  {
+		
+		int fileLength;
+		
 		if (fid.length != 2)
 			throw new IllegalArgumentException("Length of FID must be 2.");
 		if ((fid[0] & (byte) 0x10) == (byte) 0x10)
 			throw new IllegalArgumentException("Bit 8 of P1 must be 0 if READ BINARY with FID is used");
 		ResponseAPDU resp = ch.transceive(selectEF(fid));
 		if (resp.getSW1() != 0x90) throw new CardException("Couldn't select EF with FID "+HexString.bufferToHex(fid)+", RAPDU was "+HexString.bufferToHex(resp.getBytes()));
-		resp = ch.transceive(readBinary((byte) 0, (byte) 0, (byte) 0x8));
-		if (resp.getSW1() != 0x90) throw new CardException("Couldn't read EF with FID "+HexString.bufferToHex(fid)+", RAPDU was "+HexString.bufferToHex(resp.getBytes()));
-		int fileLength = getLength(resp.getData());
+		
+		if (autoDetectingFileLength) {
+			resp = ch.transceive(readBinary((byte) 0, (byte) 0, (byte) 0x8));
+			if (resp.getSW1() != 0x90) throw new CardException("Couldn't read EF with FID "+HexString.bufferToHex(fid)+", RAPDU was "+HexString.bufferToHex(resp.getBytes()));
+			fileLength = getLength(resp.getData());
+		} else {
+			fileLength = 0xFF; //TODO May increase the maximum number of bytes to read 		
+		}			
 		return readFile(fileLength);
 	}
-
+	
+	public byte[] getFile(byte[] fid) throws SecureMessagingException, CardException, IOException  {
+		return getFile(fid,true);
+	}
+	
 	/**
-	 * Reads x bytes from EF which has been selected before. 
+	 * Reads whole data from EF which has been selected before. 
 	 * 
-	 * @param length
-	 *            Length of the file to read
+	 * @param maxLength
+	 *            maximum numbers of bytes to read of the selected file
 	 * @return file content
 	 * @throws CardException 
 	 * @throws SecureMessagingException 
 	 */
-	private byte[] readFile(int length) throws SecureMessagingException, CardException {
-		int remainingBytes = length;
+	private byte[] readFile(int maxLength) throws SecureMessagingException, CardException {
+		int remainingBytes = maxLength;
+		int readDataLength=0;
 		ResponseAPDU resp;
-		byte[] fileData = new byte[length];
+		byte[] dataBuffer = new byte[maxLength];
 
-		int maxReadLength = 0xFF;
+		int maxSingleReadLength = 0xFF;
 		int i = 0;
 
 		do {
-			int offset = i * maxReadLength;
+			int offset = i * maxSingleReadLength;
 			byte off1 = (byte) ((offset & 0x0000FF00) >> 8);
 			byte off2 = (byte) (offset & 0x000000FF);
 
-			if (remainingBytes <= maxReadLength) {
+			if (remainingBytes <= maxSingleReadLength) {
 				resp = ch.transceive(readBinary(off1, off2,	(byte) remainingBytes));
 				remainingBytes = 0;
+				readDataLength += resp.getData().length;
 			} else {
-				resp = ch.transceive(readBinary(off1, off2,	(byte) maxReadLength));
-				remainingBytes -= maxReadLength;
+				resp = ch.transceive(readBinary(off1, off2,	(byte) maxSingleReadLength));
+				remainingBytes -= maxSingleReadLength;
+				readDataLength += resp.getData().length;
 			}
-			System.arraycopy(resp.getData(), 0, fileData, i * maxReadLength,
+			System.arraycopy(resp.getData(), 0, dataBuffer, i * maxSingleReadLength,
 					resp.getData().length);
 			i++;
 
 		} while (remainingBytes > 0);
-		return fileData;
+		
+		byte[] dataBytes = new byte[readDataLength];
+		System.arraycopy(dataBuffer, 0, dataBytes, 0, readDataLength);
+		return dataBytes;
 	}
+
+
+//	/**
+//	 * Reads x bytes from EF which has been selected before. 
+//	 * 
+//	 * @param length
+//	 *            Length of the file to read
+//	 * @return file content
+//	 * @throws CardException 
+//	 * @throws SecureMessagingException 
+//	 */
+//	private byte[] readFile(int length) throws SecureMessagingException, CardException {
+//		int remainingBytes = length;
+//		ResponseAPDU resp;
+//		byte[] fileData = new byte[length];
+//
+//		int maxReadLength = 0xFF;
+//		int i = 0;
+//
+//		do {
+//			int offset = i * maxReadLength;
+//			byte off1 = (byte) ((offset & 0x0000FF00) >> 8);
+//			byte off2 = (byte) (offset & 0x000000FF);
+//
+//			if (remainingBytes <= maxReadLength) {
+//				resp = ch.transceive(readBinary(off1, off2,	(byte) remainingBytes));
+//				remainingBytes = 0;
+//			} else {
+//				resp = ch.transceive(readBinary(off1, off2,	(byte) maxReadLength));
+//				remainingBytes -= maxReadLength;
+//			}
+//			System.arraycopy(resp.getData(), 0, fileData, i * maxReadLength,
+//					resp.getData().length);
+//			i++;
+//
+//		} while (remainingBytes > 0);
+//		return fileData;
+//	}
 
 	/**
 	 * Get the length value from a TLV coded byte array. This function is adapted

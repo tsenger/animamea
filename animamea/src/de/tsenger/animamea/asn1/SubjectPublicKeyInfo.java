@@ -18,10 +18,11 @@
  */
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
@@ -29,7 +30,7 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class SubjectPublicKeyInfo extends ASN1Encodable {
+public class SubjectPublicKeyInfo extends ASN1Object {
 	
 	private AlgorithmIdentifier algorithm = null;
 	private DERBitString subjectPublicKey = null;
@@ -37,7 +38,7 @@ public class SubjectPublicKeyInfo extends ASN1Encodable {
 	/**
 	 * @param seq
 	 */
-	public SubjectPublicKeyInfo(DERSequence seq) {
+	public SubjectPublicKeyInfo(ASN1Sequence seq) {
 		algorithm = AlgorithmIdentifier.getInstance(seq.getObjectAt(0));
 		subjectPublicKey = DERBitString.getInstance((seq.getObjectAt(1)));
 	}
@@ -58,9 +59,10 @@ public class SubjectPublicKeyInfo extends ASN1Encodable {
 	 *   subjectPublicKey	BIT STRING
 	 * }
 	 * </pre>
+	 * 
 	 */
 	@Override
-	public DERObject toASN1Object() {
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector vec = new ASN1EncodableVector();
 		vec.add(algorithm);
 		vec.add(subjectPublicKey);

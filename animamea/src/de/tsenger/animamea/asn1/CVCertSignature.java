@@ -18,15 +18,17 @@
  */
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
+import java.io.IOException;
+
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObject;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class CVCertSignature extends ASN1Encodable{
+public class CVCertSignature extends ASN1Object{
 	
 	DERApplicationSpecific cvcsig = null;
 	
@@ -39,20 +41,23 @@ public class CVCertSignature extends ASN1Encodable{
 	else cvcsig = derApp;
 	}
 	
+
+
 	@Override
-	public byte[] getDEREncoded() {
-		return cvcsig.getDEREncoded();
+	public byte[] getEncoded(String encoding) throws IOException {
+		return cvcsig.getEncoded(null);
 	}
 	
 	public byte[] getSignature() {
 		return cvcsig.getContents();
 	}
 
+
 	/* (non-Javadoc)
-	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	 * @see org.bouncycastle.asn1.ASN1Object#toASN1Primitive()
 	 */
 	@Override
-	public DERObject toASN1Object() {
+	public ASN1Primitive toASN1Primitive() {
 		return cvcsig;
 	}
 

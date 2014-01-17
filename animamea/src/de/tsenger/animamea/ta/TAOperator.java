@@ -29,6 +29,8 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.jce.provider.JCEDHPublicKey;
@@ -57,6 +59,8 @@ public class TAOperator {
 	private PublicKey pkpicc = null;
 	private TerminalAuthentication ta = null;
 	private PublicKey ephemeralPKpcd = null;
+	
+	static Logger logger = Logger.getLogger(TAOperator.class);
 	
 
 
@@ -105,6 +109,7 @@ public class TAOperator {
 		/*DV-Zertifikat*/
 		
 		// 1.1 MSE:Set DST
+		logger.debug("MSE Set DST: "+certProv.getDVCert().getBody().getCAR());
 		sendMSESetDST(certProv.getDVCert().getBody().getCAR()); //TODO CAR muss mit dem aus PACE übereinstimmen. Hier wird das Zert aber direkt ausgewählt weil es weiß welches benötigt wird... 
 		// 2.1 PSO:Verify Certificate
 		sendPSOVerifyCertificate(certProv.getDVCert());
@@ -112,6 +117,7 @@ public class TAOperator {
 		/*Terminal-Zertifikat*/
 		
 		// 1.2 MSE:Set DST 
+		logger.debug("MSE Set DST: "+certProv.getTerminalCert().getBody().getCAR());
 		sendMSESetDST(certProv.getTerminalCert().getBody().getCAR());
 		// 2.2 PSO:Verify Certificate
 		sendPSOVerifyCertificate(certProv.getTerminalCert());
@@ -150,7 +156,7 @@ public class TAOperator {
 	
 	private byte[] comp(java.security.PublicKey publicKey) {
 		if (publicKey.getAlgorithm().equals("ECDH")) {
-			BigInteger x = ((JCEECPublicKey)publicKey).getQ().getX().toBigInteger();
+			BigInteger x = ((JCEECPublicKey)publicKey).getQ().getAffineXCoord().toBigInteger();
 			return Converter.bigIntToByteArray(x);
 		}
 		else if (publicKey.getAlgorithm().equals("DH")) {
@@ -213,13 +219,21 @@ public class TAOperator {
 	 */
 	private ResponseAPDU sendPSOVerifyCertificate(CVCertificate dvCert) throws SecureMessagingException, CardException, TAException {
 		
-		byte[] certBody = dvCert.getBody().getDEREncoded();
-		byte[] certSignature = dvCert.getSignature().getDEREncoded();
-		
-		byte[] data = new byte[certBody.length+certSignature.length];
-		System.arraycopy(certBody, 0, data, 0, certBody.length);
-		System.arraycopy(certSignature, 0, data, certBody.length, certSignature.length);
-		
+		byte[] certBody = null;
+		byte[] certSignature = null;
+		byte[] data = null;
+		try {
+			certBody = dvCert.getBody().getEncoded(ASN1Encoding.DER);
+			certSignature = dvCert.getSignature().getEncoded(ASN1Encoding.DER);
+			
+			data = new byte[certBody.length+certSignature.length];
+			System.arraycopy(certBody, 0, data, 0, certBody.length);
+			System.arraycopy(certSignature, 0, data, certBody.length, certSignature.length);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		CommandAPDU pso = new CommandAPDU(0x00, 0x2A, 0x00, 0xBE, data);
 		ResponseAPDU resp = cardHandler.transceive(pso);
@@ -238,7 +252,14 @@ public class TAOperator {
 	private ResponseAPDU sendMSESetDST(String pubKeyRef) throws SecureMessagingException, CardException, TAException{
 	
 		DERTaggedObject do83 = new DERTaggedObject(false, 0x03, new DEROctetString(pubKeyRef.getBytes()));
-		byte[] data = do83.getDEREncoded();
+		byte[] data = null;
+		
+		try {
+			data = do83.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		CommandAPDU setdst = new CommandAPDU(0x00,0x22,0x81,0xB6,data);
 		

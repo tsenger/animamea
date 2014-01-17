@@ -21,16 +21,16 @@ package de.tsenger.animamea.asn1;
 import java.io.IOException;
 import java.util.Date;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DERIA5String;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERTags;
 
 import de.tsenger.animamea.tools.Converter;
 
@@ -38,7 +38,7 @@ import de.tsenger.animamea.tools.Converter;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class CVCertBody extends ASN1Encodable{
+public class CVCertBody extends ASN1Object{
 	
 	private DERApplicationSpecific cvcbody = null;
 	
@@ -60,11 +60,11 @@ public class CVCertBody extends ASN1Encodable{
 		if (derApp.getApplicationTag()!=0x4E) throw new IllegalArgumentException("contains no Certifcate Body with tag 0x7F4E");
 		else cvcbody = derApp;
 		
-		DERSequence bodySeq= (DERSequence)cvcbody.getObject(DERTags.SEQUENCE);
-		profileIdentifier = (DERInteger) ((DERApplicationSpecific) bodySeq.getObjectAt(0)).getObject(DERTags.INTEGER);
-		authorityReference = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(1)).getObject(DERTags.IA5_STRING);
+		DERSequence bodySeq= (DERSequence)cvcbody.getObject(BERTags.SEQUENCE);
+		profileIdentifier = (DERInteger) ((DERApplicationSpecific) bodySeq.getObjectAt(0)).getObject(BERTags.INTEGER);
+		authorityReference = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(1)).getObject(BERTags.IA5_STRING);
 		
-		DERSequence pkSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(2)).getObject(DERTags.SEQUENCE);
+		DERSequence pkSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(2)).getObject(BERTags.SEQUENCE);
 		DERObjectIdentifier pkOid = (DERObjectIdentifier) pkSeq.getObjectAt(0);
 		if (pkOid.toString().startsWith("0.4.0.127.0.7.2.2.2.2")) {
 			publicKey = new AmECPublicKey(pkSeq); 
@@ -73,23 +73,23 @@ public class CVCertBody extends ASN1Encodable{
 			publicKey = new AmRSAPublicKey(pkSeq);
 		}
 		
-		chr = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(3)).getObject(DERTags.IA5_STRING);
+		chr = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(3)).getObject(BERTags.IA5_STRING);
 		
-		DERSequence chatSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(4)).getObject(DERTags.SEQUENCE);
+		DERSequence chatSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(4)).getObject(BERTags.SEQUENCE);
 		chat = new CertificateHolderAuthorizationTemplate(chatSeq);
 		
-		effectiveDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(5)).getObject(DERTags.OCTET_STRING);
+		effectiveDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(5)).getObject(BERTags.OCTET_STRING);
 		
-		expirationDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(6)).getObject(DERTags.OCTET_STRING);
+		expirationDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(6)).getObject(BERTags.OCTET_STRING);
 		
 		if (bodySeq.size()>7) {
-			extensions = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(7)).getObject(DERTags.SEQUENCE);
+			extensions = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(7)).getObject(BERTags.SEQUENCE);
 		}
 	}
 	
 	@Override
-	public byte[] getDEREncoded() {
-		return cvcbody.getDEREncoded();
+	public byte[] getEncoded(String encoding) throws IOException {
+		return cvcbody.getEncoded(encoding);
 	}
 	
 	public int getProfileIdentifier() {
@@ -145,7 +145,7 @@ public class CVCertBody extends ASN1Encodable{
 	 * 
 	 */
 	@Override
-	public DERObject toASN1Object() {
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		try {
 			v.add(new DERApplicationSpecific(0x29, profileIdentifier));
@@ -160,7 +160,6 @@ public class CVCertBody extends ASN1Encodable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
         
         return new DERApplicationSpecific(0x4E, v);
 	}

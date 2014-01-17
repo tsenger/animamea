@@ -159,6 +159,7 @@ public class SecureMessaging {
 			byte[] encodedBytes = null;
 			try {
 				encodedBytes = asn1sp.readObject().getEncoded();
+				asn1sp.close();
 			} catch (IOException e) {
 				throw new SecureMessagingException(e);
 			}
@@ -178,6 +179,7 @@ public class SecureMessaging {
 					do8E = new DO8E();
 					do8E.fromByteArray(asn1in.readObject().getEncoded());
 				}
+				asn1in.close();
 			} catch (IOException e) {
 				throw new SecureMessagingException(e);
 			}

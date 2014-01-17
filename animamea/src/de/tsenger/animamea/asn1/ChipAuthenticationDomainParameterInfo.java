@@ -19,10 +19,11 @@
 
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
@@ -31,7 +32,7 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
  * @author Tobias Senger (tobias@t-senger.de)
  * 
  */
-public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
+public class ChipAuthenticationDomainParameterInfo extends ASN1Object{
 
 	private DERObjectIdentifier protocol = null;
 	private AlgorithmIdentifier domainParameter = null;
@@ -40,7 +41,7 @@ public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
 	/**
 	 * @param derSequence
 	 */
-	public ChipAuthenticationDomainParameterInfo(DERSequence seq) {
+	public ChipAuthenticationDomainParameterInfo(ASN1Sequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		domainParameter = AlgorithmIdentifier.getInstance(seq.getObjectAt(1));
 
@@ -61,7 +62,7 @@ public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
 		if (keyId == null)
 			return -1; // optionales Feld keyId nicht vorhanden
 		else
-			return keyId.getValue().intValue();
+			return keyId.getPositiveValue().intValue();
 	}
 
 	@Override
@@ -69,8 +70,8 @@ public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
 		return "ChipAuthenticationDomainParameterInfo \n\tOID: "
 				+ getProtocolOID() + "\n\tDomainParameter: \n\t\t"
 				+ getDomainParameter().getAlgorithm() + "\n\t\t"
-				+ getDomainParameter().getParameters() + "\n\tKeyID "
-				+ getKeyId() + "\n";
+				+ getDomainParameter().getParameters() + 
+				(keyId!=null?"\n\tKeyId " + keyId.getPositiveValue().intValue() + "\n":"\n");
 	}
 
 	/**
@@ -84,8 +85,7 @@ public class ChipAuthenticationDomainParameterInfo extends ASN1Encodable{
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(protocol);
 		v.add(domainParameter); 

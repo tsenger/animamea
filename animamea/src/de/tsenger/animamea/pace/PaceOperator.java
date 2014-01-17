@@ -40,6 +40,7 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_192;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_IM_AES_CBC_CMAC_256;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -55,6 +56,7 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
 import org.apache.log4j.Logger;
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECCurve.Fp;
 import org.bouncycastle.math.ec.ECPoint;
@@ -303,7 +305,7 @@ public class PaceOperator {
 				
 		ResponseAPDU resp = cardHandler.transceive(capdu);
 		
-		if (resp.getSW() != 36864)
+		if (!(resp.getSW() == 0x9000 || resp.getSW() == 0x6282))
 			throw new PaceException("General Authentication returns: " + HexString.bufferToHex(resp.getBytes()));
 
 		DynamicAuthenticationData dad = new DynamicAuthenticationData(resp.getData());
@@ -313,27 +315,51 @@ public class PaceOperator {
 	private DynamicAuthenticationData performMutualAuthentication(byte[] authToken) throws SecureMessagingException, CardException, PaceException {
 
 		DynamicAuthenticationData dad85 = new DynamicAuthenticationData();
+		DynamicAuthenticationData rspdad = null;
 		dad85.addDataObject(5, authToken);
 		
-		return sendGeneralAuthenticate(false, dad85.getDEREncoded());
+		try {
+			rspdad = sendGeneralAuthenticate(false, dad85.getEncoded(ASN1Encoding.DER));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rspdad;
 	}
 
 
 	private DynamicAuthenticationData performKeyAgreement(byte[] ephemeralPK) throws PaceException, CardException, SecureMessagingException {
 
 		DynamicAuthenticationData dad83 = new DynamicAuthenticationData();
+		DynamicAuthenticationData rspdad = null;
 		dad83.addDataObject(3, ephemeralPK);
 		
-		return sendGeneralAuthenticate(true, dad83.getDEREncoded());
+		try {
+			rspdad =  sendGeneralAuthenticate(true, dad83.getEncoded(ASN1Encoding.DER));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rspdad;
 	}
 
 
 	private DynamicAuthenticationData mapNonce(byte[] mappingData) throws SecureMessagingException, CardException, PaceException {
 
 		DynamicAuthenticationData dad81 = new DynamicAuthenticationData();
+		DynamicAuthenticationData rspdad = null;
 		dad81.addDataObject(1, mappingData);
 
-		return sendGeneralAuthenticate(true, dad81.getDEREncoded());
+		try {
+			rspdad = sendGeneralAuthenticate(true, dad81.getEncoded(ASN1Encoding.DER));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return rspdad;
 	}
 
 	private ResponseAPDU sendMSESetAT(int terminalType) throws PaceException, SecureMessagingException, CardException {

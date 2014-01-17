@@ -18,15 +18,18 @@
  */
 package de.tsenger.animamea.asn1;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
 import javax.crypto.interfaces.DHPublicKey;
 import javax.crypto.spec.DHParameterSpec;
 
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -54,10 +57,10 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	
 	public AmDHPublicKey(String oidString, BigInteger p, BigInteger q, BigInteger g, BigInteger y) {
 		super(oidString);
-		this.p = new DERTaggedObject(false, 1, new DERInteger(p));
-		this.q = new DERTaggedObject(false, 2, new DERInteger(q));
-		this.g = new DERTaggedObject(false, 3, new DERInteger(g));
-		this.y = new DERTaggedObject(false, 4, new DERInteger(y));
+		this.p = new DERTaggedObject(false, 1, new ASN1Integer(p));
+		this.q = new DERTaggedObject(false, 2, new ASN1Integer(q));
+		this.g = new DERTaggedObject(false, 3, new ASN1Integer(g));
+		this.y = new DERTaggedObject(false, 4, new ASN1Integer(y));
 		vec.add(this.p);
 		vec.add(this.q);
 		vec.add(this.g);
@@ -71,7 +74,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public AmDHPublicKey(String oidString, BigInteger y) {
 		super(oidString);
-		this.y = new DERTaggedObject(false, 4, new DERInteger(y));
+		this.y = new DERTaggedObject(false, 4, new ASN1Integer(y));
 		vec.add(this.y);
 	}
 
@@ -96,7 +99,11 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	@Override
 	public byte[] getEncoded() {
-		return super.getDEREncoded();
+		try {
+			return super.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -121,7 +128,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getP() {
 		if (p==null) return null;
-		DERInteger derInt =(DERInteger) p.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) p.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -130,7 +137,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getG() {
 		if (g==null) return null;
-		DERInteger derInt =(DERInteger) g.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) g.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -139,7 +146,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getQ() {
 		if (q==null) return null;
-		DERInteger derInt =(DERInteger) q.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) q.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -149,7 +156,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	@Override
 	public BigInteger getY() {
 		if (y==null) return null;
-		DERInteger derInt =(DERInteger) y.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) y.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 

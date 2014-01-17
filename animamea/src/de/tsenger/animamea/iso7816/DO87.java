@@ -59,12 +59,20 @@ public class DO87 {
 		return ret;
 	}
 
-	public void fromByteArray(byte[] encodedData) throws IOException {
+	public void fromByteArray(byte[] encodedData) {
 		ASN1InputStream asn1in = new ASN1InputStream(encodedData);
-		to = (DERTaggedObject) asn1in.readObject();	
+		try {
+			to = (DERTaggedObject) asn1in.readObject();
+			asn1in.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+		
 		DEROctetString ocs = (DEROctetString) to.getObject();
 		value_ = ocs.getOctets();
 		data = removePaddingIndicator(value_);
+		
 	}
 
 	public byte[] getEncoded() throws IOException {

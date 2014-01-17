@@ -19,10 +19,13 @@
 
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -30,13 +33,13 @@ import org.bouncycastle.asn1.DERSequence;
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  */
-public class PaceInfo extends ASN1Encodable{
+public class PaceInfo extends ASN1Object{
 
 	private DERObjectIdentifier protocol = null;
 	private DERInteger version = null;
 	private DERInteger parameterId = null;
 	
-	public PaceInfo(DERSequence seq) {
+	public PaceInfo(ASN1Sequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
 		version = (DERInteger) seq.getObjectAt(1);
 
@@ -46,9 +49,9 @@ public class PaceInfo extends ASN1Encodable{
 	}
 	
 	public PaceInfo(String oid, int version, int parameterId) {
-		this.protocol = new DERObjectIdentifier(oid);
-		this.version = new DERInteger(version);
-		this.parameterId = new DERInteger(parameterId);
+		this.protocol = new ASN1ObjectIdentifier(oid);
+		this.version = new ASN1Integer(version);
+		this.parameterId = new ASN1Integer(parameterId);
 	}
 
 	public String getProtocolOID() {
@@ -69,7 +72,8 @@ public class PaceInfo extends ASN1Encodable{
 	@Override
 	public String toString() {
 		return "PaceInfo\n\tOID: " + getProtocolOID() + "\n\tVersion: "
-				+ getVersion() + "\n\tParameterId: " + getParameterId() + "\n";
+				+ getVersion() + 
+				(parameterId!=null?"\n\tParameterId: " + getParameterId() + "\n":"\n");
 	}
 
 	/**
@@ -99,8 +103,7 @@ public class PaceInfo extends ASN1Encodable{
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector v = new ASN1EncodableVector();
 		v.add(protocol);
 		v.add(version); 

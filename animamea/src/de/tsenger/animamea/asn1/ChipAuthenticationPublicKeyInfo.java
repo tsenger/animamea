@@ -18,10 +18,11 @@
  */
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -39,15 +40,15 @@ import de.tsenger.animamea.tools.HexString;
  * }
  * </pre>
  */
-public class ChipAuthenticationPublicKeyInfo extends ASN1Encodable{
+public class ChipAuthenticationPublicKeyInfo extends ASN1Object{
 	
 	private DERObjectIdentifier protocol = null;
 	private SubjectPublicKeyInfo capk = null;
 	private DERInteger keyId = null;
 	
-	public ChipAuthenticationPublicKeyInfo(DERSequence seq) {
+	public ChipAuthenticationPublicKeyInfo(ASN1Sequence seq) {
 		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		capk = new SubjectPublicKeyInfo((DERSequence)seq.getObjectAt(1));
+		capk = new SubjectPublicKeyInfo((ASN1Sequence)seq.getObjectAt(1));
 		if (seq.size()==3) {
 			keyId = (DERInteger)seq.getObjectAt(2);
 		}	
@@ -62,7 +63,10 @@ public class ChipAuthenticationPublicKeyInfo extends ASN1Encodable{
 	}
 	
 	public int getKeyId() {
-		return keyId.getPositiveValue().intValue();
+		if (keyId == null)
+			return -1; // optionales Feld keyId nicht vorhanden
+		else
+			return keyId.getPositiveValue().intValue();
 	}
 	
 	@Override
@@ -70,8 +74,8 @@ public class ChipAuthenticationPublicKeyInfo extends ASN1Encodable{
 		return "ChipAuthenticationPublicKeyInfo \n\tprotocol: "
 				+ getProtocol() + "\n\tSubjectPublicKeyInfo: \n\t\t"
 				+ "Algorithm: "+ getPublicKey().getAlgorithm().getAlgorithm() + "\n\t\t"
-				+ "AmPublicKey:" + HexString.bufferToHex(getPublicKey().getPublicKey()) + "\n\tKeyID "
-				+ getKeyId() + "\n";
+				+ "AmPublicKey:" + HexString.bufferToHex(getPublicKey().getPublicKey()) + 
+				(keyId!=null?"\n\tKeyId " + keyId.getPositiveValue().intValue() + "\n":"\n");
 	}
 	
 	
@@ -86,8 +90,7 @@ public class ChipAuthenticationPublicKeyInfo extends ASN1Encodable{
      * </pre>
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector vec = new ASN1EncodableVector();
 		vec.add(protocol);
 		vec.add(capk);

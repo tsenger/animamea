@@ -18,13 +18,16 @@
  */
 package de.tsenger.animamea.asn1;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.interfaces.RSAPublicKey;
 
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERInteger;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -50,8 +53,8 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	
 	public AmRSAPublicKey(String oidString, BigInteger n, BigInteger e) {
 		super(oidString);
-		this.n = new DERTaggedObject(false, 1, new DERInteger(n));
-		this.e = new DERTaggedObject(false, 2, new DERInteger(e));
+		this.n = new DERTaggedObject(false, 1, new ASN1Integer(n));
+		this.e = new DERTaggedObject(false, 2, new ASN1Integer(e));
 		vec.add(this.n);
 		vec.add(this.e);
 	}
@@ -71,7 +74,11 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	public byte[] getEncoded() {
 		vec.add(this.n);
 		vec.add(this.e);
-		return super.getDEREncoded();
+		try {
+			return super.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e1) {
+			return null;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -103,7 +110,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	@Override
 	public BigInteger getModulus() {
 		if (n==null) return null;
-		DERInteger derInt =(DERInteger) n.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) n.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -113,7 +120,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	@Override
 	public BigInteger getPublicExponent() {
 		if (e==null) return null;
-		DERInteger derInt =(DERInteger) e.getObjectParser(DERTags.INTEGER, false);
+		DERInteger derInt =(DERInteger) e.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 

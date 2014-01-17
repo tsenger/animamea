@@ -23,14 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
-import org.bouncycastle.asn1.DERTags;
 
 /**
  * De-/Kodiert die ASN1-Strukturen die für PACE und CA (General Authenticate) benötigt
@@ -39,7 +39,7 @@ import org.bouncycastle.asn1.DERTags;
  * @author Tobias Senger
  * 
  */
-public class DynamicAuthenticationData extends ASN1Encodable{
+public class DynamicAuthenticationData extends ASN1Object{
 	
 	private final List<DERTaggedObject> objects = new ArrayList<DERTaggedObject>(3);
 
@@ -62,7 +62,7 @@ public class DynamicAuthenticationData extends ASN1Encodable{
 		
 		try {
 			das = (DERApplicationSpecific) DERApplicationSpecific.fromByteArray(data);
-			seq = ASN1Sequence.getInstance(das.getObject(DERTags.SEQUENCE));
+			seq = ASN1Sequence.getInstance(das.getObject(BERTags.SEQUENCE));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -93,7 +93,7 @@ public class DynamicAuthenticationData extends ASN1Encodable{
 	public byte[] getDataObject(int tagno) {
 		for (DERTaggedObject item : objects) {
 			if (item.getTagNo() == tagno) {
-				DEROctetString ostr = (DEROctetString) item.getObjectParser(DERTags.OCTET_STRING, false);
+				DEROctetString ostr = (DEROctetString) item.getObjectParser(BERTags.OCTET_STRING, false);
 				return ostr.getOctets();
 			}
 		}
@@ -102,11 +102,10 @@ public class DynamicAuthenticationData extends ASN1Encodable{
 
 
 	/* (non-Javadoc)
-	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
+	 * @see org.bouncycastle.asn1.ASN1Object#toASN1Primitive()
 	 */
 	@Override
-	public DERObject toASN1Object() {
-		
+	public ASN1Primitive toASN1Primitive() {
 		ASN1EncodableVector asn1vec = new ASN1EncodableVector();
 		
 		for (DERTaggedObject item : objects) {

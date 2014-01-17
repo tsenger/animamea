@@ -296,6 +296,7 @@ public class ECDSA5Test
         ByteArrayInputStream    bIn = new ByteArrayInputStream(encoding);
         ASN1InputStream         aIn = new ASN1InputStream(bIn);
         ASN1Sequence            s = (ASN1Sequence)aIn.readObject();
+        aIn.close();
 
         BigInteger[]            sig = new BigInteger[2];
 

@@ -18,10 +18,11 @@
  */
 package de.tsenger.animamea.asn1;
 
-import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObject;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 
@@ -32,7 +33,7 @@ import org.bouncycastle.asn1.DERSequence;
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public abstract class AmPublicKey extends ASN1Encodable{
+public abstract class AmPublicKey extends ASN1Object{
 	
 	private DERObjectIdentifier oid06 = null;
 	protected ASN1EncodableVector vec = new ASN1EncodableVector();
@@ -45,7 +46,7 @@ public abstract class AmPublicKey extends ASN1Encodable{
 	 *            Algorithmus
 	 */
 	public AmPublicKey(String oidString) {
-		oid06 = new DERObjectIdentifier(oidString);
+		oid06 = new ASN1ObjectIdentifier(oidString);
 		vec.add(oid06);
 	}
 	
@@ -70,7 +71,7 @@ public abstract class AmPublicKey extends ASN1Encodable{
 	 * @see org.bouncycastle.asn1.ASN1Encodable#toASN1Object()
 	 */
 	@Override
-	public DERObject toASN1Object() {
+	public ASN1Primitive toASN1Primitive() {
 		return new DERApplicationSpecific(0x49, vec);
 	}
 	

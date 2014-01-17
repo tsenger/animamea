@@ -20,10 +20,19 @@
 package de.tsenger.animamea;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.Security;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
@@ -37,6 +46,15 @@ import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.SignedData;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.util.Store;
 import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.asn1.DomainParameter;
@@ -51,6 +69,7 @@ import de.tsenger.animamea.pace.PaceOperator;
 import de.tsenger.animamea.ta.CertificateProvider;
 import de.tsenger.animamea.ta.TAException;
 import de.tsenger.animamea.ta.TAOperator;
+import de.tsenger.animamea.tools.FileSystem;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -59,15 +78,21 @@ import de.tsenger.animamea.tools.HexString;
  */
 public class Operator {
 
-	static final byte[] FID_EFCA = new byte[] { (byte) 0x01, (byte) 0x1C };
+	static final byte[] FID_EFCardAccess = new byte[] { (byte) 0x01, (byte) 0x1C };
+	static final byte[] FID_DIR = new byte[] { (byte) 0x2F, (byte) 0x00 };
+	static final byte[] FID_ATR = new byte[] { (byte) 0x2F, (byte) 0x01 };
 	static final byte[] FID_EFCardSec = new byte[] { (byte) 0x01, (byte) 0x1D };
 	static final byte[] FID_EFChipSec = new byte[] { (byte) 0x01, (byte) 0x1B };
 	static final byte SFID_EFCA = (byte) 0x1C;
+	
+	static final byte[] FID_SOD = new byte[] { (byte) 0x01, (byte) 0x1D };
+	static final byte[] FID_DG1 = new byte[] { (byte) 0x01, (byte) 0x01 };
 
 	static Logger logger = Logger.getLogger(Operator.class);
 	
 	private AmCardHandler ch = null;
 	private FileAccess facs = null;
+	private final String can = "053175";
 	
 
 	public static void main(String[] args) throws Exception {
@@ -77,42 +102,89 @@ public class Operator {
 		logger.info("Entering application.");
 		
 		Operator op = new Operator();
-		op.runCompleteProcedure();
 		
+		
+//		op.runCompleteProcedure();
+//		op.pintEFCA();
+//		op.getAllEFinMF();
+//		op.getEfSod();
+		op.decodeEfCs("/home/tsenger/git/animamea/animamea/card files/EF_ChipSecurity_HJP_AES_ECDH.bin");
+	}
 
+	
+	public Operator() {	}
+	
+	private void decodeEfCs(String filename) throws Exception {
+		SecurityInfos efcs = decodeEFCardSecurity(FileSystem.readFile(filename));
+		
+		System.out.println(efcs);
 	}
 	
-	public Operator() {
+	private void getEfSod() throws Exception {
 		connectCard();
-		facs = new FileAccess(ch);
+		//Selektiere die ICAO-Anwendung
+		ch.transceive(CardCommands.selectApp(Hex.decode("A0000002471001")));
+		byte[] efBytes = facs.getFile(FID_SOD);
+		if (efBytes!=null) {
+			System.out.println("SOD content:\n"+ HexString.bufferToHex(efBytes));
+			try {
+				FileSystem.saveFile("/tmp/EF_SOD.bin", efBytes);
+			} catch (IOException e) {}
+		}
+	}
+	
+	private void getAllEFinMF(){
+		connectCard();
+		for (int hb=0x00;hb<=255;hb++) {
+			for (int lb=0x00;lb<=255;lb++) {
+				byte[] fid = new byte[] {(byte)hb, (byte)lb};
+				System.out.println("FID:"+ HexString.bufferToHex(fid));
+				byte[] efBytes = getEF(fid);
+				if (efBytes!=null) {
+					try {
+						FileSystem.saveFile("/tmp/EF_"+hb+"_"+lb+".bin", efBytes);
+					} catch (IOException e) {}
+				}
+			}
+		}
 	}
 	
 
+	private void pintEFCA() throws CardException, SecureMessagingException, IOException, PaceException {
+		connectCard();
+//		byte[] efcaBytes = facs.getFile(FID_EFCardAccess, false);
+//		System.out.println("EF.CardAccess:");
+//		System.out.println(HexString.bufferToHex(efcaBytes));
+//		FileSystem.saveFile("/home/tsenger/Desktop/EF.CardAccess.bin",  efcaBytes);
+		SecurityInfos cardAccess = getEFCardAccess();	
+		byte[] efdirBytes =  getEF(FID_DIR);
+		byte[] efatrBytes = getEF(FID_ATR);
+		FileSystem.saveFile("/home/tsenger/Desktop/EF.DIR.bin", efdirBytes);
+		FileSystem.saveFile("/home/tsenger/Desktop/EF.ATR.bin", efatrBytes);
+		
+//		PublicKey ephPacePublicKey = performPACE(cardAccess);
+	}
+	
 	
 	private void runCompleteProcedure() throws Exception {
-						
+		connectCard();			
 		SecurityInfos cardAccess = getEFCardAccess();	
 		PublicKey ephPacePublicKey = performPACE(cardAccess);
 		
 		KeyPair ephPCDKeyPair = performTerminalAuthentication(cardAccess, ephPacePublicKey);
 		
 
-//		//Lese EF.ChipSecurity
-//		byte[] efChipSecBytes = facs.getFile(FID_EFChipSec);
-//		logger.info("EF.ChipSecurity read");
-//		
-//		//Extrahiere SecurityInfos
-//		SecurityInfos efChipSec = decodeEFCardAccess(efChipSecBytes);
-//		logger.debug("EF.CardSecurity \n: " + efChipSec);
-//		logger.info("EF.CardSecurity decoded");
 		
 		//Lese EF.CardSecurity
-		byte[] efcsBytes = facs.getFile(FID_EFCardSec);
+		byte[] efcsBytes = facs.getFile(FID_EFCardSec, true);
 		logger.info("EF.CardSecurity read");
+		
+//		FileSystem.saveFile("/home/tsenger/Desktop/CardSecurity.bin", efcsBytes);
 
 		
 		//Extrahiere SecurityInfos
 		SecurityInfos efcs = decodeEFCardSecurity(efcsBytes);
+		FileSystem.saveFile("/home/tsenger/Desktop/EF.CardSecurity", efcsBytes);
 		logger.debug("EF.CardSecurity \n: " + efcs);
 		logger.info("EF.CardSecurity decoded");
 
@@ -147,10 +219,11 @@ public class Operator {
 		
 //		saveToFile("/home/tsenger/Desktop/EFCardSecurity.bin", efcsBytes);
 		
-		// byte[] resetRetryCounter = Hex.decode("002c020306313233343536");
-		// ch.transceive(new CommandAPDU(resetRetryCounter));
-		// pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 0);
-		// pop.performPace();
+//		PaceOperator pop = new PaceOperator(ch);
+//		 byte[] resetRetryCounter = Hex.decode("002c020306313233343536");
+//		 ch.transceive(new CommandAPDU(resetRetryCounter));
+//		 pop.setAuthTemplate(si.getPaceInfoList().get(0), "123456", 3, 0);
+//		 pop.performPace();
 
 		// byte[] efcsBytes = facs.getFile(FID_EFCardSec);
 		// logger.info(HexString.bufferToHex(efcsBytes));
@@ -172,16 +245,37 @@ public class Operator {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
+		facs = new FileAccess(ch);
 
+	}
+	
+	private byte[] getEF(byte[] fid) {
+		
+		byte[] efBytes = null;
+		try {
+			efBytes = facs.getFile(fid, false);
+			logger.info("EF.ATR bytes:\n"+HexString.bufferToHex(efBytes));
+		} catch (SecureMessagingException e) {
+			logger.error("getEF failed because of SecureMessaging error", e);
+		} catch (IOException e) {
+			logger.error("getEF failed because of IOException", e);
+		} catch (CardException e) {
+			logger.error("getEF failed because of CardExecption", e);
+		} catch (IllegalArgumentException e) {
+			logger.error("getEF failed because of IllegalArgumentException", e);
+		}
+		return efBytes;
 	}
 	
 	private SecurityInfos getEFCardAccess() throws CardException {
 		
 		SecurityInfos efca = null;
 		try {
-			byte[] efcaBytes = facs.getFile(FID_EFCA);
+			byte[] efcaBytes = facs.getFile(FID_EFCardAccess, true);
 			efca = new SecurityInfos();
 			efca.decode(efcaBytes);
+			logger.info("EF.CardAccess bytes:\n"+HexString.bufferToHex(efcaBytes));
 			logger.info("EF.CardAccess decoded");
 			logger.debug("\n"+efca);
 		} catch (IOException e) {
@@ -200,7 +294,7 @@ public class Operator {
 	
 		if (cardAccess.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
 			pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), cardAccess.getPaceDomainParameterInfoList().get(0), "276884", 2, 2);
-		else pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), "288016", 2, 2); //Standardisierte PACE Domain Paramter
+		else pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), can , 2, 2); //Standardisierte PACE Domain Paramter
 				
 		//Führe PACE durch
 		SecureMessaging sm = null;
@@ -288,16 +382,49 @@ public class Operator {
 		} while(true);
 	}
 	
-	private static SecurityInfos decodeEFCardSecurity(byte[] data) throws IOException {
+	private static SecurityInfos decodeEFCardSecurity(byte[] data) throws IOException, CertificateException, NoSuchProviderException, CMSException, OperatorCreationException {
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+		
 		ASN1Sequence asnSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(data);
-		ContentInfo contentInfo = new ContentInfo(asnSeq);
+		ContentInfo contentInfo = ContentInfo.getInstance(asnSeq);
 		DERSequence derSeq = (DERSequence) contentInfo.getContent();
-		SignedData signedData = new SignedData(derSeq);;
-		ContentInfo contentInfo2 = signedData.getEncapContentInfo();
-		DEROctetString octString = (DEROctetString) contentInfo2.getContent();
 		
+		System.out.println("ContentType: "+ contentInfo.getContentType().toString());
+		SignedData cardSecurity = SignedData.getInstance(derSeq);
+		
+		CMSSignedData cms = new CMSSignedData(contentInfo);
+        Store store = cms.getCertificates(); 
+        SignerInformationStore signers = cms.getSignerInfos(); 
+        Collection c = signers.getSigners(); 
+        Iterator it = c.iterator();
+        while (it.hasNext()) { 
+            SignerInformation signer = (SignerInformation) it.next(); 
+            Collection certCollection = store.getMatches(signer.getSID()); 
+            Iterator certIt = certCollection.iterator();
+            X509CertificateHolder certHolder = (X509CertificateHolder) certIt.next();
+            X509Certificate cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certHolder);
+            if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert))) {
+                System.out.println("EF.CardSecurity signature verified");
+            }
+        }
+        
+		
+		System.out.println("EF.CardSecurity signing algorithms:"+cardSecurity.getDigestAlgorithms().toString());
+		
+		//Extract and print X509 certifcate
+		ASN1Sequence certSeq = (ASN1Sequence)cardSecurity.getCertificates().getObjectAt(0);
+		CertificateFactory fact = CertificateFactory.getInstance("X.509", "BC");
+		InputStream inStream = new ByteArrayInputStream(certSeq.getEncoded());
+		X509Certificate x509Cert = (X509Certificate) fact.generateCertificate(inStream);		
+		System.out.println("EF.CardSecurity DS certificate:"+x509Cert.toString());
+		
+	
+		
+		
+		//Get SecurityInfos
+		ContentInfo encapContentInfo = cardSecurity.getEncapContentInfo();
+		DEROctetString octString = (DEROctetString) encapContentInfo.getContent();
 		SecurityInfos si = new SecurityInfos();
-		
 		si.decode(octString.getOctets());
 	
 		return si;

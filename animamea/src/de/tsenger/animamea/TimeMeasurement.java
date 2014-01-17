@@ -151,7 +151,7 @@ public class TimeMeasurement {
 
 		SecurityInfos efca = null;
 		try {
-			byte[] efcaBytes = facs.getFile(FID_EFCA);
+			byte[] efcaBytes = facs.getFile(FID_EFCA, true);
 			efca = new SecurityInfos();
 			efca.decode(efcaBytes);
 			logger.info("EF.CardAccess decoded");

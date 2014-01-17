@@ -23,10 +23,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.sec.ECPrivateKeyStructure;
+import org.bouncycastle.asn1.sec.ECPrivateKey;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 
@@ -46,15 +45,15 @@ public class PKCS8PrivateKey {
 		
 		PrivateKeyInfo pkInfo = new PrivateKeyInfo(pkSeq);
 		
-		 AlgorithmIdentifier ecPublicKey = pkInfo.getAlgorithmId();
+		 AlgorithmIdentifier ecPublicKey = pkInfo.getPrivateKeyAlgorithm();
 		 System.out.println(ecPublicKey.getAlgorithm().toString());
-		 System.out.println(HexString.bufferToHex(ecPublicKey.getDEREncoded()));
+		 System.out.println(HexString.bufferToHex(ecPublicKey.getEncoded(null)));
 		 
-		 X9ECParameters ecp = new X9ECParameters((ASN1Sequence) ecPublicKey.getParameters());
+		 X9ECParameters ecp = X9ECParameters.getInstance(ecPublicKey.getParameters());
 		 
 		 System.out.println("N: \n"+HexString.bufferToHex(Converter.bigIntToByteArray(ecp.getN())));
 				 
-		 ECPrivateKeyStructure ecpk2 = new ECPrivateKeyStructure((ASN1Sequence) pkInfo.getPrivateKey()); 
+		 ECPrivateKey ecpk2 = ECPrivateKey.getInstance(ecPublicKey); 
 		 //ECPrivateKey.getInstance(pkInfo.getPrivateKey());
 		 System.out.println("private Key: \n"+HexString.bufferToHex(Converter.bigIntToByteArray(ecpk2.getKey())));
 		
@@ -68,6 +67,7 @@ public class PKCS8PrivateKey {
 		try {
 			in = new FileInputStream(efCardAccessFile);
 			in.read(buffer, 0, buffer.length);
+			in.close();
 		} catch (FileNotFoundException ex) {
 		} catch (IOException ex) {
 		}

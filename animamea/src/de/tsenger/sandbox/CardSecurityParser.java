@@ -45,16 +45,16 @@ public class CardSecurityParser {
 	public static void main(String[] args) throws Exception {
 		byte[] efcsBytes = readBinaryFile("/home/tsenger/Desktop/EFCardSecurity.bin");
 		ASN1Sequence asnSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(efcsBytes);
-		ContentInfo contentInfo = new ContentInfo(asnSeq);
+		ContentInfo contentInfo = ContentInfo.getInstance(asnSeq);
 		System.out.println(contentInfo.getContentType());
 		DERSequence derSeq = (DERSequence) contentInfo.getContent();
-		System.out.println(HexString.bufferToHex(derSeq.getDEREncoded()));
-		SignedData signedData = new SignedData(derSeq);
+		System.out.println(HexString.bufferToHex(derSeq.getEncoded(null)));
+		SignedData signedData = SignedData.getInstance(derSeq);
 		System.out.println("CMSVersion: "+signedData.getVersion().getValue().intValue());
 		ContentInfo contentInfo2 = signedData.getEncapContentInfo();
 		System.out.println(contentInfo2.getContentType());
 		DEROctetString octString = (DEROctetString) contentInfo2.getContent();
-		System.out.println("OctetString:\n"+HexString.bufferToHex(octString.getDEREncoded()));
+		System.out.println("OctetString:\n"+HexString.bufferToHex(octString.getEncoded(null)));
 		System.out.println("OctetString:\n"+HexString.bufferToHex(octString.getOctets()));
 		
 		SecurityInfos si = new SecurityInfos();
@@ -76,6 +76,7 @@ public class CardSecurityParser {
 		try {
 			in = new FileInputStream(efCardAccessFile);
 			in.read(buffer, 0, buffer.length);
+			in.close();
 		} catch (FileNotFoundException ex) {
 		} catch (IOException ex) {
 		}

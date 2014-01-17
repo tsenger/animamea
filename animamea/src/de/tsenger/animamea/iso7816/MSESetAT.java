@@ -24,7 +24,9 @@ import java.io.IOException;
 
 import javax.smartcardio.CommandAPDU;
 
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
@@ -85,9 +87,14 @@ public class MSESetAT {
 	 *            Das zu verwendende Protokoll
 	 */
 	public void setProtocol(String protocol) {
-		DERObjectIdentifier oid = new DERObjectIdentifier(protocol);
+		DERObjectIdentifier oid = new ASN1ObjectIdentifier(protocol);
 		DERTaggedObject to = new DERTaggedObject(false, 0x00, oid);
-		do80CMR = to.getDEREncoded();
+		try {
+			do80CMR = to.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -99,8 +106,13 @@ public class MSESetAT {
 	 *            PUK
 	 */
 	public void setKeyReference(int kr) {
-		DERTaggedObject to = new DERTaggedObject(false, 0x03, new DERInteger(kr));
-		do83KeyReference = to.getDEREncoded();
+		DERTaggedObject to = new DERTaggedObject(false, 0x03, new ASN1Integer(kr));
+		try {
+			do83KeyReference = to.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -114,7 +126,12 @@ public class MSESetAT {
 	 */
 	public void setKeyReference(String kr) {
 		DERTaggedObject to = new DERTaggedObject(false, 0x03, new DEROctetString(kr.getBytes()));
-		do83KeyName = to.getDEREncoded();
+		try {
+			do83KeyName = to.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -129,8 +146,13 @@ public class MSESetAT {
 	 *            Private Keys angegeben
 	 */
 	public void setPrivateKeyReference(int pkr) {
-		DERTaggedObject to = new DERTaggedObject(false, 0x04, new DERInteger(pkr));
-		do84PrivateKeyReference = to.getDEREncoded();
+		DERTaggedObject to = new DERTaggedObject(false, 0x04, new ASN1Integer(pkr));
+		try {
+			do84PrivateKeyReference = to.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -146,14 +168,24 @@ public class MSESetAT {
 	 */
 	public void setEphemeralPublicKey(byte[] pubKey) {
 		DERTaggedObject to = new DERTaggedObject(false, 0x11, new DEROctetString(pubKey));
-		do91EphemeralPublicKEy = to.getDEREncoded();
+		try {
+			do91EphemeralPublicKEy = to.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
 	 * @param chat
 	 */
 	public void setCHAT(CertificateHolderAuthorizationTemplate chat) {
-		do7F4C_CHAT = chat.getDEREncoded();
+		try {
+			do7F4C_CHAT = chat.getEncoded(ASN1Encoding.DER);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
