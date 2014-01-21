@@ -22,7 +22,7 @@ import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp1024
 import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp2048_224;
 import static de.tsenger.animamea.crypto.DHStandardizedDomainParameters.modp2048_256;
 
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.DHParameters;
@@ -54,7 +54,7 @@ public class DomainParameter {
 	 */
 	public DomainParameter(AlgorithmIdentifier aid) {
 		if (aid.getAlgorithm().toString().equals(BSIObjectIdentifiers.standardizedDomainParameters.toString())) {
-			int dpref = ((DERInteger)aid.getParameters()).getPositiveValue().intValue(); 
+			int dpref = ((ASN1Integer)aid.getParameters()).getPositiveValue().intValue(); 
 			getParameters(dpref);	
 		} 
 		

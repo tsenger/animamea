@@ -19,12 +19,11 @@
 package de.tsenger.animamea.asn1;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 
 import de.tsenger.animamea.tools.HexString;
 
@@ -42,19 +41,19 @@ import de.tsenger.animamea.tools.HexString;
  */
 public class ChipAuthenticationPublicKeyInfo extends ASN1Object{
 	
-	private DERObjectIdentifier protocol = null;
+	private ASN1ObjectIdentifier protocol = null;
 	private SubjectPublicKeyInfo capk = null;
-	private DERInteger keyId = null;
+	private ASN1Integer keyId = null;
 	
 	public ChipAuthenticationPublicKeyInfo(ASN1Sequence seq) {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
 		capk = new SubjectPublicKeyInfo((ASN1Sequence)seq.getObjectAt(1));
 		if (seq.size()==3) {
-			keyId = (DERInteger)seq.getObjectAt(2);
+			keyId = (ASN1Integer)seq.getObjectAt(2);
 		}	
 	}
 	
-	public DERObjectIdentifier getProtocol() {
+	public ASN1ObjectIdentifier getProtocol() {
 		return protocol;
 	}
 	
@@ -97,7 +96,7 @@ public class ChipAuthenticationPublicKeyInfo extends ASN1Object{
 		if (keyId!=null) {
 			vec.add(keyId);
 		}
-		return new DERSequence(vec);
+		return ASN1Sequence.getInstance(vec);
 	}
 	
 	

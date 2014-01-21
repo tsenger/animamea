@@ -38,8 +38,8 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
 import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.JCEDHPublicKey;
-import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.Arrays;
 
@@ -151,7 +151,7 @@ public class CAOperator {
 	private byte[] calcToken(byte[] kmac, PublicKey data) {
 		byte[] tpcd = null;
 		if (ca instanceof ChipAuthenticationECDH) {
-			ECPoint point = ((JCEECPublicKey)data).getQ();
+			ECPoint point = ((ECPublicKey)data).getQ();
 			AmECPublicKey pk = new AmECPublicKey(protocol, point);
 			tpcd = crypto.getMAC(kmac, pk.getEncoded());
 		}
@@ -165,7 +165,7 @@ public class CAOperator {
 	
 	private DynamicAuthenticationData sendGA() throws SecureMessagingException, CardException {
 		DynamicAuthenticationData dad80 = new DynamicAuthenticationData();
-		dad80.addDataObject(0, ((JCEECPublicKey)ephPKPCD).getQ().getEncoded());
+		dad80.addDataObject(0, ((ECPublicKey)ephPKPCD).getQ().getEncoded());
 		
 		byte[] dadBytes = null;
 		try {

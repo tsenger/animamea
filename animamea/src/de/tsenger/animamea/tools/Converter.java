@@ -25,7 +25,6 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
 import org.bouncycastle.math.ec.ECCurve;
-import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
 /**
@@ -132,11 +131,12 @@ public class Converter {
 			System.arraycopy(value, 1, x, 0, (value.length - 1) / 2);
 			System.arraycopy(value, 1 + ((value.length - 1) / 2), y, 0,
 					(value.length - 1) / 2);
-			ECFieldElement.Fp xE = new ECFieldElement.Fp(curve.getQ(),
-					new BigInteger(1, x));
-			ECFieldElement.Fp yE = new ECFieldElement.Fp(curve.getQ(),
-					new BigInteger(1, y));
-			ECPoint point = new ECPoint.Fp(curve, xE, yE);
+//			ECFieldElement.Fp xE = new ECFieldElement.Fp(curve.getQ(),
+//					new BigInteger(1, x));
+//			ECFieldElement.Fp yE = new ECFieldElement.Fp(curve.getQ(),
+//					new BigInteger(1, y));
+//			ECPoint point = new ECPoint.Fp(curve, xE, yE);
+			ECPoint point = curve.createPoint(new BigInteger(1, x), new BigInteger(1, y));
 			return point;
 		}
 

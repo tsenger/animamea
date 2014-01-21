@@ -23,10 +23,10 @@ import java.io.IOException;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1StreamParser;
 import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERSequence;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -43,7 +43,7 @@ public class CVCertificate extends ASN1Object{
 		DERApplicationSpecific cvcert = (DERApplicationSpecific) asn1Parser.readObject();
 		if (cvcert.getApplicationTag()!=0x21) throw new IllegalArgumentException("Can't find a CV Certificate");
 		
-		DERSequence derCert= (DERSequence)cvcert.getObject(BERTags.SEQUENCE); // Das CV Cerificate ist eine Sequence
+		ASN1Sequence derCert= (ASN1Sequence)cvcert.getObject(BERTags.SEQUENCE); // Das CV Cerificate ist eine Sequence
 		
 		DERApplicationSpecific body = (DERApplicationSpecific) derCert.getObjectAt(0); //Das erste Objekt des Certificates ist der Cert-Body
 		if (body.getApplicationTag()!=0x4E) throw new IllegalArgumentException("Can't find a Body in the CV Certificate");

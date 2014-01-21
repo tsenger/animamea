@@ -20,6 +20,7 @@ package de.tsenger.animamea.asn1;
 
 import java.io.IOException;
 
+import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DERApplicationSpecific;
@@ -45,7 +46,7 @@ public class CVCertSignature extends ASN1Object{
 
 	@Override
 	public byte[] getEncoded(String encoding) throws IOException {
-		return cvcsig.getEncoded(null);
+		return cvcsig.getEncoded(ASN1Encoding.DER);
 	}
 	
 	public byte[] getSignature() {

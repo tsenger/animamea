@@ -24,9 +24,8 @@ import java.security.interfaces.RSAPublicKey;
 
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERTags;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
@@ -46,7 +45,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	/**
 	 * @param seq
 	 */
-	public AmRSAPublicKey(DERSequence seq) {
+	public AmRSAPublicKey(ASN1Sequence seq) {
 		super(seq);
 		decode(seq);
 	}
@@ -90,10 +89,10 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	}
 
 	/* (non-Javadoc)
-	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
+	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.ASN1Sequence)
 	 */
 	@Override
-	protected void decode(DERSequence seq) {
+	protected void decode(ASN1Sequence seq) {
 		for (int i = 1; i<seq.size(); i++) {
 			DERTaggedObject to = (DERTaggedObject) seq.getObjectAt(i);
 			switch(to.getTagNo()) {
@@ -110,7 +109,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	@Override
 	public BigInteger getModulus() {
 		if (n==null) return null;
-		DERInteger derInt =(DERInteger) n.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt =(ASN1Integer) n.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -120,7 +119,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	@Override
 	public BigInteger getPublicExponent() {
 		if (e==null) return null;
-		DERInteger derInt =(DERInteger) e.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt =(ASN1Integer) e.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 

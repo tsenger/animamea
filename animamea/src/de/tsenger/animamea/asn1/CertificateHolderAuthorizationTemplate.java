@@ -23,16 +23,16 @@ import java.io.IOException;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 
 public class CertificateHolderAuthorizationTemplate extends ASN1Object{
 
-	private DERObjectIdentifier terminalType = null;
+	private ASN1ObjectIdentifier terminalType = null;
 	private DiscretionaryData auth = null;
 	private byte role;
 	
@@ -40,7 +40,7 @@ public class CertificateHolderAuthorizationTemplate extends ASN1Object{
 	 * @param terminalType OID for the terminal type to use
 	 * @param disData
 	 */
-	public CertificateHolderAuthorizationTemplate(DERObjectIdentifier terminalType,	DiscretionaryData disData) {
+	public CertificateHolderAuthorizationTemplate(ASN1ObjectIdentifier terminalType,	DiscretionaryData disData) {
 		this.terminalType = terminalType;
 		this.auth = disData;		 
 	}
@@ -49,8 +49,8 @@ public class CertificateHolderAuthorizationTemplate extends ASN1Object{
 	 * @param chatSeq
 	 * @throws IOException
 	 */
-	public CertificateHolderAuthorizationTemplate(DERSequence chatSeq) throws IOException {
-		this.terminalType = (DERObjectIdentifier) chatSeq.getObjectAt(0);
+	public CertificateHolderAuthorizationTemplate(ASN1Sequence chatSeq) throws IOException {
+		this.terminalType = (ASN1ObjectIdentifier) chatSeq.getObjectAt(0);
 		
 		DEROctetString oct = (DEROctetString) ((DERApplicationSpecific) chatSeq.getObjectAt(1)).getObject(BERTags.OCTET_STRING);
 		this.auth = new DiscretionaryData(oct.getOctets());

@@ -22,9 +22,8 @@ import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERApplicationSpecific;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 
 /**
  * Abstrakte Klasse für Public Key Data Objects 
@@ -35,7 +34,7 @@ import org.bouncycastle.asn1.DERSequence;
  */
 public abstract class AmPublicKey extends ASN1Object{
 	
-	private DERObjectIdentifier oid06 = null;
+	private ASN1ObjectIdentifier oid06 = null;
 	protected ASN1EncodableVector vec = new ASN1EncodableVector();
 
 	/**
@@ -54,8 +53,8 @@ public abstract class AmPublicKey extends ASN1Object{
 	 * Konstruktur zum Decoden
 	 * @param seq ASN1 Sequenz welche die Public Key Struktur enthält.
 	 */
-	public AmPublicKey(DERSequence seq) {
-		oid06 = (DERObjectIdentifier) seq.getObjectAt(0);		
+	public AmPublicKey(ASN1Sequence seq) {
+		oid06 = (ASN1ObjectIdentifier) seq.getObjectAt(0);		
 		vec.add(oid06);
 	}
 	
@@ -64,7 +63,7 @@ public abstract class AmPublicKey extends ASN1Object{
 	 * 
 	 * @param seq
 	 */
-	protected abstract void decode(DERSequence seq);
+	protected abstract void decode(ASN1Sequence seq);
 
 	
 	/* (non-Javadoc)

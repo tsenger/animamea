@@ -20,7 +20,7 @@ package de.tsenger.animamea.ta;
 
 import java.io.IOException;
 
-import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.sec.ECPrivateKey;
 
@@ -70,8 +70,8 @@ public class CertificateProvider {
 	}
 	
 	public ECPrivateKey getPrivateKey() throws IOException {
-		DERSequence pkSeq = null;
-		pkSeq = (DERSequence) DERSequence.fromByteArray(pkBytes);
+		ASN1Sequence pkSeq = null;
+		pkSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(pkBytes);
 		
 		PrivateKeyInfo pkInfo = new PrivateKeyInfo(pkSeq);
 		ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.parsePrivateKey());

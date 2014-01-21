@@ -24,7 +24,7 @@ import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 
-import org.bouncycastle.jce.provider.JCEECPrivateKey;
+import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
@@ -51,11 +51,11 @@ public class ChipAuthenticationECDH extends ChipAuthentication {
 	@Override
 	public byte[] getSharedSecret_K(PrivateKey ephskpcd, byte[] pkpicc) {
 		;
-		BigInteger privKey = ((JCEECPrivateKey)ephskpcd).getD();
+		BigInteger privKey = ((ECPrivateKey)ephskpcd).getD();
 		PK_PICC = byteArrayToECPoint(pkpicc, curve);
 		
 		ECPoint.Fp K = (Fp) PK_PICC.multiply(privKey);
-		byte[] sharedSecret_K = bigIntToByteArray(K.getAffineXCoord().toBigInteger());
+		byte[] sharedSecret_K = bigIntToByteArray(K.normalize().getXCoord().toBigInteger());
 		return sharedSecret_K;
 	}
 

@@ -25,9 +25,6 @@ import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 
 /**
  * 
@@ -35,16 +32,16 @@ import org.bouncycastle.asn1.DERSequence;
  */
 public class PaceInfo extends ASN1Object{
 
-	private DERObjectIdentifier protocol = null;
-	private DERInteger version = null;
-	private DERInteger parameterId = null;
+	private ASN1ObjectIdentifier protocol = null;
+	private ASN1Integer version = null;
+	private ASN1Integer parameterId = null;
 	
 	public PaceInfo(ASN1Sequence seq) {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		version = (DERInteger) seq.getObjectAt(1);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
+		version = (ASN1Integer) seq.getObjectAt(1);
 
 		if (seq.size() > 2) {
-			parameterId = (DERInteger) seq.getObjectAt(2);
+			parameterId = (ASN1Integer) seq.getObjectAt(2);
 		}
 	}
 	
@@ -109,6 +106,6 @@ public class PaceInfo extends ASN1Object{
 		v.add(version); 
 		if (parameterId!=null) v.add(parameterId);
 		
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 }

@@ -20,12 +20,11 @@
 package de.tsenger.animamea.asn1;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -33,16 +32,16 @@ import org.bouncycastle.asn1.DERSequence;
  */
 public class ChipAuthenticationInfo extends ASN1Object{
 
-	private DERObjectIdentifier protocol = null;
-	private DERInteger version = null;
-	private DERInteger keyId = null;
+	private ASN1ObjectIdentifier protocol = null;
+	private ASN1Integer version = null;
+	private ASN1Integer keyId = null;
 
 	public ChipAuthenticationInfo(ASN1Sequence seq) {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
-		version = (DERInteger) seq.getObjectAt(1);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
+		version = (ASN1Integer) seq.getObjectAt(1);
 
 		if (seq.size() > 2) {
-			keyId = (DERInteger) seq.getObjectAt(2);
+			keyId = (ASN1Integer) seq.getObjectAt(2);
 		}
 	}
 
@@ -94,7 +93,7 @@ public class ChipAuthenticationInfo extends ASN1Object{
 		v.add(version); 
 		if (keyId!=null) v.add(keyId);
 		
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 
 }

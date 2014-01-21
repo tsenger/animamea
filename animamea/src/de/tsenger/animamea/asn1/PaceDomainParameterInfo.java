@@ -20,12 +20,11 @@
 package de.tsenger.animamea.asn1;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
 /**
@@ -34,20 +33,20 @@ import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
  */
 public class PaceDomainParameterInfo extends ASN1Object {
 
-	private DERObjectIdentifier protocol = null;
+	private ASN1ObjectIdentifier protocol = null;
 	private AlgorithmIdentifier domainParameter = null;
-	private DERInteger parameterId = null;
+	private ASN1Integer parameterId = null;
 
 	public PaceDomainParameterInfo(ASN1Sequence seq) {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
 		domainParameter = AlgorithmIdentifier.getInstance(seq.getObjectAt(1));
 
 		if (seq.size() > 2) {
-			parameterId = (DERInteger) seq.getObjectAt(2);
+			parameterId = (ASN1Integer) seq.getObjectAt(2);
 		}
 	}
 
-	public DERObjectIdentifier getProtocol() {
+	public ASN1ObjectIdentifier getProtocol() {
 		return protocol;
 	}
 
@@ -92,6 +91,6 @@ public class PaceDomainParameterInfo extends ASN1Object {
 		v.add(domainParameter);
 		if (parameterId!=null) v.add(parameterId);
 		
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 }

@@ -25,9 +25,8 @@ import java.math.BigInteger;
 
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.spec.ECParameterSpec;
@@ -60,7 +59,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 * Konstruktor zum Dekodieren der übergebenen Sequenz
 	 * @param seq
 	 */
-	public AmECPublicKey(DERSequence seq) {
+	public AmECPublicKey(ASN1Sequence seq) {
 		super(seq);
 		decode(seq);
 	}
@@ -117,7 +116,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public BigInteger getP() {
 		if (p==null) return null;
-		DERInteger derInt = DERInteger.getInstance(p, false);
+		ASN1Integer derInt = ASN1Integer.getInstance(p, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -126,7 +125,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public BigInteger getA() {
 		if (a==null) return null;
-		DERInteger derInt = DERInteger.getInstance(a, false);
+		ASN1Integer derInt = ASN1Integer.getInstance(a, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -135,7 +134,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public BigInteger getB() {
 		if (b==null) return null;
-		DERInteger derInt = DERInteger.getInstance(b, false);
+		ASN1Integer derInt = ASN1Integer.getInstance(b, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -153,7 +152,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public BigInteger getR() {
 		if (r==null) return null;
-		DERInteger derInt = DERInteger.getInstance(r, false);
+		ASN1Integer derInt = ASN1Integer.getInstance(r, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -171,7 +170,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public BigInteger getF() {
 		if (f==null) return null;
-		DERInteger derInt = DERInteger.getInstance(f, false);
+		ASN1Integer derInt = ASN1Integer.getInstance(f, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -192,7 +191,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
 	 */
 	@Override
-	protected void decode(DERSequence seq) {
+	protected void decode(ASN1Sequence seq) {
 	
 		for (int i = 1; i<seq.size(); i++) {
 			DERTaggedObject to = (DERTaggedObject) seq.getObjectAt(i);

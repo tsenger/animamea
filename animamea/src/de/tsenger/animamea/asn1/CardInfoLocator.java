@@ -21,11 +21,10 @@ package de.tsenger.animamea.asn1;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERIA5String;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
 
 ;
 
@@ -35,19 +34,19 @@ import org.bouncycastle.asn1.DERSequence;
  */
 public class CardInfoLocator extends ASN1Object{
 
-	private DERObjectIdentifier protocol = null;
+	private ASN1ObjectIdentifier protocol = null;
 	private DERIA5String url = null;
-	private DERSequence fileID = null;
+	private ASN1Sequence fileID = null;
 
 	public CardInfoLocator(ASN1Sequence seq) {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
 		url = (DERIA5String) seq.getObjectAt(1);
 		if (seq.size() > 2) {
-			fileID = (DERSequence) seq.getObjectAt(2);
+			fileID = (ASN1Sequence) seq.getObjectAt(2);
 		}
 	}
 
-	public DERObjectIdentifier getProtocol() {
+	public ASN1ObjectIdentifier getProtocol() {
 		return protocol;
 	}
 
@@ -85,7 +84,7 @@ public class CardInfoLocator extends ASN1Object{
 		v.add(protocol);
 		v.add(url);
 		if (fileID!=null) v.add(fileID);
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 
 }

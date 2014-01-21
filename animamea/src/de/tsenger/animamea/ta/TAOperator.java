@@ -33,8 +33,8 @@ import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.JCEDHPublicKey;
-import org.bouncycastle.jce.provider.JCEECPublicKey;
 import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
@@ -73,7 +73,7 @@ public class TAOperator {
 	}
 	
 	/**
-	 * Initialisiert den TA Operator mit einem Zertifikatsprovider, den CA-DomainParamatern 
+	 * Initialisiert den TA SandOp mit einem Zertifikatsprovider, den CA-DomainParamatern 
 	 * für die Berechnung des Public Key und dem Public Key aus PACE
 	 * 
 	 * @param certProv Zertifikat-Provider stellt die benötigten CV-Zertifikate bereit
@@ -148,7 +148,7 @@ public class TAOperator {
 				
 		byte[] signature = ta.sign(message);
 		
-		sendExternalAuthenticate(signature);
+		if (sendExternalAuthenticate(signature).getSW()!=0x9000) throw new TAException("External Authentication failed.");
 		
 		return pair;
 
@@ -156,7 +156,7 @@ public class TAOperator {
 	
 	private byte[] comp(java.security.PublicKey publicKey) {
 		if (publicKey.getAlgorithm().equals("ECDH")) {
-			BigInteger x = ((JCEECPublicKey)publicKey).getQ().getAffineXCoord().toBigInteger();
+			BigInteger x = ((ECPublicKey)publicKey).getQ().getAffineXCoord().toBigInteger();
 			return Converter.bigIntToByteArray(x);
 		}
 		else if (publicKey.getAlgorithm().equals("DH")) {

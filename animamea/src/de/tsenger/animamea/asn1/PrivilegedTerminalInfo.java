@@ -23,11 +23,10 @@ import java.io.IOException;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERSet;
+import org.bouncycastle.asn1.ASN1Set;
 
 /**
  * @author Tobias Senger (tobias@t-senger.de)
@@ -35,16 +34,16 @@ import org.bouncycastle.asn1.DERSet;
  */
 public class PrivilegedTerminalInfo extends ASN1Object{
 
-	private DERObjectIdentifier protocol = null;
+	private ASN1ObjectIdentifier protocol = null;
 	private SecurityInfos secinfos = null;
 
 	public PrivilegedTerminalInfo(ASN1Sequence seq) throws IOException {
-		protocol = (DERObjectIdentifier) seq.getObjectAt(0);
+		protocol = (ASN1ObjectIdentifier) seq.getObjectAt(0);
 
-		DERSet derSet = (DERSet) seq.getObjectAt(1);
+		ASN1Set ASN1Set = (ASN1Set) seq.getObjectAt(1);
 
 		SecurityInfos si = new SecurityInfos();
-		si.decode(derSet.getEncoded());
+		si.decode(ASN1Set.getEncoded());
 
 		secinfos = (si);
 	}
@@ -78,7 +77,7 @@ public class PrivilegedTerminalInfo extends ASN1Object{
 		v.add(protocol);
 		v.add(secinfos);
 		
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 
 }

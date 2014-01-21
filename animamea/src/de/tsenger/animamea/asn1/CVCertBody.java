@@ -22,15 +22,15 @@ import java.io.IOException;
 import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERTags;
 import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DERIA5String;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 
 import de.tsenger.animamea.tools.Converter;
 
@@ -42,17 +42,17 @@ public class CVCertBody extends ASN1Object{
 	
 	private DERApplicationSpecific cvcbody = null;
 	
-	private DERInteger profileIdentifier = null;
+	private ASN1Integer profileIdentifier = null;
 	private DERIA5String authorityReference = null;	
 	private AmPublicKey publicKey = null;
 	private DERIA5String chr = null;
 	private CertificateHolderAuthorizationTemplate chat = null;
 	private DEROctetString effectiveDate = null;
 	private DEROctetString expirationDate = null;
-	private DERSequence extensions = null;
+	private ASN1Sequence extensions = null;
 	
 	
-	public CVCertBody(DERSequence derSeq) {
+	public CVCertBody(ASN1Sequence derSeq) {
 		
 	}
 	
@@ -60,12 +60,12 @@ public class CVCertBody extends ASN1Object{
 		if (derApp.getApplicationTag()!=0x4E) throw new IllegalArgumentException("contains no Certifcate Body with tag 0x7F4E");
 		else cvcbody = derApp;
 		
-		DERSequence bodySeq= (DERSequence)cvcbody.getObject(BERTags.SEQUENCE);
-		profileIdentifier = (DERInteger) ((DERApplicationSpecific) bodySeq.getObjectAt(0)).getObject(BERTags.INTEGER);
+		ASN1Sequence bodySeq= (ASN1Sequence)cvcbody.getObject(BERTags.SEQUENCE);
+		profileIdentifier = (ASN1Integer) ((DERApplicationSpecific) bodySeq.getObjectAt(0)).getObject(BERTags.INTEGER);
 		authorityReference = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(1)).getObject(BERTags.IA5_STRING);
 		
-		DERSequence pkSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(2)).getObject(BERTags.SEQUENCE);
-		DERObjectIdentifier pkOid = (DERObjectIdentifier) pkSeq.getObjectAt(0);
+		ASN1Sequence pkSeq = (ASN1Sequence) ((DERApplicationSpecific) bodySeq.getObjectAt(2)).getObject(BERTags.SEQUENCE);
+		ASN1ObjectIdentifier pkOid = (ASN1ObjectIdentifier) pkSeq.getObjectAt(0);
 		if (pkOid.toString().startsWith("0.4.0.127.0.7.2.2.2.2")) {
 			publicKey = new AmECPublicKey(pkSeq); 
 		}
@@ -75,7 +75,7 @@ public class CVCertBody extends ASN1Object{
 		
 		chr = (DERIA5String) ((DERApplicationSpecific) bodySeq.getObjectAt(3)).getObject(BERTags.IA5_STRING);
 		
-		DERSequence chatSeq = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(4)).getObject(BERTags.SEQUENCE);
+		ASN1Sequence chatSeq = (ASN1Sequence) ((DERApplicationSpecific) bodySeq.getObjectAt(4)).getObject(BERTags.SEQUENCE);
 		chat = new CertificateHolderAuthorizationTemplate(chatSeq);
 		
 		effectiveDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(5)).getObject(BERTags.OCTET_STRING);
@@ -83,7 +83,7 @@ public class CVCertBody extends ASN1Object{
 		expirationDate = (DEROctetString) ((DERApplicationSpecific) bodySeq.getObjectAt(6)).getObject(BERTags.OCTET_STRING);
 		
 		if (bodySeq.size()>7) {
-			extensions = (DERSequence) ((DERApplicationSpecific) bodySeq.getObjectAt(7)).getObject(BERTags.SEQUENCE);
+			extensions = (ASN1Sequence) ((DERApplicationSpecific) bodySeq.getObjectAt(7)).getObject(BERTags.SEQUENCE);
 		}
 	}
 	

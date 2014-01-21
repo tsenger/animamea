@@ -18,7 +18,7 @@
  */
 package de.tsenger.animamea.ta;
 
-import org.bouncycastle.asn1.pkcs.RSAPrivateKeyStructure;
+import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
 
 import de.tsenger.animamea.asn1.AmRSAPublicKey;
 import de.tsenger.animamea.asn1.DomainParameter;
@@ -30,12 +30,12 @@ import de.tsenger.animamea.asn1.DomainParameter;
 public class TerminalAuthenticationRSA extends TerminalAuthentication {
 	
 	private final String signingAlgorithm = null;
-	private final RSAPrivateKeyStructure terminalSK = null;
+	private final RSAPrivateKey terminalSK = null;
 
 	/**
 	 * @param caDomainParamter
 	 */
-	public TerminalAuthenticationRSA(DomainParameter caDomainParamter, AmRSAPublicKey taPublicKey, RSAPrivateKeyStructure taSecretKey) {
+	public TerminalAuthenticationRSA(DomainParameter caDomainParamter, AmRSAPublicKey taPublicKey, RSAPrivateKey taSecretKey) {
 		super(caDomainParamter);
 		//TODO TA mit RSA implementieren.
 		throw new UnsupportedOperationException("Terminal Authentication with RSA not yet implemented!");

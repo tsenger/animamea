@@ -23,7 +23,6 @@ import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERBitString;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 
 /**
@@ -66,7 +65,7 @@ public class SubjectPublicKeyInfo extends ASN1Object {
 		ASN1EncodableVector vec = new ASN1EncodableVector();
 		vec.add(algorithm);
 		vec.add(subjectPublicKey);
-		return new DERSequence(vec);
+		return ASN1Sequence.getInstance(vec);
 	}
 
 }

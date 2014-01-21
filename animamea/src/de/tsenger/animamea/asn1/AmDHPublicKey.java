@@ -26,9 +26,8 @@ import javax.crypto.spec.DHParameterSpec;
 
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.BERTags;
-import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
@@ -50,7 +49,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	/**
 	 * @param seq
 	 */
-	public AmDHPublicKey(DERSequence seq) {
+	public AmDHPublicKey(ASN1Sequence seq) {
 		super(seq);
 		decode(seq);
 	}
@@ -110,7 +109,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 * @see de.tsenger.animamea.asn1.AmPublicKey#decode(org.bouncycastle.asn1.DERSequence)
 	 */
 	@Override
-	protected void decode(DERSequence seq) {
+	protected void decode(ASN1Sequence seq) {
 		for (int i = 1; i<seq.size(); i++) {
 			DERTaggedObject to = (DERTaggedObject) seq.getObjectAt(i);
 			switch(to.getTagNo()) {
@@ -128,7 +127,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getP() {
 		if (p==null) return null;
-		DERInteger derInt =(DERInteger) p.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt = (ASN1Integer) p.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -137,7 +136,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getG() {
 		if (g==null) return null;
-		DERInteger derInt =(DERInteger) g.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt =(ASN1Integer) g.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 	
@@ -146,7 +145,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getQ() {
 		if (q==null) return null;
-		DERInteger derInt =(DERInteger) q.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt =(ASN1Integer) q.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -156,7 +155,7 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	@Override
 	public BigInteger getY() {
 		if (y==null) return null;
-		DERInteger derInt =(DERInteger) y.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt =(ASN1Integer) y.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 

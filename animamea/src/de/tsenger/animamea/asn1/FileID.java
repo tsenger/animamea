@@ -22,8 +22,8 @@ package de.tsenger.animamea.asn1;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 
 import de.tsenger.animamea.tools.HexString;
 
@@ -36,7 +36,7 @@ public class FileID extends ASN1Object{
 	private DEROctetString fid = null;
 	private DEROctetString sfid = null;
 
-	public FileID(DERSequence seq) {
+	public FileID(ASN1Sequence seq) {
 		fid = (DEROctetString) seq.getObjectAt(0);
 		if (seq.size() > 1) {
 			sfid = (DEROctetString) seq.getObjectAt(1);
@@ -75,7 +75,7 @@ public class FileID extends ASN1Object{
 		v.add(fid);
 		if (sfid!=null) v.add(sfid);
 		
-		return new DERSequence(v);
+		return ASN1Sequence.getInstance(v);
 	}
 
 }

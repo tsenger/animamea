@@ -30,7 +30,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 
 import org.bouncycastle.asn1.DERInteger;
-import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPrivateKeySpec;
 import org.bouncycastle.math.ec.ECCurve;
@@ -116,9 +116,9 @@ public class TerminalAuthenticationECDSA extends TerminalAuthentication {
 
 			
 		// decompose signature to get r || s
-		DERSequence seq = null;
+		DLSequence seq = null;
 		try {
-			seq = (DERSequence) DERSequence.fromByteArray(dersig);
+			seq = (DLSequence) DLSequence.fromByteArray(dersig);
 		} catch (IOException e) {
 			throw new TAException(e);
 		}

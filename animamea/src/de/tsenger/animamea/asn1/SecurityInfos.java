@@ -25,12 +25,10 @@ import java.util.List;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.DERObjectIdentifier;
-
-import de.tsenger.animamea.tools.HexString;
 
 /**
  * 
@@ -69,9 +67,8 @@ public class SecurityInfos extends ASN1Object {
 		ASN1Sequence securityInfo[] = new ASN1Sequence[anzahlObjekte];
 
 		for (int i = 0; i < anzahlObjekte; i++) {
-			System.out.println(HexString.bufferToHex(securityInfos.getObjectAt(i).toASN1Primitive().getEncoded()));
 			securityInfo[i] = (ASN1Sequence) securityInfos.getObjectAt(i);
-			DERObjectIdentifier oid = (DERObjectIdentifier) securityInfo[i].getObjectAt(0);
+			ASN1ObjectIdentifier oid = (ASN1ObjectIdentifier) securityInfo[i].getObjectAt(0);
 
 			switch (oid.toString().charAt(18)) {
 			case '1': 
