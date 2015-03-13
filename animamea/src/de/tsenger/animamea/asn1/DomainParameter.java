@@ -58,12 +58,14 @@ public class DomainParameter {
 			getParameters(dpref);	
 		} 
 		
-		else if (aid.getAlgorithm().toString().equals(BSIObjectIdentifiers.id_ecPublicKey)) {
+		else if (aid.getAlgorithm().toString().equals("1.2.840.10045.2.1")) {
 			X9ECParameters x9ecp = X9ECParameters.getInstance(aid.getParameters());
 			ecSpec = new ECParameterSpec(x9ecp.getCurve(), x9ecp.getG(), x9ecp.getN());
-		} //TODO properitäre DH Domain Parameter 
+		} 
 		
-		else throw new UnsupportedOperationException("unsupported Domain Parameters");
+		//TODO properitäre DH Domain Parameter
+		
+		else throw new UnsupportedOperationException("unsupported Domain Parameters. Algorithm OID: "+aid.getAlgorithm().toString());
 	}
 
 	/**

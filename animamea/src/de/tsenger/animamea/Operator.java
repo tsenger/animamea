@@ -76,7 +76,8 @@ public class Operator {
 	
 	private AmCardHandler ch = null;
 	private FileAccess facs = null;
-	private final String can = "985146";
+	private final String can = "098960";
+	private final int slotID = 1; 
 	
 
 	public static void main(String[] args) throws Exception {
@@ -89,6 +90,7 @@ public class Operator {
 		
 		op.runCompleteProcedure();
 	}
+
 	
 	
 	private void runCompleteProcedure() throws Exception {
@@ -107,7 +109,7 @@ public class Operator {
 		
 		//Extrahiere SecurityInfos
 		SecurityInfos efcs = decodeEFCardSecurity(efcsBytes);
-		FileSystem.saveFile("/home/tsenger/Desktop/EF.CardSecurity", efcsBytes);
+		FileSystem.saveFile("/home/tsenger/Desktop/EF.CardSecurity_eAT.bin", efcsBytes);
 		logger.debug("EF.CardSecurity \n: " + efcs);
 		logger.info("EF.CardSecurity decoded");
 
@@ -147,7 +149,7 @@ public class Operator {
 		ch = new AmCardHandler();
 		
 		try {
-			if (!ch.connect(0))  // 0 = First terminal
+			if (!ch.connect(slotID))  // 0 = First terminal
 			{
 				logger.error("Can't connect to card!");
 				System.exit(0);
@@ -217,10 +219,15 @@ public class Operator {
 
 
 		//Zertifikate für TA festlegen
-		String cvcaCertFile = "certs/CVCA/CVCA_DETESTeID00002_DETESTeID00001.cvcert";
-		String dvCertFile = "certs/DV/DETESTeID00002_DEDVTIDBSIDE006.cvcert";
-		String terminalCertFile = "certs/Terminal/DEATTIDBSIDE006.cvcert";
-		String privateKeyFile = "certs/Terminal/DEATTIDBSIDE006.pkcs8";
+//		String cvcaCertFile = "certs/CVCA/CVCA_DETESTeID00002.cv";
+//		String dvCertFile = "certs/DV/DETESTeID00002_DEDVTIDBSIDE006.cvcert";
+//		String terminalCertFile = "certs/Terminal/DEATTIDBSIDE006.cvcert";
+//		String privateKeyFile = "certs/Terminal/DEATTIDBSIDE006.pkcs8";
+		
+		String cvcaCertFile = "certs/PersoSim_HJP/DETESTeID00004.cvcert";
+		String dvCertFile = "certs/PersoSim_HJP/DETESTeID00004_DEDVTIDHJP00001.cvcert";
+		String terminalCertFile = "certs/PersoSim_HJP/DEDVTIDHJP00001_DEATTIDBSI00001.cvcert";
+		String privateKeyFile = "certs/PersoSim_HJP/DEDVTIDHJP00001_DEATTIDBSI00001.pkcs8";
 
 		CertificateProvider cp = null;
 		try {
