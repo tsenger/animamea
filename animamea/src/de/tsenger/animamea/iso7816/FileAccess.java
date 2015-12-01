@@ -133,7 +133,7 @@ public class FileAccess {
 		ResponseAPDU resp;
 		byte[] dataBuffer = new byte[maxLength];
 
-		int maxSingleReadLength = 0xFF;
+		int maxSingleReadLength = 0xDF; //limit of 223 Byte per READ BINARY command for some cards
 		int i = 0;
 
 		do {
