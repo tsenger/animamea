@@ -1,8 +1,7 @@
 #animamea
 
 ##description
-animamea is an implementation of the advanced security mechanisms (EACv2) used e.g. in the german electonic ID-card ("neuer Personalausweis").
-The protocols PACE, Chip Authentication (CA) and Therminal Authentication (TA) as definied in the BSI TR-03110 V2.05 are implemented.
+animamea is an implementation of the advanced security mechanisms (EACv2) used e.g. in the german electronic ID card ("neuer Personalausweis"). The protocols PACE, Chip Authentication (CA) and Therminal Authentication (TA) as definied in the BSI TR-03110 V2.05 are implemented.
 
 ##usage
 See the Operator.java for an example how to use the current version of animamea.
