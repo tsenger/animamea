@@ -79,7 +79,6 @@ public class SecureMessaging {
 	public CommandAPDU wrap(CommandAPDU capdu) throws SecureMessagingException {
 
 		byte[] header = null;
-		byte lc = 0;
 		DO97 do97 = null;
 		DO87 do87 = null;
 		DO8E do8E = null;
@@ -96,41 +95,34 @@ public class SecureMessaging {
 		header[0] = (byte) (header[0] | (byte) 0x0C); 
 
 		// build DO87
-		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4) {
+		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4 || getAPDUStructure(capdu) == 6) {
 			do87 = buildDO87(capdu.getData().clone());
-			try {
-				lc += do87.getEncoded().length;
-			} catch (IOException e) {
-				throw new SecureMessagingException(e);
-			}
 		}
 
 		// build DO97
-		if (getAPDUStructure(capdu) == 2 || getAPDUStructure(capdu) == 4) {
+		if (getAPDUStructure(capdu) == 2 || getAPDUStructure(capdu) == 4 || getAPDUStructure(capdu) == 7) {
 			do97 = buildDO97(capdu.getNe());
-			lc += do97.getEncoded().length;
 		}
 
 		// build DO8E
 		do8E = buildDO8E(header, do87, do97);
-		lc += do8E.getEncoded().length;
 
 		// construct and return protected APDU
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 		try {
-			bOut.write(header);
-			bOut.write(lc);
-			if (do87 != null)
+
+			if (do87 != null) 
 				bOut.write(do87.getEncoded());
+			
 			if (do97 != null)
 				bOut.write(do97.getEncoded());
+			
 			bOut.write(do8E.getEncoded());
-			bOut.write(0);
+
 		} catch (IOException e) {
 			throw new SecureMessagingException(e);
 		}
-
-		return new CommandAPDU(bOut.toByteArray());
+		return new CommandAPDU(header[0], header[1], header[2], header[3], bOut.toByteArray(), 65536);
 	}
 
 	/**
