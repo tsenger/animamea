@@ -88,19 +88,21 @@ public class SecureMessaging {
 		// Mask class byte and pad command header
 		header = new byte[4];
 		
-		// Die ersten 4 Bytes der CAPDU sind der Header
+		// Die ersten 4 Bytes der CAPDU sind der Header 
 		System.arraycopy(capdu.getBytes(), 0, header, 0, 4);
 		
 		// Markiert das Secure Messaging im CLA-Byte
 		header[0] = (byte) (header[0] | (byte) 0x0C); 
+		
+		int apduCase = getAPDUStructure(capdu);
 
 		// build DO87
-		if (getAPDUStructure(capdu) == 3 || getAPDUStructure(capdu) == 4 || getAPDUStructure(capdu) == 6) {
+		if (apduCase == 3 || apduCase == 4 || apduCase == 6) {
 			do87 = buildDO87(capdu.getData().clone());
 		}
 
 		// build DO97
-		if (getAPDUStructure(capdu) == 2 || getAPDUStructure(capdu) == 4 || getAPDUStructure(capdu) == 7) {
+		if (apduCase == 2 || apduCase == 4 || apduCase == 7) {
 			do97 = buildDO97(capdu.getNe());
 		}
 
