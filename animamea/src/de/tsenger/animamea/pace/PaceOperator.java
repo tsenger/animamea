@@ -66,6 +66,8 @@ import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.asn1.AmDHPublicKey;
 import de.tsenger.animamea.asn1.AmECPublicKey;
 import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
+import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
+import de.tsenger.animamea.asn1.DiscretionaryData;
 import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.DynamicAuthenticationData;
 import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
@@ -193,7 +195,7 @@ public class PaceOperator {
 	public SecureMessaging performPace() throws PaceException, SecureMessagingException, CardException {
 
 		// send MSE:SetAT
-		int resp = sendMSESetAT(terminalType).getSW();
+		int resp = sendMSESetAT(terminalType, null).getSW();
 		if (resp != 0x9000)	throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
 
 		// send first GA and get nonce
@@ -361,23 +363,48 @@ public class PaceOperator {
 		
 		return rspdad;
 	}
+	
+	private ResponseAPDU sendMSESetAT(int terminalType, byte chatByte ) throws PaceException, SecureMessagingException, CardException {
+		return sendMSESetAT(terminalType, new byte[]{chatByte});
+	}
 
-	private ResponseAPDU sendMSESetAT(int terminalType) throws PaceException, SecureMessagingException, CardException {
+	private ResponseAPDU sendMSESetAT(int terminalType, byte[] chatBytes ) throws PaceException, SecureMessagingException, CardException {
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_PACE);
 		mse.setProtocol(protocolOIDString);
 		mse.setKeyReference(passwordRef);
+		DiscretionaryData disData = null;
+		CertificateHolderAuthorizationTemplate chat = null;
+			
 		switch (terminalType) {
 		case 0:
 			break;
-		case 1:
-			mse.setISChat();
+		case 1: 
+			if (chatBytes!=null) {
+				disData = new DiscretionaryData(chatBytes);
+			} else {
+				disData = new DiscretionaryData((byte) 0x23);
+			}
+			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_IS, disData);
+			mse.setCHAT(chat);
 			break;
 		case 2:
-			mse.setATChat();
+			if (chatBytes!=null) {
+				disData = new DiscretionaryData(chatBytes);
+			} else { // if no CHAT was given use standard CHAT
+				disData = new DiscretionaryData(new byte[] { (byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 });
+			}
+			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_AT, disData);
+			mse.setCHAT(chat);
 			break;
 		case 3:
-			mse.setSTChat();
+			if (chatBytes!=null) {
+				disData = new DiscretionaryData(chatBytes);
+			} else {
+				disData = new DiscretionaryData((byte) 0x03);
+			}
+			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_ST, disData);
+			mse.setCHAT(chat);
 			break;
 		default:
 			throw new PaceException("Unknown Terminal Reference: " + terminalType);
