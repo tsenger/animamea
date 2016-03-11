@@ -212,43 +212,4 @@ public class MSESetAT {
 		return new CommandAPDU(CLASS, INS, P1, P2, data);
 	}
 
-	/**
-	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit AT.
-	 * 
-	 */
-	public void setATChat() {
-		
-		DiscretionaryData disData = new DiscretionaryData(new byte[] { (byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 });
-		
-		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
-				BSIObjectIdentifiers.id_AT, disData);
-		setCHAT(chat);
-	}
-
-	/**
-	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit IS.
-	 * 
-	 */
-	public void setISChat() {
-		DiscretionaryData disData = new DiscretionaryData((byte) 0x23);
-	
-		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
-				BSIObjectIdentifiers.id_IS, disData);
-		setCHAT(chat);
-	}
-
-	/**
-	 * Setzt CHAT-Standardwerte (alle Rechte) für für PACE mit ST.
-	 * @throws IOException 
-	 * 
-	 */
-	public void setSTChat() {
-		
-		DiscretionaryData disData = new DiscretionaryData((byte) 0x03);
-		
-		CertificateHolderAuthorizationTemplate chat = new CertificateHolderAuthorizationTemplate(
-				BSIObjectIdentifiers.id_ST, disData);
-		setCHAT(chat);
-	}
-
 }
