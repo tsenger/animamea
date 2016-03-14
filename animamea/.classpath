@@ -7,6 +7,6 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/animamea external libs"/>
+	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?project=animamea&amp;ivyXmlPath=ivy.xml&amp;confs=*&amp;acceptedTypes=jar%2Cbundle%2Cejb%2Cmaven-plugin&amp;alphaOrder=false&amp;resolveInWorkspace=false&amp;transitiveResolve=true&amp;readOSGiMetadata=false&amp;retrievedClasspath=true&amp;retrievedClasspathPattern=lib%2F%5Bartifact%5D-%5Brevision%5D.%5Bext%5D&amp;retrievedClasspathSync=false&amp;retrievedClasspathTypes=jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
