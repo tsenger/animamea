@@ -1,22 +1,43 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-    <project name="animamea" basedir="." default="run" xmlns:ivy="antlib:org.apache.ivy.ant">
-    <property name="source.dir"     value="src"/>
-    <property name="class.dir"      value="bin"/>
-    <property name="jar.dir"        value="dist"/>
-    <property name="lib.dir"		value="lib" />
-    <property name="main-class"     value="de.tsenger.animamea.Operator"/>
+<project name="animamea" basedir="." default="run" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property name="source.dir" value="src" />
+	<property name="class.dir" value="bin" />
+	<property name="jar.dir" value="dist" />
+	<property name="lib.dir" value="lib" />
+	<property name="main-class" value="de.tsenger.animamea.Operator" />
 
-    <target name="ivy" description="Install ivy">
-    	<mkdir dir="${user.home}/.ant/lib" />
-    	<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0-rc1/ivy-2.4.0-rc1.jar" />
-    </target>
-      
-    <target name="resolve" description="retrieve dependencies with ivy" depends="ivy">
-    	<ivy:retrieve />
-    </target>
+	<property name="ivy.install.version" value="2.1.0-rc2" />
+	<condition property="ivy.home" value="${env.IVY_HOME}">
+		<isset property="env.IVY_HOME" />
+	</condition>
+	<property name="ivy.home" value="${user.home}/.ant" />
+	<property name="ivy.jar.dir" value="${ivy.home}/lib" />
+	<property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+	<target name="download-ivy" unless="offline">
+		<mkdir dir="${ivy.jar.dir}" />
+		<!-- download Ivy from web site so that it can be used even without any special installation -->
+		<get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true" />
+	</target>
+
+	<target name="init-ivy" depends="download-ivy">
+		<!-- try to load ivy here from ivy home, in case the user has not already dropped
+	              it into ant's lib dir (note that the latter copy will always take precedence).
+	              We will not fail as long as local lib dir exists (it may be empty) and
+	              ivy is in at least one of ant's lib dir or the local lib dir. -->
+		<path id="ivy.lib.path">
+			<fileset dir="${ivy.jar.dir}" includes="*.jar" />
+
+		</path>
+		<taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
+	</target>
+
+	<target name="resolve" description="retrieve dependencies with ivy" depends="init-ivy">
+		<ivy:retrieve pattern="${lib.dir}/[artifact](-[classifier]).[ext]" />
+	</target>
 
 
-    <target name="run" depends="resolve">
-        <java classname="${main-class}" fork="true" classpath="${lib.dir}/*:${class.dir}" />
-    </target>
+	<target name="run" depends="resolve">
+		<java classname="${main-class}" fork="true" classpath="${lib.dir}/*:${class.dir}" />
+	</target>
 </project>
