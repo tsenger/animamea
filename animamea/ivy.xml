@@ -4,5 +4,6 @@
     	<dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.50"/>
     	<dependency org="org.bouncycastle" name="bcpkix-jdk15on" rev="1.50"/>
     	<dependency org="log4j" name="log4j" rev="1.2.17"/>
+    	<dependency org="junit" name="junit" rev="4.11"/>
     </dependencies>
 </ivy-module>

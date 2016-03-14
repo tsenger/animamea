@@ -5,6 +5,10 @@
 	<property name="jar.dir" value="dist" />
 	<property name="lib.dir" value="lib" />
 	<property name="main-class" value="de.tsenger.animamea.Operator" />
+	
+	<path id="classpath">
+	        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+	</path>
 
 	<property name="ivy.install.version" value="2.1.0-rc2" />
 	<condition property="ivy.home" value="${env.IVY_HOME}">
@@ -36,8 +40,14 @@
 		<ivy:retrieve pattern="${lib.dir}/[artifact](-[classifier]).[ext]" />
 	</target>
 
+	<target name="compile" depends="resolve">
+		<mkdir dir="${classes.dir}"/>
+		<javac srcdir="${source.dir}" destdir="${classes.dir}" includeantruntime="false" classpathref="classpath"/>
+	</target>
 
-	<target name="run" depends="resolve">
+	<target name="run" depends="compile">
 		<java classname="${main-class}" fork="true" classpath="${lib.dir}/*:${class.dir}" />
 	</target>
+	
+	
 </project>
