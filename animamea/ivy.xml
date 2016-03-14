@@ -1,0 +1,8 @@
+<ivy-module version="2.0">
+    <info organisation="org.apache" module="hello-ivy"/>
+    <dependencies>
+    	<dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.50"/>
+    	<dependency org="org.bouncycastle" name="bcpkix-jdk15on" rev="1.50"/>
+    	<dependency org="log4j" name="log4j" rev="1.2.17"/>
+    </dependencies>
+</ivy-module>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+    <project name="animamea" basedir="." default="run" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <property name="source.dir"     value="src"/>
+    <property name="class.dir"      value="bin"/>
+    <property name="jar.dir"        value="dist"/>
+    <property name="lib.dir"		value="lib" />
+    <property name="main-class"     value="de.tsenger.animamea.Operator"/>
+
+    <target name="ivy" description="Install ivy">
+    	<mkdir dir="${user.home}/.ant/lib" />
+    	<get dest="${user.home}/.ant/lib/ivy.jar" src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0-rc1/ivy-2.4.0-rc1.jar" />
+    </target>
+      
+    <target name="resolve" description="retrieve dependencies with ivy" depends="ivy">
+    	<ivy:retrieve />
+    </target>
+
+
+    <target name="run" depends="resolve">
+        <java classname="${main-class}" fork="true" classpath="${lib.dir}/*:${class.dir}" />
+    </target>
+</project>
