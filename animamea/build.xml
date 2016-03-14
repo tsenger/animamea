@@ -42,7 +42,7 @@
 
 	<target name="compile" depends="resolve">
 		<mkdir dir="${classes.dir}"/>
-		<javac srcdir="${source.dir}" destdir="${classes.dir}" includeantruntime="false" classpathref="classpath"/>
+		<javac srcdir="${source.dir}" destdir="${class.dir}" includeantruntime="false" classpathref="classpath"/>
 	</target>
 
 	<target name="run" depends="compile">
