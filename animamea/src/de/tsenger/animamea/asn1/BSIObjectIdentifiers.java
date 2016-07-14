@@ -79,6 +79,15 @@ public interface BSIObjectIdentifiers {
 			id_PACE_ECDH_IM + ".3");
 	public static final ASN1ObjectIdentifier id_PACE_ECDH_IM_AES_CBC_CMAC_256 = new ASN1ObjectIdentifier(
 			id_PACE_ECDH_IM + ".4");
+	
+	public static final ASN1ObjectIdentifier id_PACE_ECDH_CAM = new ASN1ObjectIdentifier(
+			id_PACE + ".6");
+	public static final ASN1ObjectIdentifier id_PACE_ECDH_CAM_AES_CBC_CMAC_128 = new ASN1ObjectIdentifier(
+			id_PACE_ECDH_CAM + ".2");
+	public static final ASN1ObjectIdentifier id_PACE_ECDH_CAM_AES_CBC_CMAC_192 = new ASN1ObjectIdentifier(
+			id_PACE_ECDH_CAM + ".3");
+	public static final ASN1ObjectIdentifier id_PACE_ECDH_CAM_AES_CBC_CMAC_256 = new ASN1ObjectIdentifier(
+			id_PACE_ECDH_CAM + ".4");
 
 	// Chip Authentication OIDs
 
