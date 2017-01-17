@@ -41,7 +41,7 @@
 	</target>
 
 	<target name="compile" depends="resolve">
-		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${class.dir}"/>
 		<javac srcdir="${source.dir}" destdir="${class.dir}" includeantruntime="false" classpathref="classpath"/>
 	</target>
 
