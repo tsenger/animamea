@@ -218,11 +218,7 @@ public class Operator {
 		DomainParameter dp = new DomainParameter(cardAccess.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
 
 
-		//Zertifikate für id_TA festlegen
-//		String cvcaCertFile = "certs/CVCA/CVCA_DETESTeID00002.cv";
-//		String dvCertFile = "certs/DV/DETESTeID00002_DEDVTIDBSIDE006.cvcert";
-//		String terminalCertFile = "certs/Terminal/DEATTIDBSIDE006.cvcert";
-//		String privateKeyFile = "certs/Terminal/DEATTIDBSIDE006.pkcs8";
+		//Zertifikate für TA festlegen
 		
 		String cvcaCertFile = "certs/PersoSim_HJP/DETESTeID00004.cvcert";
 		String dvCertFile = "certs/PersoSim_HJP/DETESTeID00004_DEDVTIDHJP00001.cvcert";
@@ -236,7 +232,7 @@ public class Operator {
 			logger.error("Can't load one or more certification file(s).",e);
 		}
 		
-		// id_TA ausführen, Rückgabe ist der ephemerale PCD Public Key
+		// TA ausführen, Rückgabe ist der ephemerale PCD Public Key
 		KeyPair ephPCDKeyPair = null;
 		try {
 			top.initialize(cp, dp, ephPacePublicKey);
@@ -249,7 +245,7 @@ public class Operator {
 			e.printStackTrace();
 		}
 		
-		logger.info("id_TA established");
+		logger.info("TA established");
 		
 		return ephPCDKeyPair;		
 	}
