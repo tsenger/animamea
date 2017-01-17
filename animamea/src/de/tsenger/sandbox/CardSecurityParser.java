@@ -64,7 +64,7 @@ public class CardSecurityParser {
 		byte[] parameter = si.getChipAuthenticationPublicKeyInfoList().get(0).getPublicKey().getPublicKey();
 		System.out.println(HexString.bufferToHex(parameter));
 		System.out.println("Key Referenz: "+si.getChipAuthenticationPublicKeyInfoList().get(0).getKeyId());
-		System.out.println("CA OID: "+si.getChipAuthenticationPublicKeyInfoList().get(0).getPublicKey().getAlgorithm().getAlgorithm());
+		System.out.println("id_CA OID: "+si.getChipAuthenticationPublicKeyInfoList().get(0).getPublicKey().getAlgorithm().getAlgorithm());
 
 	}
 	

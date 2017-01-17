@@ -24,12 +24,10 @@ import javax.smartcardio.CardException;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.Operator;
 import de.tsenger.animamea.asn1.PaceInfo;
-import de.tsenger.animamea.iso7816.CardCommands;
 import de.tsenger.animamea.iso7816.FileAccess;
 import de.tsenger.animamea.iso7816.SecureMessaging;
 import de.tsenger.animamea.iso7816.SecureMessagingException;
@@ -65,7 +63,7 @@ public class CapaceTest {
 	public CapaceTest() throws SecureMessagingException, CardException {
 		connectCard();
 		//Selektiere die CaPACE Anwendung
-		ch.transceive(CardCommands.selectApp(Hex.decode("D2760001324361504345")));
+//		ch.transceive(CardCommands.selectApp(Hex.decode("D2760001324361504345")));
 	}
 	
 	private void test() {
@@ -75,15 +73,18 @@ public class CapaceTest {
 
 	public void performPACE() throws PaceException, CardException {
 		PaceOperator pop = new PaceOperator(ch);
-		PaceInfo pi = new PaceInfo("0.4.0.127.0.7.2.2.4.2.2", 2, 0xd);
-		pop.setAuthTemplate(pi, "123456", 3, 0);
+		
+		// We didn't read EF.CardAccess, but build our own PACEInfo
+		// OID for id_PACE-CAM AES CBC CMAC 128
+		PaceInfo pi = new PaceInfo("0.4.0.127.0.7.2.2.6.2.2", 2, 0xd);
+		pop.setAuthTemplate(pi, "500540", 2, 1);
 
-		// Führe PACE durch
+		// Führe id_PACE durch
 		SecureMessaging sm = null;
 		try {
-			sm = pop.performPace();
+			sm = pop.performPace(null);
 		} catch (SecureMessagingException e) {
-			throw new PaceException("SecureMessaging failure while performing PACE", e);
+			throw new PaceException("SecureMessaging failure while performing id_PACE", e);
 		} 
 	}
 

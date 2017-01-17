@@ -18,15 +18,6 @@
  */
 package de.tsenger.animamea.ca;
 
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_DH_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_256;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_3DES_CBC_CBC;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_128;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_192;
-import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_256;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -46,6 +37,7 @@ import org.bouncycastle.util.Arrays;
 import de.tsenger.animamea.AmCardHandler;
 import de.tsenger.animamea.asn1.AmDHPublicKey;
 import de.tsenger.animamea.asn1.AmECPublicKey;
+import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
 import de.tsenger.animamea.asn1.ChipAuthenticationInfo;
 import de.tsenger.animamea.asn1.ChipAuthenticationPublicKeyInfo;
 import de.tsenger.animamea.asn1.DomainParameter;
@@ -107,7 +99,7 @@ public class CAOperator {
 	}
 	
 	public SecureMessaging performCA() throws SecureMessagingException, CardException, CAException {
-		//send MSE:Set AT
+		//send MSE:Set id_AT
 		MSESetAT mse = new MSESetAT();
 		mse.setAT(MSESetAT.setAT_CA);
 		mse.setProtocol(protocol);
@@ -189,20 +181,20 @@ public class CAOperator {
 	 */
 	private void getCryptoInformation(ChipAuthenticationInfo cai) {
 		String protocolOIDString = cai.getProtocolOID();
-		if (protocolOIDString.equals(id_CA_DH_3DES_CBC_CBC.toString())
-				|| protocolOIDString.equals(id_CA_ECDH_3DES_CBC_CBC.toString())) {
+		if (protocolOIDString.equals(BSIObjectIdentifiers.id_CA_DH_3DES_CBC_CBC.toString())
+				|| protocolOIDString.equals(BSIObjectIdentifiers.id_CA_ECDH_3DES_CBC_CBC.toString())) {
 			keyLength = 112;
 			crypto = new AmDESCrypto();
-		} else if (protocolOIDString.equals(id_CA_DH_AES_CBC_CMAC_128.toString())
-				|| protocolOIDString.equals(id_CA_ECDH_AES_CBC_CMAC_128.toString())) {
+		} else if (protocolOIDString.equals(BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_128.toString())) {
 			keyLength = 128;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_CA_DH_AES_CBC_CMAC_192.toString())
-				|| protocolOIDString.equals(id_CA_ECDH_AES_CBC_CMAC_192.toString())) {
+		} else if (protocolOIDString.equals(BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_192.toString())) {
 			keyLength = 192;
 			crypto = new AmAESCrypto();
-		} else if (protocolOIDString.equals(id_CA_DH_AES_CBC_CMAC_256.toString())
-				|| protocolOIDString.equals(id_CA_ECDH_AES_CBC_CMAC_256.toString())) {
+		} else if (protocolOIDString.equals(BSIObjectIdentifiers.id_CA_DH_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(BSIObjectIdentifiers.id_CA_ECDH_AES_CBC_CMAC_256.toString())) {
 			keyLength = 256;
 			crypto = new AmAESCrypto();
 		}

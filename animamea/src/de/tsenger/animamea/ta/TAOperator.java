@@ -73,12 +73,12 @@ public class TAOperator {
 	}
 	
 	/**
-	 * Initialisiert den TA SandOp mit einem Zertifikatsprovider, den CA-DomainParamatern 
-	 * für die Berechnung des Public Key und dem Public Key aus PACE
+	 * Initialisiert den id_TA SandOp mit einem Zertifikatsprovider, den id_CA-DomainParamatern 
+	 * für die Berechnung des Public Key und dem Public Key aus id_PACE
 	 * 
 	 * @param certProv Zertifikat-Provider stellt die benötigten CV-Zertifikate bereit
-	 * @param cadp Chip Authentication Domain Parameter zur Berechnung des Public Key während TA
-	 * @param pkpicc Public Key aus PACE 
+	 * @param cadp Chip Authentication Domain Parameter zur Berechnung des Public Key während id_TA
+	 * @param pkpicc Public Key aus id_PACE 
 	 * @throws IOException 
 	 * @throws IllegalArgumentException 
 	 */
@@ -110,7 +110,7 @@ public class TAOperator {
 		
 		// 1.1 MSE:Set DST
 		logger.debug("MSE Set DST: "+certProv.getDVCert().getBody().getCAR());
-		sendMSESetDST(certProv.getDVCert().getBody().getCAR()); //TODO CAR muss mit dem aus PACE übereinstimmen. Hier wird das Zert aber direkt ausgewählt weil es weiß welches benötigt wird... 
+		sendMSESetDST(certProv.getDVCert().getBody().getCAR()); //TODO CAR muss mit dem aus id_PACE übereinstimmen. Hier wird das Zert aber direkt ausgewählt weil es weiß welches benötigt wird... 
 		// 2.1 PSO:Verify Certificate
 		sendPSOVerifyCertificate(certProv.getDVCert());
 		
@@ -122,7 +122,7 @@ public class TAOperator {
 		// 2.2 PSO:Verify Certificate
 		sendPSOVerifyCertificate(certProv.getTerminalCert());
 		
-		// 3. MSE:Set AT
+		// 3. MSE:Set id_AT
 		// Erzeuge die ephemeralen Keys des Terminals:
 		KeyPair pair = ta.getEphemeralPCDKeyPair();
 		ephemeralPKpcd = pair.getPublic();
@@ -138,7 +138,7 @@ public class TAOperator {
 		byte[] rpicc = getChipChallenge();
 		
 		// 5. External Authenticate
-		// Komprimierter ephemeraler Public Key des Chips aus PACE: ID_PICC = Comp(ephPK_PICC)
+		// Komprimierter ephemeraler Public Key des Chips aus id_PACE: ID_PICC = Comp(ephPK_PICC)
 		byte[] idpicc = comp(pkpicc);
 		
 		byte[] message = new byte[idpicc.length+rpicc.length+compEphPK.length];
@@ -264,7 +264,7 @@ public class TAOperator {
 		CommandAPDU setdst = new CommandAPDU(0x00,0x22,0x81,0xB6,data);
 		
 		ResponseAPDU resp = cardHandler.transceive(setdst);
-		if (resp.getSW1()!=0x90) throw new TAException("MSE:Set AT failed "+HexString.bufferToHex(resp.getBytes()));
+		if (resp.getSW1()!=0x90) throw new TAException("MSE:Set id_AT failed "+HexString.bufferToHex(resp.getBytes()));
 		
 		return resp;
 	}

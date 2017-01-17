@@ -118,16 +118,16 @@ public class Operator {
 		CAOperator cop = new CAOperator(ch);
 		
 		
-		//Initialisiere und führe CA durch
+		//Initialisiere und führe id_CA durch
 		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), ephPCDKeyPair);
 		SecureMessaging sm2 = cop.performCA();
 		
-		// Wenn CA erfolgreich war, wird ein neues SecureMessaging Object zurückgeliefert welches die neuen Schlüssel enthält
+		// Wenn id_CA erfolgreich war, wird ein neues SecureMessaging Object zurückgeliefert welches die neuen Schlüssel enthält
 		if (sm2 != null) {
-			logger.info("CA established!");
+			logger.info("id_CA established!");
 			ch.setSecureMessaging(sm2);
 		} else {
-			logger.warn("Couldn't establish CA");
+			logger.warn("Couldn't establish id_CA");
 		}
 		
 		//Selektiere die eID-Anwendung
@@ -184,41 +184,41 @@ public class Operator {
 	
 	private PublicKey performPACE(SecurityInfos cardAccess) throws PaceException, CardException {
 		
-		//Initialisiere PACE mit dem ersten PACE-Info aus dem EF.CardAccess
+		//Initialisiere id_PACE mit dem ersten id_PACE-Info aus dem EF.CardAccess
 		PaceOperator pop = new PaceOperator(ch);
 	
-		if (cardAccess.getPaceDomainParameterInfoList().size()>0) //Properitäre PACE Domain-Paramter vorhanden
+		if (cardAccess.getPaceDomainParameterInfoList().size()>0) //Properitäre id_PACE Domain-Paramter vorhanden
 			pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), cardAccess.getPaceDomainParameterInfoList().get(0), can, 2, 2);
-		else pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), can , 2, 2); //Standardisierte PACE Domain Paramter
+		else pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), can , 2, 2); //Standardisierte id_PACE Domain Paramter
 				
-		//Führe PACE durch
+		//Führe id_PACE durch
 		SecureMessaging sm = null;
 		try {
 			sm = pop.performPace();
 		} catch (SecureMessagingException e) {
-			throw new PaceException("SecureMessaging failure while performing PACE",e);
+			throw new PaceException("SecureMessaging failure while performing id_PACE",e);
 		}
 				
-		//Wenn PACE erfolgreich durchgeführt wurde, wird sein SecureMessaging-Objekt
+		//Wenn id_PACE erfolgreich durchgeführt wurde, wird sein SecureMessaging-Objekt
 		//mit gültigen Session-Keys zurückgeliefert.
-		if (sm!=null) logger.info("PACE established");
+		if (sm!=null) logger.info("id_PACE established");
 		ch.setSecureMessaging(sm);			
 		return pop.getPKpicc();
 	}
 	
 	private KeyPair performTerminalAuthentication(SecurityInfos cardAccess, PublicKey ephPacePublicKey) throws TAException, SecureMessagingException, CardException {
 		if (ephPacePublicKey==null) {
-			logger.error("PACE didn't provide an ephemeral Public Key for Terminal Terminal Authentication.");
+			logger.error("id_PACE didn't provide an ephemeral Public Key for Terminal Terminal Authentication.");
 		}
 		
 		//Erzeuge neuen Terminal Authentication SandOp und übergebe den CardHandler
 		TAOperator top = new TAOperator(ch);
 
-		//TA benötigt zur Berechnung des ephemeralen PCD public Key die DomainParameter für die CA
+		//id_TA benötigt zur Berechnung des ephemeralen PCD public Key die DomainParameter für die id_CA
 		DomainParameter dp = new DomainParameter(cardAccess.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
 
 
-		//Zertifikate für TA festlegen
+		//Zertifikate für id_TA festlegen
 //		String cvcaCertFile = "certs/CVCA/CVCA_DETESTeID00002.cv";
 //		String dvCertFile = "certs/DV/DETESTeID00002_DEDVTIDBSIDE006.cvcert";
 //		String terminalCertFile = "certs/Terminal/DEATTIDBSIDE006.cvcert";
@@ -236,7 +236,7 @@ public class Operator {
 			logger.error("Can't load one or more certification file(s).",e);
 		}
 		
-		// TA ausführen, Rückgabe ist der ephemerale PCD Public Key
+		// id_TA ausführen, Rückgabe ist der ephemerale PCD Public Key
 		KeyPair ephPCDKeyPair = null;
 		try {
 			top.initialize(cp, dp, ephPacePublicKey);
@@ -249,7 +249,7 @@ public class Operator {
 			e.printStackTrace();
 		}
 		
-		logger.info("TA established");
+		logger.info("id_TA established");
 		
 		return ephPCDKeyPair;		
 	}

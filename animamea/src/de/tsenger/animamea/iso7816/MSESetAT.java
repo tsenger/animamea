@@ -36,7 +36,7 @@ import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
 import de.tsenger.animamea.asn1.DiscretionaryData;
 
 /**
- * Die Klasse MSESetAT dient zur Konstruktions einer "MSE:Set AT"-APDU
+ * Die Klasse MSESetAT dient zur Konstruktions einer "MSE:Set id_AT"-APDU
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
@@ -67,7 +67,7 @@ public class MSESetAT {
 	public MSESetAT() {}
 
 	/**
-	 * Setzt das zu verwendende Authentication Template (PACE, CA oder TA)
+	 * Setzt das zu verwendende Authentication Template (id_PACE, id_CA oder id_TA)
 	 * 
 	 * @param at
 	 *            {@link de.tsenger.androsmex.pace.MSECommand.setAT_PACE},
@@ -99,7 +99,7 @@ public class MSESetAT {
 	}
 
 	/**
-	 * Setzt das Tag 0x83 (Reference of public / secret key) für PACE
+	 * Setzt das Tag 0x83 (Reference of public / secret key) für id_PACE
 	 * 
 	 * @param kr
 	 *            Referenziert das verwendete Passwort: 1: MRZ 2: CAN 3: PIN 4:
@@ -140,9 +140,9 @@ public class MSESetAT {
 	 * a session key)
 	 * 
 	 * @param pkr
-	 *            Bei PACE wird der Index der zu verwendenden Domain Parameter
-	 *            angegeben Bei CA wird der Index des zu verwendenden Private
-	 *            Keys angegeben Bei RI wird der Index des zu verwendenden
+	 *            Bei id_PACE wird der Index der zu verwendenden Domain Parameter
+	 *            angegeben Bei id_CA wird der Index des zu verwendenden Private
+	 *            Keys angegeben Bei id_RI wird der Index des zu verwendenden
 	 *            Private Keys angegeben
 	 */
 	public void setPrivateKeyReference(int pkr) {

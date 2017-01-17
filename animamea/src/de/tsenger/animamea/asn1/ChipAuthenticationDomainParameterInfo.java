@@ -77,7 +77,7 @@ public class ChipAuthenticationDomainParameterInfo extends ASN1Object{
 	 * The definition of ChipAuthenticationDomainParameterInfo is
      * <pre>
      * ChipAuthenticationDomainParameterInfo ::= SEQUENCE {
-     *      protocol   			OBJECT IDENTIFIER(id-CA-DH | id-CA-ECDH),
+     *      protocol   			OBJECT IDENTIFIER(id-id_CA-DH | id-id_CA-ECDH),
      *      domainParameter		AlgorithmIdentifier,
      *      keyID				INTEGER OPTIONAL
      * }

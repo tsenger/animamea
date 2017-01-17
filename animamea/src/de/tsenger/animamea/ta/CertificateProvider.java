@@ -28,7 +28,7 @@ import de.tsenger.animamea.asn1.CVCertificate;
 import de.tsenger.animamea.tools.FileSystem;
 
 /**
- * Hart verdrahteter Provider für TA-Zertifikate
+ * Hart verdrahteter Provider für id_TA-Zertifikate
  * 
  * Hier gibt's noch was zu tun ;)
  * 

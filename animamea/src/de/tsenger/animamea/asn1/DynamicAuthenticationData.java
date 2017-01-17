@@ -33,7 +33,7 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
- * De-/Kodiert die ASN1-Strukturen die für PACE und CA (General Authenticate) benötigt
+ * De-/Kodiert die ASN1-Strukturen die für id_PACE und id_CA (General Authenticate) benötigt
  * werden.
  * 
  * @author Tobias Senger

@@ -73,14 +73,14 @@ public class ChipAuthenticationInfo extends ASN1Object{
      * <pre>
      * ChipAuthenticationInfo ::= SEQUENCE {
      *      protocol	OBJECT IDENTIFIER(
-	 *					id-CA-DH-3DES-CBC-CBC |
-	 *					id-CA-DH-AES-CBC-CMAC-128 |
-	 *					id-CA-DH-AES-CBC-CMAC-192 |
-	 *					id-CA-DH-AES-CBC-CMAC-256 |
-	 *					id-CA-ECDH-3DES-CBC-CBC |
-	 *					id-CA-ECDH-AES-CBC-CMAC-128 |
-	 *					id-CA-ECDH-AES-CBC-CMAC-192 |
-	 *					id-CA-ECDH-AES-CBC-CMAC-256),
+	 *					id-id_CA-DH-3DES-CBC-CBC |
+	 *					id-id_CA-DH-AES-CBC-CMAC-128 |
+	 *					id-id_CA-DH-AES-CBC-CMAC-192 |
+	 *					id-id_CA-DH-AES-CBC-CMAC-256 |
+	 *					id-id_CA-ECDH-3DES-CBC-CBC |
+	 *					id-id_CA-ECDH-AES-CBC-CMAC-128 |
+	 *					id-id_CA-ECDH-AES-CBC-CMAC-192 |
+	 *					id-id_CA-ECDH-AES-CBC-CMAC-256),
      *      version		INTEGER, -- MUST be 1 or 2
      *      keyID		INTEGER OPTIONAL
      * }

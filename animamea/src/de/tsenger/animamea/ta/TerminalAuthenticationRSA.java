@@ -37,7 +37,7 @@ public class TerminalAuthenticationRSA extends TerminalAuthentication {
 	 */
 	public TerminalAuthenticationRSA(DomainParameter caDomainParamter, AmRSAPublicKey taPublicKey, RSAPrivateKey taSecretKey) {
 		super(caDomainParamter);
-		//TODO TA mit RSA implementieren.
+		//TODO id_TA mit RSA implementieren.
 		throw new UnsupportedOperationException("Terminal Authentication with RSA not yet implemented!");
 		
 //		BigInteger modulus = taPublicKey.getModulus();

@@ -78,22 +78,22 @@ public class PaceInfo extends ASN1Object{
      * <pre>
      * PaceInfo ::= SEQUENCE {
      *      protocol	OBJECT IDENTIFIER(
-	 *					id-PACE-DH-GM-3DES-CBC-CBC |
-	 *					id-PACE-DH-GM-AES-CBC-CMAC-128 |
-	 *					id-PACE-DH-GM-AES-CBC-CMAC-192 |
-	 *					id-PACE-DH-GM-AES-CBC-CMAC-256 |
-	 *					id-PACE-ECDH-GM-3DES-CBC-CBC |
-	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-128 |
-	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-192 |
-	 *					id-PACE-ECDH-GM-AES-CBC-CMAC-256,
-	 *					id-PACE-DH-IM-3DES-CBC-CBC |
-	 *					id-PACE-DH-IM-AES-CBC-CMAC-128 |
-	 *					id-PACE-DH-IM-AES-CBC-CMAC-192 |
-	 *					id-PACE-DH-IM-AES-CBC-CMAC-256 |
-	 *					id-PACE-ECDH-IM-3DES-CBC-CBC |
-	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-128 |
-	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-192 |
-	 *					id-PACE-ECDH-IM-AES-CBC-CMAC-256),
+	 *					id-id_PACE-DH-GM-3DES-CBC-CBC |
+	 *					id-id_PACE-DH-GM-AES-CBC-CMAC-128 |
+	 *					id-id_PACE-DH-GM-AES-CBC-CMAC-192 |
+	 *					id-id_PACE-DH-GM-AES-CBC-CMAC-256 |
+	 *					id-id_PACE-ECDH-GM-3DES-CBC-CBC |
+	 *					id-id_PACE-ECDH-GM-AES-CBC-CMAC-128 |
+	 *					id-id_PACE-ECDH-GM-AES-CBC-CMAC-192 |
+	 *					id-id_PACE-ECDH-GM-AES-CBC-CMAC-256,
+	 *					id-id_PACE-DH-IM-3DES-CBC-CBC |
+	 *					id-id_PACE-DH-IM-AES-CBC-CMAC-128 |
+	 *					id-id_PACE-DH-IM-AES-CBC-CMAC-192 |
+	 *					id-id_PACE-DH-IM-AES-CBC-CMAC-256 |
+	 *					id-id_PACE-ECDH-IM-3DES-CBC-CBC |
+	 *					id-id_PACE-ECDH-IM-AES-CBC-CMAC-128 |
+	 *					id-id_PACE-ECDH-IM-AES-CBC-CMAC-192 |
+	 *					id-id_PACE-ECDH-IM-AES-CBC-CMAC-256),
      *      version		INTEGER, -- SHOULD be 2
      *      parameterId	INTEGER OPTIONAL
      * }

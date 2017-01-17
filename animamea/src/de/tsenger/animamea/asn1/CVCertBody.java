@@ -120,6 +120,17 @@ public class CVCertBody extends ASN1Object{
 		return Converter.BCDtoDate(expirationDate.getOctets());
 	}
 	
+	public CVExtensions getExtensions() {
+		CVExtensions ext = null;
+		try {
+			ext = CVExtensions.getInstance(extensions);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return ext;
+	}
+	
 	@Override
 	public String toString() {
 		return new String("Certificate Body\n" +

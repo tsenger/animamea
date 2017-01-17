@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
@@ -34,7 +35,7 @@ import org.bouncycastle.math.ec.ECPoint.Fp;
 import de.tsenger.animamea.tools.HexString;
 
 /**
- * PACE mit Elliptic Curve Diffie Hellman
+ * id_PACE mit Elliptic Curve Diffie Hellman
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
@@ -50,11 +51,15 @@ public class PaceECDH extends Pace {
 
 	private BigInteger PCD_SK_x1 = null;
 	private BigInteger PCD_SK_x2 = null;
+	
+	static Logger logger = Logger.getLogger(PaceECDH.class);
 
 
 	public PaceECDH(ECParameterSpec ecParameterSpec) {
 
 		pointG = ecParameterSpec.getG();
+		logger.debug("Point G:\n"+HexString.bufferToHex(pointG.getEncoded()));
+		
 		curve = (org.bouncycastle.math.ec.ECCurve.Fp) ecParameterSpec.getCurve();
 		Random rnd = new Random();
 		randomGenerator.setSeed(rnd.nextLong());
@@ -73,8 +78,10 @@ public class PaceECDH extends Pace {
 		byte[] x1 = new byte[(curve.getFieldSize() / 8)];
 		randomGenerator.nextBytes(x1);
 		PCD_SK_x1 = new BigInteger(1, x1);
-		
+		logger.debug("PCD private key(x1):\n"+HexString.bufferToHex(x1));
+				
 		ECPoint PCD_PK_X1 = pointG.multiply(PCD_SK_x1);
+		logger.debug("PCD public key(X1):\n"+HexString.bufferToHex(PCD_PK_X1.getEncoded()));
 		
 		return PCD_PK_X1.getEncoded();
 	}
@@ -92,14 +99,17 @@ public class PaceECDH extends Pace {
 	private ECPoint getX2(ECPoint.Fp Y1) {
 		
 		ECPoint.Fp SharedSecret_P = (Fp) Y1.multiply(PCD_SK_x1);
-		System.out.println("\nP: "+HexString.bufferToHex(SharedSecret_P.getEncoded()));
+		logger.debug("Shared Secret (P bzw. H):\n"+HexString.bufferToHex(SharedSecret_P.getEncoded()));
 		ECPoint pointG_strich = pointG.multiply(nonce_s).add(SharedSecret_P);
-		System.out.println("\nG_strich: "+HexString.bufferToHex(pointG_strich.getEncoded()));
+		logger.debug("G_strich:\n"+HexString.bufferToHex(pointG_strich.getEncoded()));
+		
 		byte[] x2 = new byte[(curve.getFieldSize() / 8)];
 		randomGenerator.nextBytes(x2);
 		PCD_SK_x2 = new BigInteger(1, x2);
+		logger.debug("PCD private key(x2):\n"+HexString.bufferToHex(x2));
 		
 		ECPoint PCD_PK_X2 = pointG_strich.multiply(PCD_SK_x2);
+		logger.debug("PCD public key(X2):\n"+HexString.bufferToHex(PCD_PK_X2.getEncoded()));
 		
 		return PCD_PK_X2;
 	}

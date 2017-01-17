@@ -75,10 +75,10 @@ public class PaceDomainParameterInfo extends ASN1Object {
      * <pre>
      * PaceDomainParameterInfo ::= SEQUENCE {
      *      protocol		OBJECT IDENTIFIER(,
-     *      				id-PACE-DH-GM |
-     *      				id-PACE-ECDH-GM |
-     *      				id-PACE-DH-IM |
-     *      				id-PACE-ECDH-IM),
+     *      				id-id_PACE-DH-GM |
+     *      				id-id_PACE-ECDH-GM |
+     *      				id-id_PACE-DH-IM |
+     *      				id-id_PACE-ECDH-IM),
      *      domainParameter	AlgorithmIdentifier,
      *      parameterId		INTEGER OPTIONAL
      * }

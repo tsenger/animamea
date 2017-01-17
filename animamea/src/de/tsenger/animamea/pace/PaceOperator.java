@@ -29,6 +29,10 @@ import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_3DES_C
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_128;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_192;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_DH_IM_AES_CBC_CMAC_256;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_CAM;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_CAM_AES_CBC_CMAC_128;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_CAM_AES_CBC_CMAC_192;
+import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_CAM_AES_CBC_CMAC_256;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_3DES_CBC_CBC;
 import static de.tsenger.animamea.asn1.BSIObjectIdentifiers.id_PACE_ECDH_GM_AES_CBC_CMAC_128;
@@ -73,6 +77,7 @@ import de.tsenger.animamea.asn1.DynamicAuthenticationData;
 import de.tsenger.animamea.asn1.PaceDomainParameterInfo;
 import de.tsenger.animamea.asn1.PaceInfo;
 import de.tsenger.animamea.crypto.AmAESCrypto;
+import de.tsenger.animamea.crypto.AmCryptoException;
 import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.crypto.AmDESCrypto;
 import de.tsenger.animamea.crypto.KeyDerivationFunction;
@@ -83,7 +88,7 @@ import de.tsenger.animamea.tools.Converter;
 import de.tsenger.animamea.tools.HexString;
 
 /**
- * PaceOperator stellt Methoden zur Durchführung des PACE-Protokolls zur Verfügung
+ * PaceOperator stellt Methoden zur Durchführung des id_PACE-Protokolls zur Verfügung
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 
@@ -101,6 +106,15 @@ public class PaceOperator {
 	private int terminalType = 0;
 	private byte[] pk_picc = null;
 	private DomainParameter dp = null;
+	private byte[] kenc, kmac = null;
+	
+	private String car, car2 = null;
+	private byte[] encCAdata = null;
+	private byte[] pk_mapic = null;
+	
+	public static final byte[] defaultChatBytes_IS = new byte[] { (byte) 0x23};
+	public static final byte[] defaultChatBytes_AT = new byte[] { (byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 };
+	public static final byte[] defaultChatBytes_ST = new byte[] { (byte) 0x03};
 	
 	static Logger logger = Logger.getLogger(PaceOperator.class);
 
@@ -115,10 +129,10 @@ public class PaceOperator {
 	/**
 	 * Initialisiert PACE mit standardisierten Domain Parametern.
 	 * 
-	 * @param pi PACEInfo enthält die Crypto-Information zur Durchführung von PACE
+	 * @param pi PACEInfo enthält die Crypto-Information zur Durchführung von id_PACE
 	 * @param password Das Password welches für PACE verwendet werden soll
 	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK). MRZ must encoded as: (SerialNumber||Date of Birth+Checksum||Date of Expiry+Checksum)
-	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST, 0=unauthenticated terminal)
+	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=id_IS, 2=id_AT, 3=id_ST, 0=unauthenticated terminal)
 	 */
 	public void setAuthTemplate(PaceInfo pi, String password, int pwRef, int terminalRef) {
 
@@ -130,6 +144,8 @@ public class PaceOperator {
 			passwordBytes = calcSHA1(password.getBytes());
 		else
 			passwordBytes = password.getBytes();
+		
+		logger.info("K from password "+password+" is: "+HexString.bufferToHex(passwordBytes));
 
 		dp = new DomainParameter(pi.getParameterId());
 
@@ -137,7 +153,8 @@ public class PaceOperator {
 				|| protocolOIDString.startsWith(id_PACE_DH_IM.toString()))
 			pace = new PaceDH(dp.getDHParameter());
 		else if (protocolOIDString.startsWith(id_PACE_ECDH_GM.toString())
-				|| protocolOIDString.startsWith(id_PACE_ECDH_IM.toString()))
+				|| protocolOIDString.startsWith(id_PACE_ECDH_IM.toString())
+				|| protocolOIDString.startsWith(id_PACE_ECDH_CAM.toString()))
 			pace = new PaceECDH(dp.getECParameter());
 
 		getCryptoInformation(pi);
@@ -146,11 +163,11 @@ public class PaceOperator {
 	/**
 	 * Initialisiert PACE mit properitären Domain Parametern.
 	 * 
-	 * @param pi PACEInfo enthält alle Crypto-Information zur Durchführung von PACE
-	 * @param pdpi Enthält die properitären Domain Parameter für PACE
+	 * @param pi PACEInfo enthält alle Crypto-Information zur Durchführung von id_PACE
+	 * @param pdpi Enthält die properitären Domain Parameter für id_PACE
 	 * @param password Das Password welches für PACE verwendet werden soll
 	 * @param pwRef Typ des Passwort (1=MRZ, 2=CAN, 3=PIN, 4=PUK). MRZ must encoded as: (SerialNumber||Date of Birth+Checksum||Date of Expiry+Checksum)
-	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=IS, 2=AT, 3=ST)
+	 * @param terminalRef Rolle des Terminals laut BSI TR-03110 (1=id_IS, 2=id_AT, 3=id_ST)
 	 * @throws PaceException 
 	 */
 	public void setAuthTemplate(PaceInfo pi, PaceDomainParameterInfo pdpi, String password, int pwRef, int terminalRef) throws PaceException{
@@ -180,12 +197,15 @@ public class PaceOperator {
 
 		getCryptoInformation(pi);
 	}
-
-
+	
+	
 	/**
-	 * Führt alle Schritte des PACE-Protokolls durch und liefert bei Erfolg 
+	 * Führt alle Schritte des id_PACE-Protokolls durch und liefert bei Erfolg 
 	 * eine mit den ausgehandelten Schlüsseln intialisierte SecureMessaging-Instanz zurück.
+	 * Verwendet einen Standard-CHAT des jeweiligen Terminaltypes. Soll PACE ohne CHAT ausgeführt werden
+	 * muss <code>perfomPace(null)</code> verwendet werden.
 	 * 
+	 * 			Wird <code>null</code> übergeben wird PACE ohne CHAT im MSE:Set id_AT durchgeführt. 
 	 * @return Bei Erfolg von PACE wird eine mit den ausgehandelten Schlüsseln 
 	 * 			intialisierte SecureMessaging-Instanz zurückgegeben. Anderfalls <code>null</code>.
 	 * @throws PaceException 
@@ -193,31 +213,62 @@ public class PaceOperator {
 	 * @throws SecureMessagingException 
 	 */
 	public SecureMessaging performPace() throws PaceException, SecureMessagingException, CardException {
+		switch(terminalType) {
+		case 1:
+			return performPace(defaultChatBytes_IS);
+		case 2:
+			return performPace(defaultChatBytes_AT);
+		case 3:
+			return performPace(defaultChatBytes_ST);
+		default:
+			return performPace(null);
+		}
+	}
+
+	/**
+	 * Führt alle Schritte des id_PACE-Protokolls durch und liefert bei Erfolg 
+	 * eine mit den ausgehandelten Schlüsseln intialisierte SecureMessaging-Instanz zurück.
+	 * 
+	 * @param optCHAT optional kann ein CHAT angegeben werden. Muss zum Terminaltype passen.
+	 * 			CHAT mit nur einem Byte müssen als Byte-Array der Länge 1 übergeben werden.
+	 * 			Wird <code>null</code> übergeben wird PACE ohne CHAT im MSE:Set id_AT durchgeführt. 
+	 * @return Bei Erfolg von PACE wird eine mit den ausgehandelten Schlüsseln 
+	 * 			intialisierte SecureMessaging-Instanz zurückgegeben. Anderfalls <code>null</code>.
+	 * @throws PaceException 
+	 * @throws CardException 
+	 * @throws SecureMessagingException 
+	 */
+
+	public SecureMessaging performPace(byte[] optCHAT) throws PaceException, SecureMessagingException, CardException {
 
 		// send MSE:SetAT
-		int resp = sendMSESetAT(terminalType, null).getSW();
-		if (resp != 0x9000)	throw new PaceException("MSE:Set AT failed. SW: " + Integer.toHexString(resp));
+		int resp = sendMSESetAT(terminalType, optCHAT).getSW();
+		if (resp != 0x9000)	throw new PaceException("MSE:Set id_AT failed. SW: " + Integer.toHexString(resp));
 
 		// send first GA and get nonce
 		byte[] nonce_z = getNonce().getDataObject(0);
+		logger.debug("encrypted nonce z: "+HexString.bufferToHex(nonce_z));
 		byte[] nonce_s = decryptNonce(nonce_z);
-		logger.debug("Nonce s: "+HexString.bufferToHex(nonce_s));
+		logger.debug("decrypted nonce s: "+HexString.bufferToHex(nonce_s));
 		byte[] X1 = pace.getX1(nonce_s);
 
 		// X1 zur Karte schicken und Y1 empfangen
 		byte[] Y1 = mapNonce(X1).getDataObject(2);
+		
+		//Y1 ist PK_MapIc für id_PACE-CAM
+		pk_mapic  = Y1.clone();
 
 		byte[] X2 = pace.getX2(Y1);
 		// X2 zur Karte schicken und Y2 empfangen.
 		byte[] Y2 = performKeyAgreement(X2).getDataObject(4);
 		
-		// Y2 ist PK_Picc der für die TA benötigt wird.
+		// Y2 ist PK_Picc der für die id_TA benötigt wird.
 		pk_picc = Y2.clone();
 
 		byte[] S = pace.getSharedSecret_K(Y2);
-		byte[] kenc = getKenc(S);
-		byte[] kmac = getKmac(S);
-		logger.debug("K bzw S: "+HexString.bufferToHex(S));
+		kenc = getKenc(S);
+		kmac = getKmac(S);
+		logger.debug("shared secret (K bzw S): "+HexString.bufferToHex(S));
 		logger.debug("Kenc: "+HexString.bufferToHex(kenc));
 		logger.debug("Kmac: "+HexString.bufferToHex(kmac));
 		// Authentication Token T_PCD berechnen
@@ -226,12 +277,23 @@ public class PaceOperator {
 		// Authentication Token T_PCD zur Karte schicken und Authentication Token T_PICC empfangen
 		DynamicAuthenticationData dad = performMutualAuthentication(tpcd);
 		byte[] tpicc = dad.getDataObject(6);
-		if (dad.getDataObject(7)!= null) logger.info("CAR: "+new String(dad.getDataObject(7)));
-		if (dad.getDataObject(8)!= null) logger.info("CAR2: "+new String(dad.getDataObject(8)));
+		if (dad.getDataObject(7)!= null) {
+			car = new String(dad.getDataObject(7));
+			logger.info("CAR: "+car);
+		}
+		if (dad.getDataObject(8)!= null) {
+			car2 = new String(dad.getDataObject(8));
+			logger.info("CAR2: "+ car2);
+		}
+		if (dad.getDataObject(0x0A)!= null) {
+			encCAdata = dad.getDataObject(0x0A);
+			logger.info("Encrypted id_CA Data: "+HexString.bufferToHex(encCAdata));
+			
+		}
 
 		// Authentication Token T_PICC' berechnen
 		byte[] tpicc_strich = calcAuthToken(kmac, X2);
-		logger.debug("tpicc' :"+HexString.bufferToHex(tpicc_strich));
+		logger.debug("tpicc':\n"+HexString.bufferToHex(tpicc_strich));
 
 		// Prüfe ob T_PICC = T_PICC'
 		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
@@ -239,6 +301,8 @@ public class PaceOperator {
 		return new SecureMessaging(crypto, kenc, kmac, new byte[crypto.getBlockSize()]);
 	}
 	
+
+
 	/**
 	 * Liefert den ephemeralen Public Key des Chips zurück. Dieser wird für Terminal
 	 * Authentisierung nach V.2 benötigt.
@@ -273,12 +337,69 @@ public class PaceOperator {
 		return pubKey;
 	}
 	
+	/** Liefert die nach PACE vom Chip zurückgelieferte Certificate Authority Reference
+	 *  für die Terminal Authentisierung zurück. 
+	 * @return aktuelle Certificate Authority Reference
+	 */
+	public String getCAR() {
+		return car;
+	}
+	
+	/** Liefert die nach PACE vom Chip zurückgelieferte alternative Certificate Authority Reference
+	 *  für die Terminal Authentisierung zurück. 
+	 * @return alternative Certificate Authority Reference
+	 */
+	public String getCAR2() {
+		return car2;
+	}
+	
+	/** Liefert die nach id_PACE-CAM vom Chip zurückgelieferte und entschlüsselte Chip Authentication Data zurück. 
+	 * @return  Decrypted Chip Authentication Data
+	 */
+	
+	public byte[] getCAData() {
+		byte[] iv = new byte[16];
+		for (int i=0;i<16;i++) iv[i] = (byte)0xFF;
+		logger.info("IV: "+HexString.bufferToHex(iv));
+		logger.info("Kenc: "+HexString.bufferToHex(kenc));
+		crypto.init(kenc, iv);
+		try {
+			return crypto.decrypt(encCAdata);
+		} catch (AmCryptoException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public PublicKey getPKmapic() {
+		
+		KeyFactory fact = null;
+		PublicKey pubKey = null;
+		
+		ECPoint q = Converter.byteArrayToECPoint(pk_mapic, (Fp) dp.getECParameter().getCurve()).normalize();
+		ECPublicKeySpec pubKeySpec = new ECPublicKeySpec(q, dp.getECParameter());
+		try {
+			fact = KeyFactory.getInstance(dp.getDPType(), "BC");
+			pubKey = fact.generatePublic(pubKeySpec);
+		} catch (NoSuchAlgorithmException e) {
+			logger.warn("Couldn't generate ephemeral public key.", e);
+		} catch (NoSuchProviderException e) {
+			logger.warn("Couldn't generate ephemeral public key.", e);
+		} catch (InvalidKeySpecException e) {
+			logger.warn("Couldn't generate ephemeral public key.", e);
+		}
+		
+		return pubKey;
+	}
+
+
 	/**
 	 * Der Authentication Token berechnet sich aus dem MAC (mit Schlüssel kmac) über 
 	 * einen AmPublicKey welcher den Object Identifier des verwendeten Protokolls und den 
 	 * von der empfangenen ephemeralen Public Key (Y2) enthält. 
 	 * Siehe dazu TR-03110 V2.05 Kapitel A.2.4 und D.3.4
-	 * Hinweis: In älteren Versionen des PACE-Protokolls wurden weitere Parameter zur 
+	 * Hinweis: In älteren Versionen des id_PACE-Protokolls wurden weitere Parameter zur 
 	 * Berechnung des Authentication Token herangezogen.
 	 * 
 	 * @param data Byte-Array welches ein DO84 (Ephemeral Public Key) enthält
@@ -294,7 +415,9 @@ public class PaceOperator {
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}
 		else if (pace instanceof PaceDH) {
-			BigInteger y = new BigInteger(data);
+			//TODO have a look if BigInteger has influence if data is interpreted as negativ number. Previously this was used:
+			//BigInteger y = new BigInteger(data); 
+			BigInteger y = new BigInteger(1, data);
 			AmDHPublicKey pkpcd = new AmDHPublicKey(protocolOIDString, y);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}
@@ -382,29 +505,23 @@ public class PaceOperator {
 		case 1: 
 			if (chatBytes!=null) {
 				disData = new DiscretionaryData(chatBytes);
-			} else {
-				disData = new DiscretionaryData((byte) 0x23);
-			}
-			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_IS, disData);
-			mse.setCHAT(chat);
+				chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_IS, disData);
+				mse.setCHAT(chat);
+			}			
 			break;
 		case 2:
 			if (chatBytes!=null) {
 				disData = new DiscretionaryData(chatBytes);
-			} else { // if no CHAT was given use standard CHAT
-				disData = new DiscretionaryData(new byte[] { (byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF7 });
-			}
-			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_AT, disData);
-			mse.setCHAT(chat);
+				chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_AT, disData);
+				mse.setCHAT(chat);
+			}			
 			break;
 		case 3:
 			if (chatBytes!=null) {
 				disData = new DiscretionaryData(chatBytes);
-			} else {
-				disData = new DiscretionaryData((byte) 0x03);
+				chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_ST, disData);
+				mse.setCHAT(chat);
 			}
-			chat = new CertificateHolderAuthorizationTemplate(BSIObjectIdentifiers.id_ST, disData);
-			mse.setCHAT(chat);
 			break;
 		default:
 			throw new PaceException("Unknown Terminal Reference: " + terminalType);
@@ -426,6 +543,7 @@ public class PaceOperator {
 	 */
 	private byte[] decryptNonce(byte[] z) {
 		byte[] derivatedPassword = getKey(keyLength, passwordBytes, 3);
+		logger.debug("derivatedPassword K_pi: "+HexString.bufferToHex(derivatedPassword));
 		return crypto.decryptBlock(derivatedPassword, z);
 	}
 
@@ -502,7 +620,7 @@ public class PaceOperator {
 
 	/**
 	 * Ermittelt anhand der ProtokollOID den Algorithmus und die Schlüssellänge
-	 * für PACE
+	 * für id_PACE
 	 */
 	private void getCryptoInformation(PaceInfo pi) {
 		String protocolOIDString = pi.getProtocolOID();
@@ -515,19 +633,22 @@ public class PaceOperator {
 		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_128.toString())
 				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_128.toString())
 				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_128.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128.toString())) {
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_128.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_CAM_AES_CBC_CMAC_128.toString())) {
 			keyLength = 128;
 			crypto = new AmAESCrypto();
 		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_192.toString())
 				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_192.toString())
 				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_192.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192.toString())) {
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_192.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_CAM_AES_CBC_CMAC_192.toString())) {
 			keyLength = 192;
 			crypto = new AmAESCrypto();
 		} else if (protocolOIDString.equals(id_PACE_DH_GM_AES_CBC_CMAC_256.toString())
 				|| protocolOIDString.equals(id_PACE_DH_IM_AES_CBC_CMAC_256.toString())
 				|| protocolOIDString.equals(id_PACE_ECDH_GM_AES_CBC_CMAC_256.toString())
-				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256.toString())) {
+				|| protocolOIDString.equals(id_PACE_ECDH_IM_AES_CBC_CMAC_256.toString())
+				|| protocolOIDString.equals(id_PACE_ECDH_CAM_AES_CBC_CMAC_256.toString())) {
 			keyLength = 256;
 			crypto = new AmAESCrypto();
 		}

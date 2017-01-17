@@ -28,7 +28,7 @@ import java.util.Random;
 import org.bouncycastle.crypto.params.DHParameters;
 
 /**
- * PACE mit Diffie Hellman
+ * id_PACE mit Diffie Hellman
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  * 

@@ -110,7 +110,7 @@ public class TimeMeasurement {
 			
 			System.out.println("Testrun: "+ i);
 			
-			System.out.println("MSE:Set AT\n"+stat1.toString());
+			System.out.println("MSE:Set id_AT\n"+stat1.toString());
 			System.out.println("Get Nonce\n"+stat2.toString());
 			System.out.println("Map Nonce\n"+stat3.toString());
 			System.out.println("Key Agreement\n"+stat4.toString());
@@ -169,19 +169,19 @@ public class TimeMeasurement {
 		PaceOperator pop = new PaceOperator(ch);
 		pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), "819955", 2, 0);
 
-		// Führe PACE durch
+		// Führe id_PACE durch
 		SecureMessaging sm = null;
 		try {
 			sm = pop.performPace();
 		} catch (SecureMessagingException e) {
-			throw new PaceException("SecureMessaging failure while performing PACE", e);
+			throw new PaceException("SecureMessaging failure while performing id_PACE", e);
 		}
 
-		// Wenn PACE erfolgreich durchgeführt wurde, wird sein
+		// Wenn id_PACE erfolgreich durchgeführt wurde, wird sein
 		// SecureMessaging-Objekt
 		// mit gültigen Session-Keys zurückgeliefert.
 		if (sm != null)
-			logger.info("PACE established");
+			logger.info("id_PACE established");
 		ch.setSecureMessaging(sm);
 		return pop.getPKpicc();
 	}

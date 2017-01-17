@@ -76,7 +76,7 @@ public class TerminalAuthenticationInfo extends ASN1Object{
 	 * The definition of TerminalAuthenticationInfo is
      * <pre>
      * TerminalAuthenticationInfo ::= SEQUENCE {
-     *      protocol	OBJECT IDENTIFIER(id-TA),
+     *      protocol	OBJECT IDENTIFIER(id-id_TA),
      *      version		INTEGER, -- MUST be 1 or 2
      *      efCVCA		FileID OPTIONAL -- MUST NOT be used for version 2
      * }
