@@ -1,10 +1,10 @@
 #animamea
 
 ##description
-animamea is an implementation of the advanced security mechanisms (EACv2) used e.g. in the german electronic ID card ("neuer Personalausweis"). The protocols PACE, Chip Authentication (CA) and Therminal Authentication (TA) as definied in the BSI TR-03110 V2.05 are implemented.
+animamea is an implementation of the advanced security mechanisms (EACv2) used e.g. in the german electronic ID card ("neuer Personalausweis"). The protocols PACE, Chip Authentication (CA) and Therminal Authentication (TA) as definied in the BSI TR-03110 V2.20 are implemented.
 
 ##usage
-See the Operator.java for an example how to use the current version of animamea.
+Dependencies (BouncyCastle, Log4J, etc.) will be resolved by starting the build.xml ant script. It will compile all files and start the Operator.java. See the Operator.java for an example how to use the current version of animamea. You will have to edit this file to set the password (PIN, CAN, or MRZ) and the certificates which have to match to your card. The certificates provided in this project will not work with real german ID cards.
 
 ##license
 animamea is free software: you can redistribute it and/or modify
