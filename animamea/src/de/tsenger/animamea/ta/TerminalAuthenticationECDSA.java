@@ -29,7 +29,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 
-import org.bouncycastle.asn1.DERInteger;
+import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DLSequence;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.spec.ECPrivateKeySpec;
@@ -122,8 +122,8 @@ public class TerminalAuthenticationECDSA extends TerminalAuthentication {
 		} catch (IOException e) {
 			throw new TAException(e);
 		}
-		DERInteger derIntR = (DERInteger) seq.getObjectAt(0);
-		DERInteger derIntS = (DERInteger) seq.getObjectAt(1);
+		ASN1Integer derIntR = (ASN1Integer) seq.getObjectAt(0);
+		ASN1Integer derIntS = (ASN1Integer) seq.getObjectAt(1);
 		BigInteger my_r = derIntR.getValue();
 		BigInteger my_s = derIntS.getValue(); 
 		

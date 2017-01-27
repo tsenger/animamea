@@ -19,7 +19,6 @@
 
 package de.tsenger.animamea.pace;
 
-import static de.tsenger.animamea.tools.Converter.bigIntToByteArray;
 import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 
 import java.math.BigInteger;
@@ -58,7 +57,7 @@ public class PaceECDH extends Pace {
 	public PaceECDH(ECParameterSpec ecParameterSpec) {
 
 		pointG = ecParameterSpec.getG();
-		logger.debug("Point G:\n"+HexString.bufferToHex(pointG.getEncoded()));
+		logger.debug("Point G:\n"+HexString.bufferToHex(pointG.getEncoded(false)));
 		
 		curve = (org.bouncycastle.math.ec.ECCurve.Fp) ecParameterSpec.getCurve();
 		Random rnd = new Random();
@@ -81,9 +80,9 @@ public class PaceECDH extends Pace {
 		logger.debug("PCD private key(x1):\n"+HexString.bufferToHex(x1));
 				
 		ECPoint PCD_PK_X1 = pointG.multiply(PCD_SK_x1).normalize();
-		logger.debug("PCD public key(X1):\n"+HexString.bufferToHex(PCD_PK_X1.getEncoded()));
+		logger.debug("PCD public key(X1):\n"+HexString.bufferToHex(PCD_PK_X1.getEncoded(false)));
 		
-		return PCD_PK_X1.getEncoded();
+		return PCD_PK_X1.getEncoded(false);
 	}
 	
 
@@ -99,9 +98,9 @@ public class PaceECDH extends Pace {
 	private ECPoint getX2(ECPoint.Fp Y1) {
 		
 		ECPoint.Fp SharedSecret_P = (Fp) Y1.multiply(PCD_SK_x1).normalize();
-		logger.debug("Shared Secret (P bzw. H):\n"+HexString.bufferToHex(SharedSecret_P.getEncoded()));
+		logger.debug("Shared Secret (P bzw. H):\n"+HexString.bufferToHex(SharedSecret_P.getEncoded(false)));
 		ECPoint pointG_strich = pointG.multiply(nonce_s).add(SharedSecret_P).normalize();
-		logger.debug("G_strich:\n"+HexString.bufferToHex(pointG_strich.getEncoded()));
+		logger.debug("G_strich:\n"+HexString.bufferToHex(pointG_strich.getEncoded(false)));
 		
 		byte[] x2 = new byte[(curve.getFieldSize() / 8)];
 		randomGenerator.nextBytes(x2);
@@ -109,7 +108,7 @@ public class PaceECDH extends Pace {
 		logger.debug("PCD private key(x2):\n"+HexString.bufferToHex(x2));
 		
 		ECPoint PCD_PK_X2 = pointG_strich.multiply(PCD_SK_x2).normalize();
-		logger.debug("PCD public key(X2):\n"+HexString.bufferToHex(PCD_PK_X2.getEncoded()));
+		logger.debug("PCD public key(X2):\n"+HexString.bufferToHex(PCD_PK_X2.getEncoded(false)));
 		
 		return PCD_PK_X2;
 	}
@@ -125,7 +124,7 @@ public class PaceECDH extends Pace {
 		ECPoint.Fp Y1 = null;
 		Y1 = (Fp) byteArrayToECPoint(Y1Bytes, curve).normalize();
 
-		return getX2(Y1).getEncoded();
+		return getX2(Y1).getEncoded(false);
 	}
 
 	/*
@@ -135,10 +134,9 @@ public class PaceECDH extends Pace {
 	 */
 	@Override
 	public byte[] getSharedSecret_K(byte[] Y2) {
-		
 		ECPoint PICC_PK_Y2 = byteArrayToECPoint(Y2, curve).normalize();
 		ECPoint.Fp K = (Fp) PICC_PK_Y2.multiply(PCD_SK_x2).normalize();
-		return bigIntToByteArray(K.normalize().getXCoord().toBigInteger());
+		return K.getXCoord().getEncoded();
 	}
 
 }

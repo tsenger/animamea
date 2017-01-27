@@ -29,8 +29,6 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
 
-import de.tsenger.animamea.tools.HexString;
-
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  * 
@@ -121,8 +119,6 @@ public class AmAESCrypto extends AmCryptoProvider {
 	public byte[] getMAC(byte[] key, byte[] data) {
 		BlockCipher cipher = new AESFastEngine();
 		Mac mac = new CMac(cipher, 64); // TODO Padding der Daten
-		System.out.println("MAC key : "+HexString.bufferToHex(key));
-		System.out.println("MAC data: "+HexString.bufferToHex(data));
 		KeyParameter keyP = new KeyParameter(key);
 		mac.init(keyP);
 

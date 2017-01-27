@@ -18,7 +18,6 @@
  */
 package de.tsenger.animamea.ca;
 
-import static de.tsenger.animamea.tools.Converter.bigIntToByteArray;
 import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 
 import java.math.BigInteger;
@@ -55,7 +54,8 @@ public class ChipAuthenticationECDH extends ChipAuthentication {
 		PK_PICC = byteArrayToECPoint(pkpicc, curve);
 		
 		ECPoint.Fp K = (Fp) PK_PICC.multiply(privKey);
-		byte[] sharedSecret_K = bigIntToByteArray(K.normalize().getXCoord().toBigInteger());
+//		byte[] sharedSecret_K = bigIntToByteArray(K.normalize().getXCoord().toBigInteger());
+		byte[] sharedSecret_K = K.normalize().getXCoord().toBigInteger().toByteArray();
 		return sharedSecret_K;
 	}
 
