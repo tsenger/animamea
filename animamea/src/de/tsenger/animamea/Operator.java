@@ -76,8 +76,8 @@ public class Operator {
 	
 	private AmCardHandler ch = null;
 	private FileAccess facs = null;
-	private final String can = "098960";
-	private final int slotID = 1; 
+	private final String can = "500540";
+	private final int slotID = 0; 
 	
 
 	public static void main(String[] args) throws Exception {

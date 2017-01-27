@@ -80,7 +80,7 @@ public class PaceECDH extends Pace {
 		PCD_SK_x1 = new BigInteger(1, x1);
 		logger.debug("PCD private key(x1):\n"+HexString.bufferToHex(x1));
 				
-		ECPoint PCD_PK_X1 = pointG.multiply(PCD_SK_x1);
+		ECPoint PCD_PK_X1 = pointG.multiply(PCD_SK_x1).normalize();
 		logger.debug("PCD public key(X1):\n"+HexString.bufferToHex(PCD_PK_X1.getEncoded()));
 		
 		return PCD_PK_X1.getEncoded();
@@ -98,9 +98,9 @@ public class PaceECDH extends Pace {
 	 */
 	private ECPoint getX2(ECPoint.Fp Y1) {
 		
-		ECPoint.Fp SharedSecret_P = (Fp) Y1.multiply(PCD_SK_x1);
+		ECPoint.Fp SharedSecret_P = (Fp) Y1.multiply(PCD_SK_x1).normalize();
 		logger.debug("Shared Secret (P bzw. H):\n"+HexString.bufferToHex(SharedSecret_P.getEncoded()));
-		ECPoint pointG_strich = pointG.multiply(nonce_s).add(SharedSecret_P);
+		ECPoint pointG_strich = pointG.multiply(nonce_s).add(SharedSecret_P).normalize();
 		logger.debug("G_strich:\n"+HexString.bufferToHex(pointG_strich.getEncoded()));
 		
 		byte[] x2 = new byte[(curve.getFieldSize() / 8)];
@@ -108,7 +108,7 @@ public class PaceECDH extends Pace {
 		PCD_SK_x2 = new BigInteger(1, x2);
 		logger.debug("PCD private key(x2):\n"+HexString.bufferToHex(x2));
 		
-		ECPoint PCD_PK_X2 = pointG_strich.multiply(PCD_SK_x2);
+		ECPoint PCD_PK_X2 = pointG_strich.multiply(PCD_SK_x2).normalize();
 		logger.debug("PCD public key(X2):\n"+HexString.bufferToHex(PCD_PK_X2.getEncoded()));
 		
 		return PCD_PK_X2;
@@ -123,7 +123,7 @@ public class PaceECDH extends Pace {
 	public byte[] getX2(byte[] Y1Bytes) {
 		
 		ECPoint.Fp Y1 = null;
-		Y1 = (Fp) byteArrayToECPoint(Y1Bytes, curve);
+		Y1 = (Fp) byteArrayToECPoint(Y1Bytes, curve).normalize();
 
 		return getX2(Y1).getEncoded();
 	}
@@ -136,8 +136,8 @@ public class PaceECDH extends Pace {
 	@Override
 	public byte[] getSharedSecret_K(byte[] Y2) {
 		
-		ECPoint PICC_PK_Y2 = byteArrayToECPoint(Y2, curve);
-		ECPoint.Fp K = (Fp) PICC_PK_Y2.multiply(PCD_SK_x2);
+		ECPoint PICC_PK_Y2 = byteArrayToECPoint(Y2, curve).normalize();
+		ECPoint.Fp K = (Fp) PICC_PK_Y2.multiply(PCD_SK_x2).normalize();
 		return bigIntToByteArray(K.normalize().getXCoord().toBigInteger());
 	}
 

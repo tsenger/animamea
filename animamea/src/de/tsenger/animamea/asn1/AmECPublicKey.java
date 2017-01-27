@@ -23,10 +23,10 @@ import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 import java.io.IOException;
 import java.math.BigInteger;
 
+import org.bouncycastle.asn1.ASN1ApplicationSpecific;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -70,9 +70,9 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 		this.p = new DERTaggedObject(false, 1, new ASN1Integer(p));
 		this.a = new DERTaggedObject(false, 2, new ASN1Integer(a));
 		this.b = new DERTaggedObject(false, 3, new ASN1Integer(b));
-		this.G = new DERTaggedObject(false, 4, new DEROctetString(G.getEncoded()));
+		this.G = new DERTaggedObject(false, 4, new DEROctetString(G.getEncoded(false)));
 		this.r = new DERTaggedObject(false, 5, new ASN1Integer(r));
-		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded()));
+		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded(false)));
 		this.f = new DERTaggedObject(false, 7, new ASN1Integer(f));
 		vec.add(this.p);
 		vec.add(this.a);
@@ -91,7 +91,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	 */
 	public AmECPublicKey(String oidString, ECPoint Y) {
 		super(oidString);
-		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded()));
+		this.Y = new DERTaggedObject(false, 6, new DEROctetString(Y.getEncoded(false)));
 		vec.add(this.Y);
 	}
 
@@ -232,7 +232,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	}
 	
 	public static AmECPublicKey getInstance(byte[] bytes) throws IOException {
-		DERApplicationSpecific seq = DERApplicationSpecific.getInstance(bytes);
+		ASN1ApplicationSpecific seq = ASN1ApplicationSpecific.getInstance(bytes);
 		AmECPublicKey ecPubKey = new AmECPublicKey(ASN1Sequence.getInstance(seq.getObject(16)));
 		return ecPubKey;
 	}

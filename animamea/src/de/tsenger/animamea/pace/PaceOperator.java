@@ -315,7 +315,7 @@ public class PaceOperator {
 		KeySpec pubKeySpec = null;
 		
 		if (dp.getDPType().equals("ECDH")) {
-			ECPoint q = Converter.byteArrayToECPoint(pk_picc, (Fp) dp.getECParameter().getCurve());
+			ECPoint q = Converter.byteArrayToECPoint(pk_picc, (Fp) dp.getECParameter().getCurve()).normalize();
 			pubKeySpec = new ECPublicKeySpec(q, dp.getECParameter());	
 			
 		} else if (dp.getDPType().equals("DH")) {
@@ -410,7 +410,7 @@ public class PaceOperator {
 		byte[] tpcd = null;
 		if (pace instanceof PaceECDH) {
 			Fp curve = (Fp) dp.getECParameter().getCurve();
-			ECPoint pointY = Converter.byteArrayToECPoint(data, curve);
+			ECPoint pointY = Converter.byteArrayToECPoint(data, curve).normalize();
 			AmECPublicKey pkpcd = new AmECPublicKey(protocolOIDString, pointY);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}

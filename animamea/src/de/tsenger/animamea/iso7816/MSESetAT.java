@@ -27,13 +27,10 @@ import javax.smartcardio.CommandAPDU;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 
-import de.tsenger.animamea.asn1.BSIObjectIdentifiers;
 import de.tsenger.animamea.asn1.CertificateHolderAuthorizationTemplate;
-import de.tsenger.animamea.asn1.DiscretionaryData;
 
 /**
  * Die Klasse MSESetAT dient zur Konstruktions einer "MSE:Set id_AT"-APDU
@@ -87,7 +84,7 @@ public class MSESetAT {
 	 *            Das zu verwendende Protokoll
 	 */
 	public void setProtocol(String protocol) {
-		DERObjectIdentifier oid = new ASN1ObjectIdentifier(protocol);
+		ASN1ObjectIdentifier oid = new ASN1ObjectIdentifier(protocol);
 		DERTaggedObject to = new DERTaggedObject(false, 0x00, oid);
 		try {
 			do80CMR = to.getEncoded(ASN1Encoding.DER);

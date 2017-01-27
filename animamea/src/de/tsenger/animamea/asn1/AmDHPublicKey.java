@@ -127,7 +127,12 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getP() {
 		if (p==null) return null;
-		ASN1Integer derInt = (ASN1Integer) p.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt = null;
+		try {
+			derInt = (ASN1Integer) p.getObjectParser(BERTags.INTEGER, false);
+		} catch (IOException e) {
+			return null;
+		}
 		return derInt.getPositiveValue();
 	}
 	
@@ -136,7 +141,12 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getG() {
 		if (g==null) return null;
-		ASN1Integer derInt =(ASN1Integer) g.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt = null;
+		try {
+			derInt = (ASN1Integer) g.getObjectParser(BERTags.INTEGER, false);
+		} catch (IOException e) {
+			return null;
+		}
 		return derInt.getPositiveValue();
 	}
 	
@@ -145,7 +155,12 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	 */
 	public BigInteger getQ() {
 		if (q==null) return null;
-		ASN1Integer derInt =(ASN1Integer) q.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt = null;
+		try {
+			derInt = (ASN1Integer) q.getObjectParser(BERTags.INTEGER, false);
+		} catch (IOException e) {
+			return null;
+		}
 		return derInt.getPositiveValue();
 	}
 
@@ -155,7 +170,12 @@ public class AmDHPublicKey extends AmPublicKey implements DHPublicKey{
 	@Override
 	public BigInteger getY() {
 		if (y==null) return null;
-		ASN1Integer derInt =(ASN1Integer) y.getObjectParser(BERTags.INTEGER, false);
+		ASN1Integer derInt = null;
+		try {
+			derInt = (ASN1Integer) y.getObjectParser(BERTags.INTEGER, false);
+		} catch (IOException e) {
+			return null;
+		}
 		return derInt.getPositiveValue();
 	}
 

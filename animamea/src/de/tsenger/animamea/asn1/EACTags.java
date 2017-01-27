@@ -1,8 +1,8 @@
 //package org.bouncycastle.asn1.eac;
 package de.tsenger.animamea.asn1;
 
+import org.bouncycastle.asn1.ASN1ApplicationSpecific;
 import org.bouncycastle.asn1.BERTags;
-import org.bouncycastle.asn1.DERApplicationSpecific;
 
 public class EACTags
 {
@@ -137,14 +137,14 @@ public class EACTags
     	return 0;
     }
     
-    public static int encodeTag(DERApplicationSpecific spec)
+    public static int encodeTag(ASN1ApplicationSpecific appSpe)
     {
     	int retValue = BERTags.APPLICATION;
-    	boolean constructed = spec.isConstructed();
+    	boolean constructed = appSpe.isConstructed();
     	if (constructed)
     		retValue |= BERTags.CONSTRUCTED;
     	
-    	int tag = spec.getApplicationTag();
+    	int tag = appSpe.getApplicationTag();
     	
     	if (tag > 31)
     	{
