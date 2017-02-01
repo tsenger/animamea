@@ -293,7 +293,7 @@ public class PaceOperator {
 
 		// Authentication Token T_PICC' berechnen
 		byte[] tpicc_strich = calcAuthToken(kmac, X2);
-		logger.debug("tpicc':\n"+HexString.bufferToHex(tpicc_strich));
+		logger.debug("tpicc': "+HexString.bufferToHex(tpicc_strich));
 
 		// Prüfe ob T_PICC = T_PICC'
 		if (!Arrays.areEqual(tpicc, tpicc_strich)) throw new PaceException("Authentication Tokens are different");
@@ -366,8 +366,7 @@ public class PaceOperator {
 		try {
 			return crypto.decrypt(encCAdata);
 		} catch (AmCryptoException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		return null;
 	}
@@ -415,8 +414,6 @@ public class PaceOperator {
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
 		}
 		else if (pace instanceof PaceDH) {
-			//TODO have a look if BigInteger has influence if data is interpreted as negativ number. Previously this was used:
-			//BigInteger y = new BigInteger(data); 
 			BigInteger y = new BigInteger(1, data);
 			AmDHPublicKey pkpcd = new AmDHPublicKey(protocolOIDString, y);
 			tpcd = crypto.getMAC(kmac, pkpcd.getEncoded());
@@ -446,8 +443,7 @@ public class PaceOperator {
 		try {
 			rspdad = sendGeneralAuthenticate(false, dad85.getEncoded(ASN1Encoding.DER));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		
 		return rspdad;
@@ -463,8 +459,7 @@ public class PaceOperator {
 		try {
 			rspdad =  sendGeneralAuthenticate(true, dad83.getEncoded(ASN1Encoding.DER));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		
 		return rspdad;
@@ -480,15 +475,10 @@ public class PaceOperator {
 		try {
 			rspdad = sendGeneralAuthenticate(true, dad81.getEncoded(ASN1Encoding.DER));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		
 		return rspdad;
-	}
-	
-	private ResponseAPDU sendMSESetAT(int terminalType, byte chatByte ) throws PaceException, SecureMessagingException, CardException {
-		return sendMSESetAT(terminalType, new byte[]{chatByte});
 	}
 
 	private ResponseAPDU sendMSESetAT(int terminalType, byte[] chatBytes ) throws PaceException, SecureMessagingException, CardException {

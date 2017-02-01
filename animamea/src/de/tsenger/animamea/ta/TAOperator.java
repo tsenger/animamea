@@ -110,7 +110,8 @@ public class TAOperator {
 		
 		// 1.1 MSE:Set DST
 		logger.debug("MSE Set DST: "+certProv.getDVCert().getBody().getCAR());
-		sendMSESetDST(certProv.getDVCert().getBody().getCAR()); //TODO CAR muss mit dem aus id_PACE übereinstimmen. Hier wird das Zert aber direkt ausgewählt weil es weiß welches benötigt wird... 
+		//TODO CAR must match with return CAR value from PACE. Here we just use the CAR from our selected DV because this is the only one we have. If it doesn't match TA will fail.
+		sendMSESetDST(certProv.getDVCert().getBody().getCAR()); 
 		// 2.1 PSO:Verify Certificate
 		sendPSOVerifyCertificate(certProv.getDVCert());
 		
@@ -231,8 +232,7 @@ public class TAOperator {
 			System.arraycopy(certSignature, 0, data, certBody.length, certSignature.length);
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		
 		CommandAPDU pso = new CommandAPDU(0x00, 0x2A, 0x00, 0xBE, data);
@@ -257,8 +257,7 @@ public class TAOperator {
 		try {
 			data = do83.getEncoded(ASN1Encoding.DER);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getLocalizedMessage());
 		}
 		
 		CommandAPDU setdst = new CommandAPDU(0x00,0x22,0x81,0xB6,data);

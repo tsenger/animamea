@@ -73,7 +73,7 @@ public class CertificateProvider {
 		ASN1Sequence pkSeq = null;
 		pkSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(pkBytes);
 		
-		PrivateKeyInfo pkInfo = new PrivateKeyInfo(pkSeq);
+		PrivateKeyInfo pkInfo = PrivateKeyInfo.getInstance(pkSeq);
 		ECPrivateKey ecpk = ECPrivateKey.getInstance(pkInfo.parsePrivateKey());
 		return ecpk;
 	}

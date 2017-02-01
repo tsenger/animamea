@@ -1,5 +1,5 @@
 /**
- *  Copyright 2011, Tobias Senger
+ *  Copyright 2011-2017, Tobias Senger
  *  
  *  This file is part of animamea.
  *
@@ -21,9 +21,7 @@ package de.tsenger.animamea;
 
 import java.io.IOException;
 import java.security.KeyPair;
-import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.Security;
 import java.security.cert.CertificateException;
 
 import javax.smartcardio.CardException;
@@ -39,7 +37,6 @@ import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.SignedData;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.util.encoders.Hex;
 
 import de.tsenger.animamea.asn1.DomainParameter;
 import de.tsenger.animamea.asn1.SecurityInfos;
@@ -53,7 +50,6 @@ import de.tsenger.animamea.pace.PaceOperator;
 import de.tsenger.animamea.ta.CertificateProvider;
 import de.tsenger.animamea.ta.TAException;
 import de.tsenger.animamea.ta.TAOperator;
-import de.tsenger.animamea.tools.FileSystem;
 import de.tsenger.animamea.tools.HexString;
 
 /**
@@ -61,6 +57,30 @@ import de.tsenger.animamea.tools.HexString;
  * @author Tobias Senger <tobias@t-senger.de>
  */
 public class Operator {
+	
+	//MODIFY this value to your actual Password (eg. PIN, CAN, etc) see also pwRef
+	private final String password = "500540";
+	
+	//MODIFY Password Reference to set which PW shall be used for PACE (1=MRZ, 2=CAN, 3=PIN, 4=PUK). MRZ must encoded as: (SerialNumber||Date of Birth+Checksum||Date of Expiry+Checksum)
+	private final int pwRef = 2;
+	
+	//MODIFY role of the terminal shall be used for PACE (1=id_IS, 2=id_AT, 3=id_ST, 0=unauthenticated terminal)
+	private final int terminalRef = 2;
+		
+	//MODIFY this value to the slotID where your card (or simulator) is insert
+	private final int slotID = 0;
+
+	/* 
+	 * MODIFY this paths to your certificates and private key for TA
+	 * If you use the PersoSim simulator (www.persosim.de) you can just use these certificates 
+	 * to successful perform TA. 
+	 */ 
+	String cvcaCertFile = "certs/PersoSim/DETESTeID00004.cvcert";
+	String dvCertFile = "certs/PersoSim/DETESTeID00004_DEDVTIDHJP00001.cvcert";
+	String terminalCertFile = "certs/PersoSim/DEDVTIDHJP00001_DEATTIDBSI00001.cvcert";
+	String privateKeyFile = "certs/PersoSim/DEDVTIDHJP00001_DEATTIDBSI00001.pkcs8";
+	
+	
 
 	static final byte[] FID_EFCardAccess = new byte[] { (byte) 0x01, (byte) 0x1C };
 	static final byte[] FID_DIR = new byte[] { (byte) 0x2F, (byte) 0x00 };
@@ -68,205 +88,192 @@ public class Operator {
 	static final byte[] FID_EFCardSec = new byte[] { (byte) 0x01, (byte) 0x1D };
 	static final byte[] FID_EFChipSec = new byte[] { (byte) 0x01, (byte) 0x1B };
 	static final byte SFID_EFCA = (byte) 0x1C;
-	
+
 	static final byte[] FID_SOD = new byte[] { (byte) 0x01, (byte) 0x1D };
 	static final byte[] FID_DG1 = new byte[] { (byte) 0x01, (byte) 0x01 };
+	
+    static final byte[] EID_APP_ID = new byte[] {(byte)0xE8, 0x07, 0x04, 0x00, 0x7F, 0x00, 0x07, 0x03, 0x02}; 
 
 	static Logger logger = Logger.getLogger(Operator.class);
-	
+
 	private AmCardHandler ch = null;
 	private FileAccess facs = null;
-	private final String can = "500540";
-	private final int slotID = 0; 
+	
 	
 
 	public static void main(String[] args) throws Exception {
-		
+
 		PropertyConfigurator.configure("log4j.properties");
-		
+
 		logger.info("Entering application.");
-		
+
 		Operator op = new Operator();
-		
-		op.runCompleteProcedure();
+		if (op.connectCard()) {
+			op.runCompleteProcedure();
+		}
 	}
 
-	
-	
 	private void runCompleteProcedure() throws Exception {
-		connectCard();			
-		SecurityInfos cardAccess = getEFCardAccess();	
-		PublicKey ephPacePublicKey = performPACE(cardAccess);
-		
-		KeyPair ephPCDKeyPair = performTerminalAuthentication(cardAccess, ephPacePublicKey);
-		
 
-		
-		//Lese EF.CardSecurity
+		SecurityInfos cardAccess = getEFCardAccess();
+		PublicKey ephPacePublicKey = performPACE(cardAccess);
+
+		KeyPair ephPCDKeyPair = performTerminalAuthentication(cardAccess, ephPacePublicKey);
+
+		// read EF.CardSecurity
 		byte[] efcsBytes = facs.getFile(FID_EFCardSec, true);
 		logger.info("EF.CardSecurity read");
-		
-		
-		//Extrahiere SecurityInfos
+
+		// extract SecurityInfos
 		SecurityInfos efcs = decodeEFCardSecurity(efcsBytes);
-		FileSystem.saveFile("/home/tsenger/Desktop/EF.CardSecurity_eAT.bin", efcsBytes);
+		
 		logger.debug("EF.CardSecurity \n: " + efcs);
 		logger.info("EF.CardSecurity decoded");
 
-		
-		// Erzeuge Chip Authentication SandOp und übergebe CardHandler
+		// create a Chip Authentication Operator and hand over the CardHandler
 		CAOperator cop = new CAOperator(ch);
-		
-		
-		//Initialisiere und führe id_CA durch
+
+		// Initialize and perform CA 
 		cop.initialize(efcs.getChipAuthenticationInfoList().get(0), efcs.getChipAuthenticationPublicKeyInfoList().get(0), ephPCDKeyPair);
 		SecureMessaging sm2 = cop.performCA();
-		
-		// Wenn id_CA erfolgreich war, wird ein neues SecureMessaging Object zurückgeliefert welches die neuen Schlüssel enthält
+
+		// If CA was successful a new SecureMessaging object will be returned which 
+		// will we used for SecureMessaging from now on 
 		if (sm2 != null) {
 			logger.info("id_CA established!");
 			ch.setSecureMessaging(sm2);
 		} else {
 			logger.warn("Couldn't establish id_CA");
 		}
-		
-		//Selektiere die eID-Anwendung
-		ch.transceive(CardCommands.selectApp(Hex.decode("E80704007F00070302")));
-		
-		// Lese eine Datengrupppe
+
+		// select the eID application
+		ch.transceive(CardCommands.selectApp(EID_APP_ID));
+
+		// read a datagroup (e.g. DG4 contains the first name)
 		byte dgno = 4;
-		byte[] dgdata= facs.getFile(dgno);
+		byte[] dgdata = facs.getFile(dgno);
 		DERApplicationSpecific derapp = (DERApplicationSpecific) DERApplicationSpecific.fromByteArray(dgdata);
 		DERUTF8String name = (DERUTF8String) derapp.getObject();
-		logger.info("Content of DG0"+dgno+": "+ name);
+		logger.info("Content of DG0" + dgno + ": " + name);
 
 	}
-	
-	
-	private void connectCard() {
-		
-		//CardHandler erzeugen und erstes Terminal verbinden
+
+	private boolean connectCard() {
+
+		// create an animamea CardHandler and connect the Terminal
 		ch = new AmCardHandler();
-		
+
 		try {
-			if (!ch.connect(slotID))  // 0 = First terminal
-			{
+			if (!ch.connect(slotID)) {
 				logger.error("Can't connect to card!");
-				System.exit(0);
+				return false;
 			}
 		} catch (CardException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.error(e1.getLocalizedMessage());
 		}
-		
+
 		facs = new FileAccess(ch);
+		return true;
 
 	}
-	
-	
+
 	private SecurityInfos getEFCardAccess() throws CardException {
-		
+
 		SecurityInfos efca = null;
 		try {
 			byte[] efcaBytes = facs.getFile(FID_EFCardAccess, true);
 			efca = new SecurityInfos();
 			efca.decode(efcaBytes);
-			logger.info("EF.CardAccess bytes:\n"+HexString.bufferToHex(efcaBytes));
+			logger.info("EF.CardAccess bytes:\n"+ HexString.bufferToHex(efcaBytes));
 			logger.info("EF.CardAccess decoded");
-			logger.debug("\n"+efca);
+			logger.debug("\n" + efca);
 		} catch (IOException e) {
-			logger.error("Couldn't decode EF.CardAccess",e);
+			logger.error("Couldn't decode EF.CardAccess", e);
 		} catch (SecureMessagingException e) {
 			logger.error("SecureMessaging failed!", e);
 		}
 		return efca;
 	}
-	
-	private PublicKey performPACE(SecurityInfos cardAccess) throws PaceException, CardException {
-		
-		//Initialisiere id_PACE mit dem ersten id_PACE-Info aus dem EF.CardAccess
+
+	private PublicKey performPACE(SecurityInfos cardAccess)
+			throws PaceException, CardException {
+
+		// initialize PACE with the first PACE-Info from EF.CardAccess
 		PaceOperator pop = new PaceOperator(ch);
-	
-		if (cardAccess.getPaceDomainParameterInfoList().size()>0) //Properitäre id_PACE Domain-Paramter vorhanden
-			pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), cardAccess.getPaceDomainParameterInfoList().get(0), can, 2, 2);
-		else pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), can , 2, 2); //Standardisierte id_PACE Domain Paramter
-				
-		//Führe id_PACE durch
+
+		if (cardAccess.getPaceDomainParameterInfoList().size() > 0) 
+			// explicit PACE domain parameter available
+			pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), cardAccess.getPaceDomainParameterInfoList().get(0), password, pwRef, terminalRef);
+		else
+			// standardized PACE domain parameter
+			pop.setAuthTemplate(cardAccess.getPaceInfoList().get(0), password, pwRef, terminalRef); 
+
+		// perform PACE
 		SecureMessaging sm = null;
 		try {
 			sm = pop.performPace();
 		} catch (SecureMessagingException e) {
-			throw new PaceException("SecureMessaging failure while performing id_PACE",e);
+			throw new PaceException("SecureMessaging failure while performing PACE", e);
 		}
-				
-		//Wenn id_PACE erfolgreich durchgeführt wurde, wird sein SecureMessaging-Objekt
-		//mit gültigen Session-Keys zurückgeliefert.
-		if (sm!=null) logger.info("id_PACE established");
-		ch.setSecureMessaging(sm);			
+
+		// If PACE was successful a new SecureMessaging object will be returned which 
+		// will we used for SecureMessaging
+		if (sm != null)
+			logger.info("___PACE established!___");
+		ch.setSecureMessaging(sm);
 		return pop.getPKpicc();
 	}
-	
-	private KeyPair performTerminalAuthentication(SecurityInfos cardAccess, PublicKey ephPacePublicKey) throws TAException, SecureMessagingException, CardException {
-		if (ephPacePublicKey==null) {
-			logger.error("id_PACE didn't provide an ephemeral Public Key for Terminal Terminal Authentication.");
+
+	private KeyPair performTerminalAuthentication(SecurityInfos cardAccess,
+			PublicKey ephPacePublicKey) throws TAException,
+			SecureMessagingException, CardException {
+		if (ephPacePublicKey == null) {
+			logger.error("PACE didn't provide an ephemeral Public Key for Terminal Terminal Authentication.");
 		}
-		
-		//Erzeuge neuen Terminal Authentication SandOp und übergebe den CardHandler
+
+		// create a new  Terminal Authentication operator pass over the CardHandler
 		TAOperator top = new TAOperator(ch);
 
-		//id_TA benötigt zur Berechnung des ephemeralen PCD public Key die DomainParameter für die id_CA
+		// To calculaten the ephemeral PCD public Key TA needs the CA domain parameter
 		DomainParameter dp = new DomainParameter(cardAccess.getChipAuthenticationDomainParameterInfoList().get(0).getDomainParameter());
-
-
-		//Zertifikate für TA festlegen
-		
-		String cvcaCertFile = "certs/PersoSim_HJP/DETESTeID00004.cvcert";
-		String dvCertFile = "certs/PersoSim_HJP/DETESTeID00004_DEDVTIDHJP00001.cvcert";
-		String terminalCertFile = "certs/PersoSim_HJP/DEDVTIDHJP00001_DEATTIDBSI00001.cvcert";
-		String privateKeyFile = "certs/PersoSim_HJP/DEDVTIDHJP00001_DEATTIDBSI00001.pkcs8";
 
 		CertificateProvider cp = null;
 		try {
 			cp = new CertificateProvider(cvcaCertFile, dvCertFile, terminalCertFile, privateKeyFile);
 		} catch (IOException e) {
-			logger.error("Can't load one or more certification file(s).",e);
+			logger.error("Can't load one or more certification file(s).", e);
 		}
-		
-		// TA ausführen, Rückgabe ist der ephemerale PCD Public Key
+
+		// perform TA, ephemeral PCD Public Key will be returned after success
 		KeyPair ephPCDKeyPair = null;
 		try {
 			top.initialize(cp, dp, ephPacePublicKey);
 			ephPCDKeyPair = top.performTA();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (IllegalArgumentException | IOException e) {
+			logger.error(e.getLocalizedMessage());
 		}
-		
+
 		logger.info("TA established");
-		
-		return ephPCDKeyPair;		
+
+		return ephPCDKeyPair;
 	}
-	
-	private static SecurityInfos decodeEFCardSecurity(byte[] data) throws IOException, CertificateException, NoSuchProviderException, CMSException, OperatorCreationException {
-		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+	private SecurityInfos decodeEFCardSecurity(byte[] data)
+			throws IOException, CertificateException, CMSException, OperatorCreationException {
 		
 		ASN1Sequence asnSeq = (ASN1Sequence) ASN1Sequence.fromByteArray(data);
 		ContentInfo contentInfo = ContentInfo.getInstance(asnSeq);
 		DERSequence derSeq = (DERSequence) contentInfo.getContent();
-		
-		System.out.println("ContentType: "+ contentInfo.getContentType().toString());
-		SignedData cardSecurity = SignedData.getInstance(derSeq);		
-		
-		//Get SecurityInfos
+
+		SignedData cardSecurity = SignedData.getInstance(derSeq);
+
+		// Get SecurityInfos
 		ContentInfo encapContentInfo = cardSecurity.getEncapContentInfo();
 		DEROctetString octString = (DEROctetString) encapContentInfo.getContent();
 		SecurityInfos si = new SecurityInfos();
 		si.decode(octString.getOctets());
-	
+
 		return si;
 	}
-	
+
 }

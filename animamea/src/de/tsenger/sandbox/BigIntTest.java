@@ -8,6 +8,8 @@ import java.math.BigInteger;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tsenger.animamea.tools.HexString;
+
 /**
  * @author Tobias Senger (tobias@t-senger.de)
  * 
@@ -62,6 +64,13 @@ public class BigIntTest {
 		System.out.println("Ergebnis:" + (((sw0 & 0xff) << 8) | (sw1 & 0xff)));
 		System.out.println("0x9000:" + 0x9000);
 
+	}
+	
+	@Test
+	public void test3() {
+		byte[] b1 = new byte[] {0,(byte)0x7f, 0x65};		
+		BigInteger bi1 = new BigInteger(b1);
+		System.out.println(HexString.bufferToHex(bi1.toByteArray()));
 	}
 
 }
