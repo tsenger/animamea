@@ -59,7 +59,7 @@ import de.tsenger.animamea.tools.HexString;
 public class Operator {
 	
 	//MODIFY this value to your actual Password (eg. PIN, CAN, etc) see also pwRef
-	private final String password = "500540";
+	private final String password = "300841";
 	
 	//MODIFY Password Reference to set which PW shall be used for PACE (1=MRZ, 2=CAN, 3=PIN, 4=PUK). MRZ must encoded as: (SerialNumber||Date of Birth+Checksum||Date of Expiry+Checksum)
 	private final int pwRef = 2;

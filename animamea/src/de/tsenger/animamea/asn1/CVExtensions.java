@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bouncycastle.asn1.ASN1ApplicationSpecific;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.ASN1Object;
@@ -24,13 +23,13 @@ public class CVExtensions extends ASN1Object {
 		this.DiscretionaryDataTemplateList.add(ddt);
 	}
 	
-	private CVExtensions(ASN1ApplicationSpecific appSpe)
+	private CVExtensions(DERApplicationSpecific appSpe)
 	        throws IOException
 	    {
 	        setCertificateExtensions(appSpe);
 	    }
 
-	private void setCertificateExtensions(ASN1ApplicationSpecific appSpe) throws IOException {
+	private void setCertificateExtensions(DERApplicationSpecific appSpe) throws IOException {
 		byte[] content;
         if (appSpe.getApplicationTag() == EACTags.CERTIFICATE_EXTENSIONS)
         {
@@ -98,7 +97,7 @@ public class CVExtensions extends ASN1Object {
 	        }
 	        else if (appSpe != null)
 	        {
-	            return new CVExtensions(ASN1ApplicationSpecific.getInstance(appSpe));
+			return new CVExtensions(DERApplicationSpecific.getInstance(appSpe));
 	        }
 
 	        return null;

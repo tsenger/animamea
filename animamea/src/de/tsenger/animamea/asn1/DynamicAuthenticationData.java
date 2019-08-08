@@ -94,11 +94,7 @@ public class DynamicAuthenticationData extends ASN1Object{
 		for (DERTaggedObject item : objects) {
 			if (item.getTagNo() == tagno) {
 				DEROctetString ostr;
-				try {
-					ostr = (DEROctetString) item.getObjectParser(BERTags.OCTET_STRING, false);
-				} catch (IOException e) {
-					return null;
-				}
+				ostr = (DEROctetString) item.getObjectParser(BERTags.OCTET_STRING, false);
 				return ostr.getOctets();
 			}
 		}

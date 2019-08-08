@@ -32,7 +32,8 @@ import de.tsenger.animamea.crypto.AmCryptoProvider;
 import de.tsenger.animamea.tools.HexString;
 
 /**
- * Verpackt ungeschützte CAPDU in SecureMessaging und entpackt SM-geschützte RAPDU.
+ * Verpackt ungeschützte CAPDU in SecureMessaging und entpackt SM-geschützte
+ * RAPDU.
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  *
@@ -43,6 +44,28 @@ public class SecureMessaging {
 	private byte[] ks_mac = null;
 	private byte[] ssc = null;
 	private AmCryptoProvider crypto = null;
+	private boolean useExtendLengthAPDUs = true;
+
+	/**
+	 * @param acp
+	 *            AmDESCrypto- oder AmAESCrypto-Instanz
+	 * @param ksenc
+	 *            Session Key für Verschlüsselung (K_enc)
+	 * @param ksmac
+	 *            Session Key für Prüfsummenberechnung (K_mac)
+	 * @param initialSSC
+	 *            Initialer Wert des Send Sequence Counters
+	 * @param useExtendLengthAPDUs
+	 *            by default APDU with extended length will be used, if your
+	 *            card doesn't support EL set this paramter to false
+	 */
+	public SecureMessaging(AmCryptoProvider acp, byte[] ksenc, byte[] ksmac, byte[] initialSSC, boolean useExtendLengthAPDUs) {
+		this.crypto = acp;
+		this.ks_enc = ksenc.clone();
+		this.ks_mac = ksmac.clone();
+		this.ssc = initialSSC.clone();
+		this.useExtendLengthAPDUs = useExtendLengthAPDUs;
+	}
 
 	/**
 	 * Konstruktor
@@ -56,25 +79,18 @@ public class SecureMessaging {
 	 * @param initssc
 	 *            Initialer Wert des Send Sequence Counters
 	 */
-	public SecureMessaging(AmCryptoProvider acp, byte[] ksenc, byte[] ksmac,
-			byte[] initialSSC) {
-
-		crypto = acp;
-
-		ks_enc = ksenc.clone();
-		ks_mac = ksmac.clone();
-
-		ssc = initialSSC.clone();
-
+	public SecureMessaging(AmCryptoProvider acp, byte[] ksenc, byte[] ksmac, byte[] initialSSC) {
+		this(acp, ksenc, ksmac, initialSSC, true);
 	}
 
 	/**
-	 * Erzeugt aus einer Plain-Command-APDU ohne Secure Messaging eine Command-APDU
-	 * mit Secure Messaging.
+	 * Erzeugt aus einer Plain-Command-APDU ohne Secure Messaging eine
+	 * Command-APDU mit Secure Messaging.
 	 * 
-	 * @param capdu plain Command-APDU
+	 * @param capdu
+	 *            plain Command-APDU
 	 * @return CommandAPDU mit SM
-	 * @throws SecureMessagingException 
+	 * @throws SecureMessagingException
 	 */
 	public CommandAPDU wrap(CommandAPDU capdu) throws SecureMessagingException {
 
@@ -87,13 +103,13 @@ public class SecureMessaging {
 
 		// Mask class byte and pad command header
 		header = new byte[4];
-		
-		// Die ersten 4 Bytes der CAPDU sind der Header 
+
+		// Die ersten 4 Bytes der CAPDU sind der Header
 		System.arraycopy(capdu.getBytes(), 0, header, 0, 4);
-		
+
 		// Markiert das Secure Messaging im CLA-Byte
-		header[0] = (byte) (header[0] | (byte) 0x0C); 
-		
+		header[0] = (byte) (header[0] | (byte) 0x0C);
+
 		int apduCase = getAPDUStructure(capdu);
 
 		// build DO87
@@ -113,28 +129,30 @@ public class SecureMessaging {
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 		try {
 
-			if (do87 != null) 
+			if (do87 != null)
 				bOut.write(do87.getEncoded());
-			
+
 			if (do97 != null)
 				bOut.write(do97.getEncoded());
-			
+
 			bOut.write(do8E.getEncoded());
 
 		} catch (IOException e) {
 			throw new SecureMessagingException(e);
 		}
-		return new CommandAPDU(header[0], header[1], header[2], header[3], bOut.toByteArray(), 65536);
+		return new CommandAPDU(header[0], header[1], header[2], header[3], bOut.toByteArray(), useExtendLengthAPDUs ? 65536 : 256);
 	}
 
 	/**
-	 *  Erzeugt aus einer SM geschützten Response-APDU eine plain Response-APDU
-	 *  ohne Secure Messaging.
-	 * @param rapdu SM protected RAPDU
+	 * Erzeugt aus einer SM geschützten Response-APDU eine plain Response-APDU
+	 * ohne Secure Messaging.
+	 * 
+	 * @param rapdu
+	 *            SM protected RAPDU
 	 * @return plain RAPDU
 	 * @throws SecureMessagingException
 	 */
-	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws SecureMessagingException{
+	public ResponseAPDU unwrap(ResponseAPDU rapdu) throws SecureMessagingException {
 
 		DO87 do87 = null;
 		DO99 do99 = null;
@@ -147,8 +165,7 @@ public class SecureMessaging {
 		byte[] subArray = new byte[rapduBytes.length];
 
 		while (pointer < rapduBytes.length) {
-			System.arraycopy(rapduBytes, pointer, subArray, 0,
-					rapduBytes.length - pointer);
+			System.arraycopy(rapduBytes, pointer, subArray, 0, rapduBytes.length - pointer);
 			ASN1InputStream asn1sp = new ASN1InputStream(subArray);
 			byte[] encodedBytes = null;
 			try {
@@ -182,15 +199,18 @@ public class SecureMessaging {
 		}
 
 		if (do99 == null)
-			throw new SecureMessagingException("Secure Messaging error: mandatory DO99 not found"); // DO99 is mandatory
-															// and only absent
-															// if SM error
-															// occurs
+			throw new SecureMessagingException("Secure Messaging error: mandatory DO99 not found"); // DO99
+																									// is
+																									// mandatory
+		// and only absent
+		// if SM error
+		// occurs
 
 		// Construct K (SSC||DO87||DO99)
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		try {
-			if (do87 != null) bout.write(do87.getEncoded());
+			if (do87 != null)
+				bout.write(do87.getEncoded());
 			bout.write(do99.getEncoded());
 		} catch (IOException e) {
 			throw new SecureMessagingException(e);
@@ -202,8 +222,7 @@ public class SecureMessaging {
 		byte[] do8eData = do8E.getData();
 
 		if (!java.util.Arrays.equals(cc, do8eData))
-			throw new SecureMessagingException("Checksum is incorrect!\n Calculated CC: "
-					+ HexString.bufferToHex(cc) + "\nCC in DO8E: "
+			throw new SecureMessagingException("Checksum is incorrect!\n Calculated CC: " + HexString.bufferToHex(cc) + "\nCC in DO8E: "
 					+ HexString.bufferToHex(do8eData));
 
 		// Decrypt DO87
@@ -222,22 +241,25 @@ public class SecureMessaging {
 			unwrappedAPDUBytes = new byte[data.length + 2];
 			System.arraycopy(data, 0, unwrappedAPDUBytes, 0, data.length);
 			byte[] do99Data = do99.getData();
-			System.arraycopy(do99Data, 0, unwrappedAPDUBytes, data.length,
-					do99Data.length);
+			System.arraycopy(do99Data, 0, unwrappedAPDUBytes, data.length, do99Data.length);
 		} else
 			unwrappedAPDUBytes = do99.getData().clone();
 
 		return new ResponseAPDU(unwrappedAPDUBytes);
 	}
 
-	
+	public void setExtendLengthSupport(boolean useExtendLengthAPDUs) {
+		this.useExtendLengthAPDUs = useExtendLengthAPDUs;
+	}
+
 	/**
 	 * encrypt data with KS.ENC and build DO87
+	 * 
 	 * @param data
 	 * @return
 	 * @throws SecureMessagingException
 	 */
-	private DO87 buildDO87(byte[] data) throws SecureMessagingException  {
+	private DO87 buildDO87(byte[] data) throws SecureMessagingException {
 
 		crypto.init(ks_enc, ssc);
 		byte[] enc_data;
@@ -263,7 +285,7 @@ public class SecureMessaging {
 		try {
 			if (do87 != null || do97 != null)
 				m.write(crypto.addPadding(header));
-			
+
 			else
 				m.write(header);
 
@@ -297,17 +319,15 @@ public class SecureMessaging {
 			return 1;
 		if (cardcmd.length == 5)
 			return 2;
-		if (cardcmd.length == (5 + (cardcmd[4]&0xff)) && cardcmd[4] != 0)
+		if (cardcmd.length == (5 + (cardcmd[4] & 0xff)) && cardcmd[4] != 0)
 			return 3;
-		if (cardcmd.length == (6 + (cardcmd[4]&0xff)) && cardcmd[4] != 0)
+		if (cardcmd.length == (6 + (cardcmd[4] & 0xff)) && cardcmd[4] != 0)
 			return 4;
 		if (cardcmd.length == 7 && cardcmd[4] == 0)
 			return 5;
-		if (cardcmd.length == (7 + (cardcmd[5]&0xff) * 256 + (cardcmd[6]&0xff))
-				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
+		if (cardcmd.length == (7 + (cardcmd[5] & 0xff) * 256 + (cardcmd[6] & 0xff)) && cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
 			return 6;
-		if (cardcmd.length == (9 + (cardcmd[5]&0xff) * 256 + (cardcmd[6]&0xff))
-				&& cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
+		if (cardcmd.length == (9 + (cardcmd[5] & 0xff) * 256 + (cardcmd[6] & 0xff)) && cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
 			return 7;
 		return 0;
 	}

@@ -247,6 +247,7 @@ public class PaceOperator {
 
 		// send first GA and get nonce
 		byte[] nonce_z = getNonce().getDataObject(0);
+
 		logger.debug("encrypted nonce z: "+HexString.bufferToHex(nonce_z));
 		byte[] nonce_s = decryptNonce(nonce_z);
 		logger.debug("decrypted nonce s: "+HexString.bufferToHex(nonce_s));

@@ -110,11 +110,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	public BigInteger getModulus() {
 		if (n==null) return null;
 		ASN1Integer derInt;
-		try {
-			derInt = (ASN1Integer) n.getObjectParser(BERTags.INTEGER, false);
-		} catch (IOException e) {
-			return null;
-		}
+		derInt = (ASN1Integer) n.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 
@@ -125,11 +121,7 @@ public class AmRSAPublicKey extends AmPublicKey implements RSAPublicKey{
 	public BigInteger getPublicExponent() {
 		if (e==null) return null;
 		ASN1Integer derInt;
-		try {
-			derInt = (ASN1Integer) e.getObjectParser(BERTags.INTEGER, false);
-		} catch (IOException e1) {
-			return null;
-		}
+		derInt = (ASN1Integer) e.getObjectParser(BERTags.INTEGER, false);
 		return derInt.getPositiveValue();
 	}
 

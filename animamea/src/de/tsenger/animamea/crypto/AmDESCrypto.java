@@ -72,7 +72,7 @@ public class AmDESCrypto extends AmCryptoProvider {
 	 */
 	@Override
 	public void init(byte[] keyBytes, byte[] ssc) {
-		sscBytes = ssc.clone();
+		if(ssc!=null) sscBytes = ssc.clone();
 		initCiphers(keyBytes, new byte[blockSize]);
 	}
 
@@ -114,7 +114,7 @@ public class AmDESCrypto extends AmCryptoProvider {
 	 */
 	@Override
 	public byte[] decryptBlock(byte[] key, byte[] z) {
-		byte[] s = new byte[16];
+		byte[] s = new byte[blockSize];
 		KeyParameter encKey = new KeyParameter(key);
 		BlockCipher cipher = new DESedeEngine();
 		cipher.init(false, encKey);
@@ -151,6 +151,29 @@ public class AmDESCrypto extends AmCryptoProvider {
 	@Override
 	public int getBlockSize() {
 		return blockSize;
+	}
+	
+	/**
+	 * Berechnet die XOR-Verknüpfung von zwei Bytes-Arrays der selben Länge
+	 * 
+	 * @param a
+	 *            Byte-Array A
+	 * @param b
+	 *            Byte-Array B
+	 * @return XOR-Verknüpfung von a und b
+	 * @throws IllegalArgumentException
+	 *             falls die beiden Byte-Arrays nicht die gleiche Länge haben
+	 */
+	public byte[] xorArray(byte[] a, byte[] b)
+			throws IllegalArgumentException {
+		if (b.length < a.length)
+			throw new IllegalArgumentException(
+					"length of byte [] b must be >= byte [] a");
+		byte[] c = new byte[a.length];
+		for (int i = 0; i < a.length; i++) {
+			c[i] = (byte) (a[i] ^ b[i]);
+		}
+		return c;
 	}
 
 }

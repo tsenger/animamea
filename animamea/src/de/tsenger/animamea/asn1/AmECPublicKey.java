@@ -23,10 +23,10 @@ import static de.tsenger.animamea.tools.Converter.byteArrayToECPoint;
 import java.io.IOException;
 import java.math.BigInteger;
 
-import org.bouncycastle.asn1.ASN1ApplicationSpecific;
 import org.bouncycastle.asn1.ASN1Encoding;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.DERApplicationSpecific;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -232,7 +232,7 @@ public class AmECPublicKey extends AmPublicKey implements ECPublicKey{
 	}
 	
 	public static AmECPublicKey getInstance(byte[] bytes) throws IOException {
-		ASN1ApplicationSpecific seq = ASN1ApplicationSpecific.getInstance(bytes);
+		DERApplicationSpecific seq = DERApplicationSpecific.getInstance(bytes);
 		AmECPublicKey ecPubKey = new AmECPublicKey(ASN1Sequence.getInstance(seq.getObject(16)));
 		return ecPubKey;
 	}
