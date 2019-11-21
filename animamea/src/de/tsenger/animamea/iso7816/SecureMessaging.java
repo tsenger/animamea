@@ -367,7 +367,7 @@ public class SecureMessaging {
 	}
 
 	private void incrementAtIndex(byte[] array, int index) {
-		if (array[index] == Byte.MAX_VALUE) {
+		if (array[index] == 0xff) {
 			array[index] = 0;
 			if (index > 0)
 				incrementAtIndex(array, index - 1);
