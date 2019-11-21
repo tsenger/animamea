@@ -46,6 +46,10 @@ public class SecureMessaging {
 	private AmCryptoProvider crypto = null;
 	private boolean useExtendLengthAPDUs = true;
 
+	enum apdutype {
+		case1, case2s, case2e, case3s, case3e, case4s, case4e
+	};
+
 	/**
 	 * @param acp
 	 *            AmDESCrypto- oder AmAESCrypto-Instanz
@@ -96,6 +100,7 @@ public class SecureMessaging {
 
 		byte[] header = null;
 		DO97 do97 = null;
+		DO85 do85 = null;
 		DO87 do87 = null;
 		DO8E do8E = null;
 
@@ -110,24 +115,35 @@ public class SecureMessaging {
 		// Markiert das Secure Messaging im CLA-Byte
 		header[0] = (byte) (header[0] | (byte) 0x0C);
 
-		int apduCase = getAPDUStructure(capdu);
+		apdutype atype = getAPDUStructure(capdu);
 
 		// build DO87
-		if (apduCase == 3 || apduCase == 4 || apduCase == 6) {
-			do87 = buildDO87(capdu.getData().clone());
+		if (atype == apdutype.case3s || atype == apdutype.case4s || atype == apdutype.case3e || atype == apdutype.case4e) {
+			if (header[1] % 2 == 1) {
+				do85 = buildDO85(capdu.getData().clone());
+			} else {
+				do87 = buildDO87(capdu.getData().clone());
+			}
 		}
 
 		// build DO97
-		if (apduCase == 2 || apduCase == 4 || apduCase == 7) {
+		if (atype == apdutype.case2s || atype == apdutype.case4s || atype == apdutype.case2e || atype == apdutype.case4e) {
 			do97 = buildDO97(capdu.getNe());
 		}
 
 		// build DO8E
-		do8E = buildDO8E(header, do87, do97);
+		if (do85 != null) {
+			do8E = buildDO8E(header, do85, do97);
+		} else {
+			do8E = buildDO8E(header, do87, do97);
+		}
 
 		// construct and return protected APDU
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 		try {
+
+			if (do85 != null)
+				bOut.write(do85.getEncoded());
 
 			if (do87 != null)
 				bOut.write(do87.getEncoded());
@@ -253,6 +269,24 @@ public class SecureMessaging {
 	}
 
 	/**
+	 * encrypt data with KS.ENC and build DO85
+	 * 
+	 * @param data
+	 * @return
+	 * @throws SecureMessagingException
+	 */
+	private DO85 buildDO85(byte[] data) throws SecureMessagingException {
+		crypto.init(ks_enc, ssc);
+		byte[] enc_data;
+		try {
+			enc_data = crypto.encrypt(data);
+		} catch (AmCryptoException e) {
+			throw new SecureMessagingException(e);
+		}
+		return new DO85(enc_data);
+	}
+
+	/**
 	 * encrypt data with KS.ENC and build DO87
 	 * 
 	 * @param data
@@ -273,7 +307,7 @@ public class SecureMessaging {
 
 	}
 
-	private DO8E buildDO8E(byte[] header, DO87 do87, DO97 do97) throws SecureMessagingException {
+	private DO8E buildDO8E(byte[] header, DO85 do85, DO97 do97) throws SecureMessagingException {
 
 		ByteArrayOutputStream m = new ByteArrayOutputStream();
 
@@ -283,14 +317,14 @@ public class SecureMessaging {
 		 * Berechnen des MAC gepaddet.
 		 */
 		try {
-			if (do87 != null || do97 != null)
+			if (do85 != null || do97 != null)
 				m.write(crypto.addPadding(header));
 
 			else
 				m.write(header);
 
-			if (do87 != null)
-				m.write(do87.getEncoded());
+			if (do85 != null)
+				m.write(do85.getEncoded());
 			if (do97 != null)
 				m.write(do97.getEncoded());
 		} catch (IOException e) {
@@ -310,26 +344,26 @@ public class SecureMessaging {
 	 * Bestimmt welchem Case die CAPDU enstpricht. (Siehe ISO/IEC 7816-3 Kapitel
 	 * 12.1)
 	 * 
-	 * @return Strukurtype (1 = CASE1, ...)
+	 * @return apdutype
 	 */
-	private byte getAPDUStructure(CommandAPDU capdu) {
+	private apdutype getAPDUStructure(CommandAPDU capdu) {
 		byte[] cardcmd = capdu.getBytes();
 
 		if (cardcmd.length == 4)
-			return 1;
+			return apdutype.case1;
 		if (cardcmd.length == 5)
-			return 2;
+			return apdutype.case2s;
 		if (cardcmd.length == (5 + (cardcmd[4] & 0xff)) && cardcmd[4] != 0)
-			return 3;
+			return apdutype.case3s;
 		if (cardcmd.length == (6 + (cardcmd[4] & 0xff)) && cardcmd[4] != 0)
-			return 4;
+			return apdutype.case4s;
 		if (cardcmd.length == 7 && cardcmd[4] == 0)
-			return 5;
+			return apdutype.case2e;
 		if (cardcmd.length == (7 + (cardcmd[5] & 0xff) * 256 + (cardcmd[6] & 0xff)) && cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
-			return 6;
+			return apdutype.case3e;
 		if (cardcmd.length == (9 + (cardcmd[5] & 0xff) * 256 + (cardcmd[6] & 0xff)) && cardcmd[4] == 0 && (cardcmd[5] != 0 || cardcmd[6] != 0))
-			return 7;
-		return 0;
+			return apdutype.case4e;
+		return null;
 	}
 
 	private void incrementAtIndex(byte[] array, int index) {

@@ -1,5 +1,5 @@
 /**
- *  Copyright 2011, Tobias Senger
+ *  Copyright 2019, Tobias Senger
  *  
  *  This file is part of animamea.
  *
@@ -26,42 +26,29 @@ import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DLTaggedObject;
 
 /**
- * Data Object mit Tag 87 beeinhaltet einen Padding-Indikator gefolgt von dem Cryptogram
+ * Data Object mit Tag 85 beeinhaltet ein Cryptogram (wird bei odd Instruction bytes genutzt)
  * 
  * @author Tobias Senger (tobias@t-senger.de)
  *
  */
-public class DO87 extends DO85 {
+public class DO85 {
 
-	private byte[] value_ = null;
 
-	public DO87() {
+	protected byte[] data = null;
+	protected DLTaggedObject to = null;
+
+	public DO85() {
 	}
 
-	public DO87(byte[] data) {
-		this.data = data.clone();
-		value_ = addPaddingIndicator(data);
-		super.to = new DLTaggedObject(false, 7, new DEROctetString(value_));
+	public DO85(byte[] data) {
+		this.data = data.clone();		
+		to = new DLTaggedObject(false, 5, new DEROctetString(data));
 	}
 
-	private byte[] addPaddingIndicator(byte[] data) {
-		byte[] ret = new byte[data.length + 1];
-		System.arraycopy(data, 0, ret, 1, data.length);
-		ret[0] = 1;
-		return ret;
-	}
-
-	private byte[] removePaddingIndicator(byte[] value) {
-		byte[] ret = new byte[value.length - 1];
-		System.arraycopy(value, 1, ret, 0, ret.length);
-		return ret;
-	}
-
-	@Override
 	public void fromByteArray(byte[] encodedData) {
 		ASN1InputStream asn1in = new ASN1InputStream(encodedData);
 		try {
-			super.to = (DLTaggedObject) asn1in.readObject();
+			to = (DLTaggedObject) asn1in.readObject();
 			asn1in.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -69,9 +56,16 @@ public class DO87 extends DO85 {
 		}	
 		
 		DEROctetString ocs = (DEROctetString) to.getObject();
-		value_ = ocs.getOctets();
-		super.data = removePaddingIndicator(value_);
+		data =  ocs.getOctets();
 		
+	}
+
+	public byte[] getEncoded() throws IOException {
+		return to.getEncoded();
+	}
+
+	public byte[] getData() {
+		return data;
 	}
 
 }
