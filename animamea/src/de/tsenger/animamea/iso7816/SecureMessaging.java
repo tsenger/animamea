@@ -119,7 +119,7 @@ public class SecureMessaging {
 
 		// build DO87
 		if (atype == apdutype.case3s || atype == apdutype.case4s || atype == apdutype.case3e || atype == apdutype.case4e) {
-			if (header[1] % 2 == 1) {
+			if ((header[1] & 0xff) % 2 == 1) {
 				do85 = buildDO85(capdu.getData().clone());
 			} else {
 				do87 = buildDO87(capdu.getData().clone());
